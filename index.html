@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>RepoSage | GitHub Manager Pro</title>
+  <meta name="description" content="Professional GitHub repository management with analytics, advanced upload, and live terminal">
+  <!-- Google Fonts + Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo"><div class="logo-icon"><i class="fab fa-github"></i></div><span>Repo<span style="color:#2f81f7">Sage</span></span></div>
+    <nav class="nav-menu">
+      <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-line"></i><span>Dashboard</span></div>
+      <div class="nav-item" data-page="repos"><i class="fas fa-book"></i><span>Repositories</span></div>
+      <div class="nav-item" data-page="upload"><i class="fas fa-cloud-upload-alt"></i><span>Upload</span></div>
+      <div class="nav-item" data-page="create"><i class="fas fa-plus-circle"></i><span>Create Repo</span></div>
+      <div class="nav-item" data-page="delete"><i class="fas fa-trash-alt"></i><span>Delete Repo</span></div>
+    </nav>
+    <div style="padding: 20px; border-top:1px solid var(--border-color); margin-top:auto;"><div class="theme-switch" id="themeToggle"><i class="fas fa-moon"></i><i class="fas fa-sun"></i><span>Dark/Light</span></div></div>
+  </aside>
+  <main class="main-content">
+    <div class="top-bar"><button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button><div class="user-section"><div id="authStatusBadge"><button id="showLoginBtn" class="btn-login"><i class="fab fa-github"></i> Login</button></div></div></div>
+    <div class="pages-container" id="pagesContainer" style="display: none;">
+      <!-- Dashboard -->
+      <div class="page" id="dashboardPage">
+        <h2 style="margin-bottom:24px"><i class="fas fa-chart-line"></i> Insights Dashboard</h2>
+        <div class="dashboard-grid" id="statsGrid"></div>
+        <div class="stat-card"><canvas id="commitChart" width="400" height="200" style="max-height:200px"></canvas></div>
+        <div class="stat-card"><h3>Recent Activity</h3><div id="recentActivityList" style="margin-top:16px"></div></div>
+      </div>
+      <!-- Repositories -->
+      <div class="page" id="reposPage" style="display:none">
+        <div class="filter-bar"><input type="text" id="repoSearch" class="search-input" placeholder="Search repos..."><select id="filterVisibility" class="search-input"><option value="all">All</option><option value="public">Public</option><option value="private">Private</option></select><select id="sortRepos" class="search-input"><option value="updated">Last updated</option><option value="name">Name</option><option value="stars">Stars</option></select><button id="refreshRepos" class="btn-login" style="background:var(--bg-inset)"><i class="fas fa-sync-alt"></i></button></div>
+        <div id="repoList" class="repo-grid"></div><div class="pagination" id="pagination"></div>
+      </div>
+      <!-- Upload Page Advanced -->
+      <div class="page" id="uploadPage" style="display:none">
+        <div class="stat-card"><h3><i class="fas fa-cloud-upload-alt"></i> Upload to GitHub</h3>
+          <div class="upload-zone" id="dropZone"><i class="fas fa-folder-open" style="font-size:48px"></i><p>Drag & drop files or folder (ZIP supported)</p><input type="file" id="fileInput" multiple webkitdirectory style="display:none"></div>
+          <div class="input-group"><label>Repository</label><input type="text" id="uploadRepo" placeholder="owner/repo" class="search-input" style="width:100%"></div>
+          <div class="input-group"><label>Branch</label><input type="text" id="branchName" value="main" class="search-input"></div>
+          <div class="input-group"><label>Commit message</label><input type="text" id="commitMsgUpload" value="Upload via RepoSage" class="search-input"></div>
+          <div id="fileTreePreview" class="file-tree" style="display:none"></div>
+          <button id="startUpload" class="btn-login" style="margin-top:20px; width:100%"><i class="fas fa-rocket"></i> Commit changes</button>
+        </div>
+      </div>
+      <!-- Create Repo -->
+      <div class="page" id="createPage" style="display:none"><div class="stat-card"><h3>Create repository</h3><input type="text" id="newRepoName" placeholder="Repository name" class="search-input" style="width:100%"><div id="nameValidation"></div><textarea id="repoDescCreate" placeholder="Description" class="search-input" style="width:100%; margin-top:12px"></textarea><div style="margin:12px 0"><label><input type="checkbox" id="privateRepo"> Private</label> <label><input type="checkbox" id="initReadme"> Initialize with README</label></div><select id="gitignoreSelect" class="search-input"><option value="">No .gitignore</option><option value="Node">Node</option><option value="Python">Python</option></select><button id="createRepoBtn" class="btn-login" style="margin-top:20px">Create Repository</button></div></div>
+      <!-- Delete Repo -->
+      <div class="page" id="deletePage" style="display:none"><div class="stat-card"><h3 style="color:var(--accent-red)">Delete repository</h3><select id="deleteRepoSelect" class="search-input" style="width:100%"><option>Select repository</option></select><div class="warning-text" style="margin:16px 0; background:rgba(248,81,73,0.1); padding:12px; border-radius:8px"><i class="fas fa-exclamation-triangle"></i> This action is permanent!</div><input type="text" id="confirmRepoName" placeholder="Type repository name to confirm" class="search-input"><button id="confirmDeleteBtn" class="btn-login" style="background:var(--accent-red); margin-top:16px">Delete permanently</button></div></div>
+    </div>
+    <div class="terminal" id="terminalContainer" style="display:none; margin: 20px"><div class="terminal-header"><span><i class="fas fa-terminal"></i> Live Logs</span><button id="closeTerminal" style="background:none; border:none; color:white">✕</button></div><div class="terminal-body" id="terminalBody"></div></div>
+  </main>
+</div>
+<div id="toastContainer"></div>
+<div id="deleteModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>⚠️ Confirm deletion</h3><button class="modal-close">&times;</button></div><div class="modal-body"><p>You are about to delete <strong id="modalRepoName"></strong></p><input type="text" id="modalConfirmInput" placeholder="Enter repository name" class="search-input"></div><div class="modal-footer"><button id="modalConfirmDelete" class="btn-login" style="background:var(--accent-red)">Delete</button></div></div></div>
+ <script src="js/script.js"></script>
+</body>
+</html>
