@@ -1,6 +1,6 @@
-
     /* ========================================
        REPOFLOW - COMPLETE STYLESHEET
+       All original functionality preserved
        ======================================== */
     :root {
       --bg-primary: #0d1117;
@@ -163,7 +163,7 @@
     .repo-search { flex: 1; position: relative; min-width: 200px; }
     .repo-search input { width: 100%; padding: 8px 12px 8px 32px; background: var(--bg-inset); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); }
     .repo-search i { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); }
-    .filter-btn, .sort-select { padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; background: var(--bg-inset); color: var(--text-primary); }
+    .filter-btn, .sort-select { padding: 6px 12px; background: var(--bg-inset); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; color: var(--text-primary); }
     .filter-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
     .repo-grid-enhanced { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
     .repo-card-enhanced { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius); padding: 20px; position: relative; transition: var(--transition); }
