@@ -1,5 +1,6 @@
 // ========================================
 // REPOFLOW - COMPLETE GITHUB MANAGER
+// With Cyberpunk README Generator PRO
 // ========================================
 
 // =============== STATE MANAGEMENT ===============
@@ -25,21 +26,23 @@ let searchQuery = '';
 let currentMode = 'mode1';
 let features = [""];
 let techStack = [];
+let previewImages = [];
 let commitChart = null;
 let typingTimeout = null;
 let isTypingActive = false;
+let currentTemplate = 'cyberpunk';
 
 // Gitignore templates
 const gitignoreTemplates = {
-  node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log`,
-  react: `node_modules/\nbuild/\n.env\n.DS_Store\n*.log`,
-  python: `__pycache__/\n*.py[cod]\n.env\nvenv/\n*.pyc`,
-  java: `*.class\ntarget/\n*.log\n.settings/\n.project`
+  node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
+  react: `node_modules/\nbuild/\n.env\n.DS_Store\n*.log\ncoverage/`,
+  python: `__pycache__/\n*.py[cod]\n.env\nvenv/\n*.pyc\n.pytest_cache/`,
+  java: `*.class\ntarget/\n*.log\n.settings/\n.project\n.classpath`
 };
 
 const languageColors = {
   'JavaScript': '#f1e05a', 'TypeScript': '#3178c6', 'Python': '#3572A5',
-  'Java': '#b07219', 'Go': '#00ADD8', 'default': '#8b949e'
+  'Java': '#b07219', 'Go': '#00ADD8', 'Rust': '#dea584', 'default': '#8b949e'
 };
 
 // =============== INITIALIZATION ===============
@@ -113,22 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
   });
   
-  // Close terminal
-  document.getElementById('closeTerminalBtn')?.addEventListener('click', () => {
-    document.getElementById('terminalContainer').style.display = 'none';
-    if (typingTimeout) clearTimeout(typingTimeout);
-    isTypingActive = false;
-  });
+  // Terminal controls
+  initTerminalControls();
   
   // Theme toggle
-  const themeToggle = document.getElementById('themeToggle');
-  if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      document.body.classList.toggle('light-theme');
-      localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
-    });
-    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
-  }
+  initThemeToggle();
   
   // Close modals
   document.querySelectorAll('.modal').forEach(modal => {
@@ -148,8 +140,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } else showToast('Repository name does not match!', 'error');
   });
   
-  // README Generator
-  initReadmeGenerator();
+  // Cyberpunk README Generator
+  initCyberpunkReadmeGenerator();
   
   // Profile Page
   initProfilePage();
@@ -164,6 +156,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('copyInstagramProfileBtn')?.addEventListener('click', copyInstagram);
   document.getElementById('instagramLink')?.addEventListener('click', (e) => { e.preventDefault(); copyInstagram(); });
   
+  // Copy and download README buttons
+  document.getElementById('copyMarkdownBtn')?.addEventListener('click', copyMarkdownToClipboard);
+  document.getElementById('downloadReadmeBtn')?.addEventListener('click', downloadReadmeFile);
+  
+  // Template buttons
+  document.querySelectorAll('.template-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTemplate = btn.dataset.template;
+      updateReadmePreview();
+    });
+  });
+  
   // Terminal welcome
   setTimeout(() => {
     if (document.getElementById('terminalBody')?.children.length === 0 && !isAuthenticated) {
@@ -171,6 +177,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 500);
 });
+
+// =============== TERMINAL CONTROLS ===============
+function initTerminalControls() {
+  const terminalContainer = document.getElementById('terminalContainer');
+  const minimizeBtn = document.getElementById('terminalMinimizeBtn');
+  const maximizeBtn = document.getElementById('terminalMaximizeBtn');
+  const closeBtn = document.getElementById('closeTerminalBtn');
+  const showBtn = document.getElementById('showTerminalBtn');
+  
+  if (minimizeBtn) {
+    minimizeBtn.addEventListener('click', () => {
+      terminalContainer.classList.add('minimized');
+      minimizeBtn.style.display = 'none';
+      maximizeBtn.style.display = 'flex';
+      showBtn.style.display = 'flex';
+    });
+  }
+  
+  if (maximizeBtn) {
+    maximizeBtn.addEventListener('click', () => {
+      terminalContainer.classList.remove('minimized');
+      maximizeBtn.style.display = 'none';
+      minimizeBtn.style.display = 'flex';
+      showBtn.style.display = 'none';
+    });
+  }
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      terminalContainer.style.display = 'none';
+      showBtn.style.display = 'flex';
+    });
+  }
+  
+  if (showBtn) {
+    showBtn.addEventListener('click', () => {
+      terminalContainer.style.display = 'block';
+      showBtn.style.display = 'none';
+      if (terminalContainer.classList.contains('minimized')) {
+        maximizeBtn.click();
+      }
+    });
+  }
+}
+
+// =============== THEME TOGGLE ===============
+function initThemeToggle() {
+  const themeBtn = document.getElementById('themeToggleBtn');
+  if (themeBtn) {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-theme');
+      themeBtn.innerHTML = '<i class="fas fa-sun"></i> <span>Light Mode</span>';
+    }
+    
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      themeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>';
+    });
+  }
+}
 
 // =============== PROFILE PAGE ===============
 function initProfilePage() {
@@ -201,8 +270,9 @@ function updateProfilePage() {
 }
 
 function copyInstagram() {
-  navigator.clipboard.writeText("@jhon_production");
-  showToast("Instagram username copied: @jhon_production", "success");
+  const instagram = document.getElementById('socialInstagram')?.value || '@jhon_production';
+  navigator.clipboard.writeText(instagram);
+  showToast(`Instagram copied: ${instagram}`, 'success');
 }
 
 function updateSidebarProfile() {
@@ -248,8 +318,8 @@ function updateHeroStats() {
   if (quickTotalForks) quickTotalForks.textContent = allRepositories.reduce((s, r) => s + r.forks_count, 0);
 }
 
-// =============== README GENERATOR ===============
-function initReadmeGenerator() {
+// =============== CYBERPUNK README GENERATOR ===============
+function initCyberpunkReadmeGenerator() {
   const enableCheckbox = document.getElementById('enableReadmeGenerator');
   const section = document.getElementById('readmeGeneratorSection');
   if (enableCheckbox) {
@@ -260,13 +330,19 @@ function initReadmeGenerator() {
     });
   }
   
+  // Features
   document.getElementById('addFeatureBtn')?.addEventListener('click', () => { features.push(''); renderFeatures(); updateReadmePreview(); });
-  document.getElementById('projectName')?.addEventListener('input', updateReadmePreview);
-  document.getElementById('projectDesc')?.addEventListener('input', updateReadmePreview);
-  document.getElementById('installSteps')?.addEventListener('input', updateReadmePreview);
-  document.getElementById('usageSteps')?.addEventListener('input', updateReadmePreview);
-  document.getElementById('authorName')?.addEventListener('input', updateReadmePreview);
   
+  // Preview Images
+  document.getElementById('addPreviewImageBtn')?.addEventListener('click', () => { previewImages.push(''); renderPreviewImages(); updateReadmePreview(); });
+  
+  // Input listeners
+  const inputs = ['projectName', 'projectTagline', 'projectGif', 'projectDesc', 'installSteps', 'usageSteps', 'authorName', 'authorBio', 'socialGithub', 'socialInstagram', 'socialTwitter', 'seoKeywords'];
+  inputs.forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updateReadmePreview);
+  });
+  
+  // License and Gitignore
   document.getElementById('enableLicense')?.addEventListener('change', () => {
     const preview = document.getElementById('licensePreview');
     if (document.getElementById('enableLicense').checked) {
@@ -293,6 +369,7 @@ function initReadmeGenerator() {
   
   renderFeatures();
   renderTechTags();
+  renderPreviewImages();
 }
 
 function renderFeatures() {
@@ -309,6 +386,23 @@ function renderFeatures() {
   });
   document.querySelectorAll('[data-remove-feature]').forEach(btn => {
     btn.addEventListener('click', () => { features.splice(parseInt(btn.dataset.removeFeature), 1); if(features.length===0) features=['']; renderFeatures(); updateReadmePreview(); });
+  });
+}
+
+function renderPreviewImages() {
+  const container = document.getElementById('previewImagesList');
+  if (!container) return;
+  container.innerHTML = previewImages.map((img, i) => `
+    <div class="list-item">
+      <input type="text" class="modern-input cyberpunk-input" value="${escapeHtml(img)}" data-preview-idx="${i}" placeholder="Image/GIF URL">
+      <button class="btn-secondary" style="padding:6px 12px" data-remove-preview="${i}"><i class="fas fa-trash"></i></button>
+    </div>
+  `).join('');
+  document.querySelectorAll('[data-preview-idx]').forEach(inp => {
+    inp.addEventListener('change', (e) => { previewImages[parseInt(inp.dataset.previewIdx)] = inp.value; updateReadmePreview(); });
+  });
+  document.querySelectorAll('[data-remove-preview]').forEach(btn => {
+    btn.addEventListener('click', () => { previewImages.splice(parseInt(btn.dataset.removePreview), 1); renderPreviewImages(); updateReadmePreview(); });
   });
 }
 
@@ -332,37 +426,160 @@ function renderTechTags() {
   }
 }
 
-function generateReadme() {
-  const name = document.getElementById('projectName')?.value.trim() || "Project Name";
+function generateCyberpunkReadme() {
+  const name = document.getElementById('projectName')?.value.trim() || "CyberProject";
+  const tagline = document.getElementById('projectTagline')?.value.trim() || "⚡ Next-gen GitHub Manager ⚡";
+  const projectGif = document.getElementById('projectGif')?.value.trim();
   const desc = document.getElementById('projectDesc')?.value.trim();
   const featuresList = features.filter(f => f.trim());
   const tech = techStack;
   const install = document.getElementById('installSteps')?.value.trim();
   const usage = document.getElementById('usageSteps')?.value.trim();
   const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
+  const authorBio = document.getElementById('authorBio')?.value.trim() || "Full-stack developer & cybersecurity enthusiast";
+  const socialGithub = document.getElementById('socialGithub')?.value.trim();
+  const socialInstagram = document.getElementById('socialInstagram')?.value.trim();
+  const socialTwitter = document.getElementById('socialTwitter')?.value.trim();
+  const seoKeywords = document.getElementById('seoKeywords')?.value.trim() || "github, manager, repository, upload, terminal";
   const year = new Date().getFullYear();
   
-  let markdown = `# ${name}\n\n`;
-  if (desc) markdown += `## 📖 Description\n\n${desc}\n\n`;
-  if (featuresList.length) { markdown += `## ✨ Features\n\n`; featuresList.forEach(f => markdown += `* ${f}\n`); markdown += `\n`; }
-  if (tech.length) { markdown += `## 🛠️ Tech Stack\n\n`; tech.forEach(t => markdown += `* ${t}\n`); markdown += `\n`; }
-  if (install) { markdown += `## 📦 Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n`; }
-  if (usage) { markdown += `## 🚀 Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n`; }
-  markdown += `## 🤝 Contributing\n\nPull requests are welcome.\n\n## 📜 License\n\nMIT License © ${year} ${author}\n`;
+  let markdown = '';
+  
+  if (currentTemplate === 'cyberpunk') {
+    // Cyberpunk Template
+    markdown = `<!-- SEO Keywords: ${seoKeywords} -->\n\n`;
+    markdown += `<div align="center">\n\n`;
+    markdown += `# ⚡ ${name} ⚡\n\n`;
+    markdown += `### ${tagline}\n\n`;
+    if (projectGif) markdown += `<img src="${projectGif}" width="600" alt="Project Demo"/>\n\n`;
+    markdown += `![GitHub stars](https://img.shields.io/github/stars/${socialGithub || 'username'}/${name}?style=for-the-badge&color=cyan)\n`;
+    markdown += `![GitHub forks](https://img.shields.io/github/forks/${socialGithub || 'username'}/${name}?style=for-the-badge&color=purple)\n`;
+    markdown += `![License](https://img.shields.io/badge/License-MIT-cyan?style=for-the-badge)\n`;
+    markdown += `![Version](https://img.shields.io/badge/version-1.0.0-purple?style=for-the-badge)\n\n`;
+    markdown += `---\n\n`;
+    if (desc) markdown += `## 🔮 Description\n\n${desc}\n\n---\n\n`;
+    
+    // Features
+    if (featuresList.length) {
+      markdown += `## ✨ Features\n\n`;
+      featuresList.forEach(f => markdown += `- \`⚡\` ${f}\n`);
+      markdown += `\n---\n\n`;
+    }
+    
+    // UI Preview
+    if (previewImages.length > 0) {
+      markdown += `## 🎮 UI Preview\n\n<div align="center">\n\n`;
+      previewImages.forEach(img => {
+        if (img.trim()) markdown += `<img src="${img.trim()}" width="45%" style="margin: 10px; border-radius: 12px; box-shadow: 0 0 20px cyan;" />\n`;
+      });
+      markdown += `\n</div>\n\n---\n\n`;
+    }
+    
+    // Tech Stack
+    if (tech.length) {
+      markdown += `## 🛠️ Tech Stack\n\n`;
+      tech.forEach(t => markdown += `<code style="color:cyan">⚡ ${t}</code> `);
+      markdown += `\n\n---\n\n`;
+    }
+    
+    // Installation
+    if (install) {
+      markdown += `## 📦 Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n---\n\n`;
+    }
+    
+    // Usage
+    if (usage) {
+      markdown += `## 🚀 Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n---\n\n`;
+    }
+    
+    // Developer
+    markdown += `## 👨‍💻 Developer\n\n`;
+    markdown += `<div align="center">\n\n`;
+    markdown += `**${author}**\n\n`;
+    markdown += `*${authorBio}*\n\n`;
+    markdown += `<p>\n`;
+    if (socialGithub) markdown += `  <a href="https://github.com/${socialGithub}"><img src="https://img.shields.io/badge/GitHub-${socialGithub}-cyan?style=for-the-badge&logo=github"/></a>\n`;
+    if (socialInstagram) markdown += `  <a href="https://instagram.com/${socialInstagram}"><img src="https://img.shields.io/badge/Instagram-${socialInstagram}-purple?style=for-the-badge&logo=instagram"/></a>\n`;
+    if (socialTwitter) markdown += `  <a href="https://twitter.com/${socialTwitter}"><img src="https://img.shields.io/badge/Twitter-${socialTwitter}-cyan?style=for-the-badge&logo=twitter"/></a>\n`;
+    markdown += `</p>\n\n</div>\n\n---\n\n`;
+    
+    // License
+    markdown += `## 📜 License\n\n`;
+    markdown += `MIT License © ${year} ${author}\n\n`;
+    markdown += `---\n\n`;
+    markdown += `<div align="center">\n\n`;
+    markdown += `### ⚡ Built with RepoFlow Pro ⚡\n\n`;
+    markdown += `*Premium GitHub Manager*\n\n`;
+    markdown += `</div>`;
+    
+  } else if (currentTemplate === 'minimal') {
+    // Minimal Template
+    markdown = `# ${name}\n\n`;
+    if (desc) markdown += `${desc}\n\n`;
+    if (featuresList.length) {
+      markdown += `## Features\n\n`;
+      featuresList.forEach(f => markdown += `- ${f}\n`);
+      markdown += `\n`;
+    }
+    if (install) markdown += `## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n`;
+    if (usage) markdown += `## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n`;
+    markdown += `## License\n\nMIT © ${year} ${author}\n`;
+    
+  } else {
+    // Clean Pro Template
+    markdown = `# ${name}\n\n`;
+    markdown += `> ${tagline}\n\n`;
+    if (desc) markdown += `## Description\n\n${desc}\n\n`;
+    if (featuresList.length) {
+      markdown += `## Features\n\n`;
+      featuresList.forEach(f => markdown += `- **${f}**\n`);
+      markdown += `\n`;
+    }
+    if (tech.length) {
+      markdown += `## Tech Stack\n\n`;
+      tech.forEach(t => markdown += `- ${t}\n`);
+      markdown += `\n`;
+    }
+    if (install) markdown += `## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n`;
+    if (usage) markdown += `## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n`;
+    markdown += `## License\n\nMIT © ${year} ${author}\n`;
+  }
+  
   return markdown;
 }
 
 function updateReadmePreview() {
-  const md = generateReadme();
+  const md = generateCyberpunkReadme();
   const previewDiv = document.getElementById('readmePreview');
-  if (previewDiv && typeof marked !== 'undefined') previewDiv.innerHTML = marked.parse(md);
+  if (previewDiv && typeof marked !== 'undefined') {
+    marked.setOptions({ breaks: true, gfm: true });
+    previewDiv.innerHTML = marked.parse(md);
+  }
   updateFileTreePreview();
 }
 
 function generateLicenseContent() {
   const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
   const year = new Date().getFullYear();
-  return `MIT License\n\nCopyright (c) ${year} ${author}\n\nPermission is hereby granted...`;
+  return `MIT License\n\nCopyright (c) ${year} ${author}\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
+}
+
+function copyMarkdownToClipboard() {
+  const md = generateCyberpunkReadme();
+  navigator.clipboard.writeText(md);
+  showToast('README markdown copied to clipboard!', 'success');
+}
+
+function downloadReadmeFile() {
+  const md = generateCyberpunkReadme();
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'README.md';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('README.md downloaded!', 'success');
 }
 
 function updateFileTreePreview() {
@@ -424,6 +641,9 @@ async function authenticateAndVerify() {
       document.getElementById('authorName').value = gitUsername;
       updateReadmePreview();
     }
+    if (document.getElementById('socialGithub') && !document.getElementById('socialGithub').value) {
+      document.getElementById('socialGithub').value = gitUsername;
+    }
   } catch (err) {
     addSystemLog(`[ERROR] Authentication failed: ${err.message}`, 'error');
     showAuthStatus(err.message, 'error');
@@ -441,6 +661,7 @@ function logout() {
   modernFiles = []; allRepositories = [];
   document.getElementById('pagesContainer').style.display = 'none';
   document.getElementById('terminalContainer').style.display = 'none';
+  document.getElementById('showTerminalBtn').style.display = 'flex';
   document.getElementById('userName').textContent = 'Guest';
   document.getElementById('showLoginBtn').style.display = 'flex';
   document.getElementById('logoutBtn').style.display = 'none';
@@ -451,7 +672,14 @@ function logout() {
 }
 
 // =============== TERMINAL ===============
-function showTerminal() { document.getElementById('terminalContainer').style.display = 'block'; }
+function showTerminal() { 
+  const terminal = document.getElementById('terminalContainer');
+  terminal.style.display = 'block';
+  document.getElementById('showTerminalBtn').style.display = 'none';
+  if (terminal.classList.contains('minimized')) {
+    document.getElementById('terminalMaximizeBtn').click();
+  }
+}
 function addTerminalLog(message, type = 'info') {
   const body = document.getElementById('terminalBody');
   if (!body) return;
@@ -479,7 +707,7 @@ function hideProgress() { document.getElementById('progressWrapper').style.displ
 function showToast(message, type) {
   const toast = document.createElement('div');
   toast.className = `toast-notification ${type}`;
-  toast.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':'fa-info-circle'}"></i><span>${escapeHtml(message)}</span>`;
+  toast.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':type==='error'?'fa-times-circle':'fa-info-circle'}"></i><span>${escapeHtml(message)}</span>`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
@@ -771,7 +999,7 @@ async function startModernUpload() {
   
   showTerminal(); addSystemLog(`[UPLOAD] Starting to ${gitUsername}/${repo}`, 'info'); showProgress();
   const allUploads = [...modernFiles];
-  if(document.getElementById('enableReadmeGenerator')?.checked) allUploads.push({file:new File([generateReadme()],'README.md',{type:'text/markdown'}), name:'README.md'});
+  if(document.getElementById('enableReadmeGenerator')?.checked) allUploads.push({file:new File([generateCyberpunkReadme()],'README.md',{type:'text/markdown'}), name:'README.md'});
   if(document.getElementById('enableLicense')?.checked) allUploads.push({file:new File([generateLicenseContent()],'LICENSE',{type:'text/plain'}), name:'LICENSE'});
   if(document.getElementById('enableGitignore')?.checked && document.getElementById('gitignoreContent')?.value.trim()) allUploads.push({file:new File([document.getElementById('gitignoreContent').value],'.gitignore',{type:'text/plain'}), name:'.gitignore'});
   
