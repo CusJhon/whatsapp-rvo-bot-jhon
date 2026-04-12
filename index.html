@@ -56,14 +56,21 @@
           <span>Repositories</span>
         </a>
       </nav>
-      <div class="sidebar-footer">
+      
+      <!-- Sidebar Spacer & Account -->
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-account">
+        <div class="sidebar-profile" id="sidebarProfileBtn">
+          <img class="avatar" id="sidebarAvatar" src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="avatar" referrerpolicy="no-referrer" />
+          <div class="sp-meta">
+            <div class="sp-name" id="sidebarName">jhon ofc</div>
+            <div class="sp-tag">Student • Web Development</div>
+          </div>
+        </div>
         <div class="status-indicator" id="connectionStatus">
           <i class="fas fa-circle"></i>
           <span>Disconnected</span>
         </div>
-        <button class="theme-toggle" id="themeToggle" style="margin-top: 12px; width: 100%; background: rgba(255,255,255,0.1); border: none; padding: 8px; border-radius: 8px; color: white; cursor: pointer;">
-          <i class="fas fa-moon"></i> Dark/Light Mode
-        </button>
       </div>
     </aside>
 
@@ -117,163 +124,148 @@
         </div>
       </div>
 
+      <!-- PROFILE SECTION MODAL -->
+      <div id="profileTool" class="modal profile-modal">
+        <div class="modal-content profile-modal-content">
+          <div class="modal-header">
+            <h3><i class="fas fa-user-circle"></i> Developer Profile</h3>
+            <button class="modal-close" id="closeProfileModal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="dashboard-card profile-card">
+              <div class="profile-hero">
+                <div class="profile-avatar-wrap">
+                  <img class="profile-avatar-big" id="profileAvatar" src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="avatar" referrerpolicy="no-referrer" />
+                </div>
+              </div>
+              <div class="profile-body">
+                <div class="profile-center">
+                  <div class="profile-name-big" id="profileName">jhon ofc</div>
+                  <div class="profile-desc">JHON PRODUCTION dengan ketertarikan pada bidang teknologi. Memulai dari eksplorasi AI, kemudian memperluas fokus ke pengembangan web. Mengutamakan pembuatan antarmuka yang konsisten, rapi, dan mudah digunakan.</div>
+                  <div class="chip-row" style="justify-content:center;">
+                    <div class="chip">JHON PRODUCTION</div>
+                    <div class="chip">Web Development</div>
+                    <div class="chip">UI / UX</div>
+                    <div class="chip">Frontend</div>
+                  </div>
+                </div>
+                <div class="stat-grid-2">
+                  <div class="stat-card"><div class="k">FOKUS</div><div class="v">UI / UX</div></div>
+                  <div class="stat-card"><div class="k">PROJECT</div><div class="v">jhon_tools</div></div>
+                  <div class="stat-card"><div class="k">STACK</div><div class="v">HTML • CSS • JS</div></div>
+                  <div class="stat-card"><div class="k">AKTIVITAS</div><div class="v">Upload Tools</div></div>
+                </div>
+                <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                  <button class="tool-btn" id="backToDashboardBtn"><i class="fas fa-gauge"></i> Back to Dashboard</button>
+                  <button class="tool-btn" id="copyInstagramBtn"><i class="fab fa-instagram"></i> Copy Instagram</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Content Pages -->
       <div class="pages-container" id="pagesContainer" style="display: none;">
-        <!-- Home Page -->
+        <!-- Home Page - Redesigned -->
         <div class="page" id="homePage">
-          <div class="welcome-section">
-            <div class="hero">
-              <h1>Welcome to <span class="gradient-text">RepoFlow</span></h1>
-              <p>Upload, push, dan kelola repository GitHub Anda dengan terminal live yang powerful</p>
+          <!-- Hero Section -->
+          <div class="hero-section">
+            <div class="hero-content">
+              <div class="hero-badge">
+                <i class="fas fa-rocket"></i> Professional GitHub Manager
+              </div>
+              <h1 class="hero-title">Manage Your <span class="gradient-text">GitHub Repositories</span> Like a Pro</h1>
+              <p class="hero-desc">RepoFlow adalah alat manajemen repository GitHub profesional dengan fitur upload canggih, live terminal, dan dashboard analitik lengkap.</p>
+              <div class="hero-stats" id="heroStats">
+                <div class="hero-stat"><i class="fas fa-code-branch"></i> <span id="heroTotalRepos">0</span> Repos</div>
+                <div class="hero-stat"><i class="fas fa-cloud-upload-alt"></i> 2 Upload Modes</div>
+                <div class="hero-stat"><i class="fas fa-terminal"></i> Live Terminal</div>
+              </div>
+              <div class="hero-buttons">
+                <button class="btn-primary" onclick="navigateTo('upload')"><i class="fas fa-cloud-upload-alt"></i> Upload Project</button>
+                <button class="btn-secondary" onclick="navigateTo('repos')"><i class="fas fa-book"></i> View Repos</button>
+              </div>
+            </div>
+            <div class="hero-illustration">
+              <i class="fab fa-github"></i>
             </div>
           </div>
 
-          <!-- Developer Profile -->
-          <div class="developer-section">
-            <div class="developer-card">
-              <div class="developer-avatar">
-                <img src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="Developer Avatar">
+          <!-- Features Grid -->
+          <div class="features-section">
+            <h2 class="section-title"><i class="fas fa-star"></i> Powerful Features</h2>
+            <div class="features-grid">
+              <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-file-alt"></i></div>
+                <h3>README Generator</h3>
+                <p>Buat README.md profesional dengan live preview, fitur dinamis, dan tech stack tags.</p>
               </div>
-              <div class="developer-info">
-                <h3><i class="fas fa-code"></i> Created by <span class="highlight">cpm_jhon</span></h3>
-                <p>Full-stack developer & cybersecurity enthusiast</p>
-                <div class="developer-social">
-                  <a href="#" class="social-link"><i class="fab fa-github"></i> GitHub</a>
-                  <a href="#" class="social-link"><i class="fab fa-twitter"></i> Twitter</a>
-                  <a href="#" class="social-link"><i class="fab fa-linkedin"></i> LinkedIn</a>
-                </div>
+              <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-gavel"></i></div>
+                <h3>MIT License</h3>
+                <p>Tambahkan lisensi MIT secara otomatis dengan tahun dan author yang dinamis.</p>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-ban"></i></div>
+                <h3>.gitignore Templates</h3>
+                <p>Pilih dari berbagai template .gitignore untuk stack teknologi favorit Anda.</p>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                <h3>Analytics Dashboard</h3>
+                <p>Pantau statistik repository, stars, forks, dan aktivitas commit dalam satu tempat.</p>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-upload"></i></div>
+                <h3>Dual Upload Modes</h3>
+                <p>Upload multiple files atau ZIP archive dengan auto-extract dan struktur folder.</p>
+              </div>
+              <div class="feature-card">
+                <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
+                <h3>Fully Responsive</h3>
+                <p>Akses dari desktop, tablet, atau smartphone dengan pengalaman yang konsisten.</p>
               </div>
             </div>
           </div>
 
-          <!-- Documentation Section -->
-          <div class="docs-section">
-            <h2><i class="fas fa-book-open"></i> Documentation & Guide</h2>
-            
-            <div class="docs-grid">
-              <div class="doc-card">
-                <div class="doc-icon"><i class="fas fa-rocket"></i></div>
-                <h3>Getting Started</h3>
-                <p>Langkah pertama menggunakan RepoFlow untuk mengelola repository GitHub Anda.</p>
-                <ul>
-                  <li><i class="fas fa-check-circle"></i> Buat Personal Access Token di GitHub</li>
-                  <li><i class="fas fa-check-circle"></i> Login dengan username dan token</li>
-                  <li><i class="fas fa-check-circle"></i> Mulai kelola repository</li>
-                </ul>
-              </div>
-
-              <div class="doc-card">
-                <div class="doc-icon"><i class="fas fa-plus-circle"></i></div>
-                <h3>Create Repository</h3>
-                <p>Membuat repository baru di GitHub dengan mudah.</p>
-                <ul>
-                  <li><i class="fas fa-check-circle"></i> Klik menu "Create Repo"</li>
-                  <li><i class="fas fa-check-circle"></i> Isi nama repository</li>
-                  <li><i class="fas fa-check-circle"></i> Tambahkan deskripsi (opsional)</li>
-                  <li><i class="fas fa-check-circle"></i> Pilih Public/Private</li>
-                </ul>
-              </div>
-
-              <div class="doc-card">
-                <div class="doc-icon"><i class="fas fa-trash-alt"></i></div>
-                <h3>Delete Repository</h3>
-                <p>Menghapus repository dengan konfirmasi keamanan.</p>
-                <ul>
-                  <li><i class="fas fa-check-circle"></i> Klik menu "Delete Repo"</li>
-                  <li><i class="fas fa-check-circle"></i> Masukkan nama repository</li>
-                  <li><i class="fas fa-check-circle"></i> Konfirmasi nama</li>
-                  <li><i class="fas fa-check-circle"></i> Klik tombol delete</li>
-                </ul>
-                <div class="warning-note">⚠️ Tindakan ini permanen!</div>
-              </div>
-
-              <div class="doc-card">
-                <div class="doc-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                <h3>Upload Mode 1: Multiple Files</h3>
-                <p>Upload banyak file sekaligus ke repository.</p>
-                <ul>
-                  <li><i class="fas fa-check-circle"></i> Pilih tab "Mode 1: Multiple Files"</li>
-                  <li><i class="fas fa-check-circle"></i> Pilih target repository</li>
-                  <li><i class="fas fa-check-circle"></i> Pilih file (bisa multiple)</li>
-                  <li><i class="fas fa-check-circle"></i> Klik "Upload Files"</li>
-                </ul>
-              </div>
-
-              <div class="doc-card">
-                <div class="doc-icon"><i class="fas fa-file-archive"></i></div>
-                <h3>Upload Mode 2: ZIP Archive</h3>
-                <p>Upload file ZIP, auto extract, dan upload semua file.</p>
-                <ul>
-                  <li><i class="fas fa-check-circle"></i> Pilih tab "Mode 2: Archive (ZIP)"</li>
-                  <li><i class="fas fa-check-circle"></i> Upload file ZIP</li>
-                  <li><i class="fas fa-check-circle"></i> Tunggu auto extract</li>
-                  <li><i class="fas fa-check-circle"></i> Klik "Extract & Upload"</li>
-                </ul>
-              </div>
-
-              <div class="doc-card">
-                <div class="doc-icon"><i class="fas fa-terminal"></i></div>
-                <h3>Live Terminal</h3>
-                <p>Terminal real-time untuk melihat proses operasi.</p>
-                <ul>
-                  <li><i class="fas fa-check-circle"></i> Muncul otomatis saat operasi</li>
-                  <li><i class="fas fa-check-circle"></i> Warna log: <span class="log-success">Sukses</span>, <span class="log-error">Error</span>, <span class="log-warning">Warning</span></li>
-                  <li><i class="fas fa-check-circle"></i> Progress bar animasi</li>
-                  <li><i class="fas fa-check-circle"></i> Bisa ditutup manual</li>
-                </ul>
+          <!-- Quick Stats -->
+          <div class="quick-stats">
+            <div class="stat-card-horizontal">
+              <i class="fas fa-database"></i>
+              <div class="stat-info">
+                <div class="stat-number" id="quickTotalRepos">0</div>
+                <div class="stat-label">Total Repositories</div>
               </div>
             </div>
-
-            <!-- FAQ Section -->
-            <div class="faq-section">
-              <h3><i class="fas fa-question-circle"></i> Frequently Asked Questions</h3>
-              <div class="faq-list">
-                <div class="faq-item">
-                  <div class="faq-question">
-                    <i class="fas fa-chevron-right"></i>
-                    <span>Bagaimana cara mendapatkan Personal Access Token (PAT)?</span>
-                  </div>
-                  <div class="faq-answer">
-                    Buka GitHub Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token. Centang permission: repo, delete_repo. Copy token yang dihasilkan.
-                  </div>
-                </div>
-                <div class="faq-item">
-                  <div class="faq-question">
-                    <i class="fas fa-chevron-right"></i>
-                    <span>Apakah token saya aman?</span>
-                  </div>
-                  <div class="faq-answer">
-                    Ya, token hanya disimpan di memori browser dan tidak pernah dikirim ke server manapun selain API GitHub.
-                  </div>
-                </div>
-                <div class="faq-item">
-                  <div class="faq-question">
-                    <i class="fas fa-chevron-right"></i>
-                    <span>Berapa batas upload file?</span>
-                  </div>
-                  <div class="faq-answer">
-                    GitHub membatasi file individual maksimal 100MB. Untuk file besar, disarankan menggunakan Git LFS.
-                  </div>
-                </div>
-                <div class="faq-item">
-                  <div class="faq-question">
-                    <i class="fas fa-chevron-right"></i>
-                    <span>Apakah bisa upload folder dengan struktur?</span>
-                  </div>
-                  <div class="faq-answer">
-                    Untuk struktur folder, gunakan Mode 2 (ZIP Archive). ZIP file akan diekstrak dan mempertahankan struktur folder.
-                  </div>
-                </div>
+            <div class="stat-card-horizontal">
+              <i class="fas fa-star"></i>
+              <div class="stat-info">
+                <div class="stat-number" id="quickTotalStars">0</div>
+                <div class="stat-label">Stars Earned</div>
               </div>
             </div>
-
-            <!-- Version Info -->
-            <div class="version-info">
-              <div class="version-badge">
-                <i class="fas fa-tag"></i> Version 3.0.0
+            <div class="stat-card-horizontal">
+              <i class="fas fa-code-branch"></i>
+              <div class="stat-info">
+                <div class="stat-number" id="quickTotalForks">0</div>
+                <div class="stat-label">Forks</div>
               </div>
-              <div class="last-updated">
-                <i class="fas fa-calendar-alt"></i> Last updated: December 2024
+            </div>
+          </div>
+
+          <!-- Developer Info -->
+          <div class="developer-info-card">
+            <div class="dev-avatar">
+              <img src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="Developer">
+            </div>
+            <div class="dev-content">
+              <h3>Created by <span class="highlight">cpm_jhon</span></h3>
+              <p>Full-stack developer & cybersecurity enthusiast dedicated to creating powerful developer tools.</p>
+              <div class="dev-social">
+                <a href="#" class="social-link"><i class="fab fa-github"></i> GitHub</a>
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i> Instagram</a>
+                <a href="#" class="social-link"><i class="fab fa-twitter"></i> Twitter</a>
               </div>
             </div>
           </div>
@@ -282,7 +274,7 @@
         <!-- Dashboard Page -->
         <div class="page" id="dashboardPage" style="display: none;">
           <div class="section-header">
-            <h2><i class="fas fa-chart-line"></i> Dashboard</h2>
+            <h2><i class="fas fa-chart-line"></i> Analytics Dashboard</h2>
             <p>Overview aktivitas GitHub Anda</p>
           </div>
           <div class="dashboard-grid">
@@ -293,6 +285,7 @@
                 <div class="stat-item">Public: <span id="publicRepos">0</span></div>
                 <div class="stat-item">Private: <span id="privateRepos">0</span></div>
                 <div class="stat-item">Total Stars: <span id="totalStars">0</span></div>
+                <div class="stat-item">Total Forks: <span id="totalForks">0</span></div>
               </div>
             </div>
             <div class="dashboard-card">
@@ -308,18 +301,10 @@
             <div class="dashboard-card">
               <h3>Quick Actions</h3>
               <div class="quick-actions">
-                <button class="quick-btn" data-page="create">
-                  <i class="fas fa-plus-circle"></i> New Repository
-                </button>
-                <button class="quick-btn" data-page="upload">
-                  <i class="fas fa-upload"></i> Upload Project
-                </button>
-                <button class="quick-btn" data-page="delete">
-                  <i class="fas fa-trash-alt"></i> Delete Repository
-                </button>
-                <button class="quick-btn" data-page="repos">
-                  <i class="fas fa-list"></i> View Repositories
-                </button>
+                <button class="quick-btn" data-page="create"><i class="fas fa-plus-circle"></i> New Repository</button>
+                <button class="quick-btn" data-page="upload"><i class="fas fa-upload"></i> Upload Project</button>
+                <button class="quick-btn" data-page="delete"><i class="fas fa-trash-alt"></i> Delete Repository</button>
+                <button class="quick-btn" data-page="repos"><i class="fas fa-list"></i> View Repositories</button>
               </div>
             </div>
           </div>
@@ -342,14 +327,10 @@
               <textarea id="repoDesc" rows="3" placeholder="Deskripsi project..." class="modern-input"></textarea>
             </div>
             <div class="checkbox-group">
-              <label>
-                <input type="checkbox" id="repoPrivate"> Private repository
-              </label>
+              <label><input type="checkbox" id="repoPrivate"> Private repository</label>
             </div>
             <div class="checkbox-group">
-              <label>
-                <input type="checkbox" id="initReadme"> Initialize with README
-              </label>
+              <label><input type="checkbox" id="initReadme"> Initialize with README</label>
             </div>
             <div class="input-group">
               <label>.gitignore Template (Optional)</label>
@@ -389,7 +370,7 @@
           </div>
         </div>
 
-        <!-- Upload Page with README Generator -->
+        <!-- Upload Page -->
         <div class="page" id="uploadPage" style="display: none;">
           <div class="section-header">
             <h2><i class="fas fa-cloud-upload-alt"></i> Upload Project</h2>
@@ -397,18 +378,13 @@
           </div>
           
           <div class="mode-tabs">
-            <button class="mode-tab active" data-mode="mode1">
-              <i class="fas fa-file"></i> Mode 1: Multiple Files
-            </button>
-            <button class="mode-tab" data-mode="mode2">
-              <i class="fas fa-file-archive"></i> Mode 2: Archive (ZIP)
-            </button>
+            <button class="mode-tab active" data-mode="mode1"><i class="fas fa-file"></i> Mode 1: Multiple Files</button>
+            <button class="mode-tab" data-mode="mode2"><i class="fas fa-file-archive"></i> Mode 2: Archive (ZIP)</button>
           </div>
 
-          <!-- Mode 1: Multiple Files with README Generator -->
+          <!-- Mode 1 -->
           <div id="mode1Container" class="mode-container">
             <div class="upload-modern-container">
-              <!-- Drop Zone -->
               <div class="drop-zone" id="dropZone1">
                 <i class="fas fa-cloud-upload-alt"></i>
                 <p>Drag & drop file di sini atau klik untuk memilih</p>
@@ -416,20 +392,10 @@
                 <input type="file" id="fileInputModern1" multiple style="display: none;">
               </div>
               
-              <!-- Target Repository & Commit Message -->
               <div style="padding: 0 20px;">
-                <div class="input-group">
-                  <label>Target Repository</label>
-                  <input type="text" id="targetRepoName1" placeholder="repository-name" class="modern-input">
-                </div>
-                <div class="input-group">
-                  <label>Branch</label>
-                  <input type="text" id="branchName1" placeholder="main" class="modern-input" value="main">
-                </div>
-                <div class="input-group">
-                  <label>Commit Message</label>
-                  <input type="text" id="commitMsg1" placeholder="Upload files via RepoFlow" class="modern-input" value="Upload files via RepoFlow">
-                </div>
+                <div class="input-group"><label>Target Repository</label><input type="text" id="targetRepoName1" placeholder="repository-name" class="modern-input"></div>
+                <div class="input-group"><label>Branch</label><input type="text" id="branchName1" placeholder="main" class="modern-input" value="main"></div>
+                <div class="input-group"><label>Commit Message</label><input type="text" id="commitMsg1" placeholder="Upload files via RepoFlow" class="modern-input" value="Upload files via RepoFlow"></div>
               </div>
               
               <!-- README Generator Section -->
@@ -442,12 +408,12 @@
                   <div class="readme-layout">
                     <div class="readme-form">
                       <div class="input-group"><label>Project Name</label><input type="text" id="projectName" class="modern-input" placeholder="Project Name"></div>
-                      <div class="input-group"><label>Description</label><textarea id="projectDesc" rows="2" class="modern-input" placeholder="Brief description of your project"></textarea></div>
+                      <div class="input-group"><label>Description</label><textarea id="projectDesc" rows="2" class="modern-input" placeholder="Brief description"></textarea></div>
                       <div class="input-group"><label>Features</label><div id="featuresList" class="dynamic-list"></div><button type="button" class="add-btn" id="addFeatureBtn"><i class="fas fa-plus"></i> Add Feature</button></div>
                       <div class="input-group"><label>Tech Stack</label><div id="techTags" class="tag-input-container"></div></div>
                       <div class="input-group"><label>Installation Steps</label><textarea id="installSteps" rows="2" class="modern-input" placeholder="npm install&#10;npm start"></textarea></div>
-                      <div class="input-group"><label>Usage</label><textarea id="usageSteps" rows="2" class="modern-input" placeholder="How to use your project"></textarea></div>
-                      <div class="input-group"><label>Screenshot URL (optional)</label><input type="text" id="screenshotUrl" class="modern-input" placeholder="https://example.com/screenshot.png"></div>
+                      <div class="input-group"><label>Usage</label><textarea id="usageSteps" rows="2" class="modern-input" placeholder="How to use"></textarea></div>
+                      <div class="input-group"><label>Screenshot URL</label><input type="text" id="screenshotUrl" class="modern-input" placeholder="https://example.com/screenshot.png"></div>
                       <div class="input-group"><label>Author Name</label><input type="text" id="authorName" class="modern-input" placeholder="Your Name"></div>
                     </div>
                     <div class="readme-preview">
@@ -458,21 +424,14 @@
                 </div>
               </div>
               
-              <!-- MIT License Toggle -->
+              <!-- MIT License & Gitignore -->
               <div style="padding: 0 20px; margin-top: 16px;">
-                <div class="checkbox-group">
-                  <input type="checkbox" id="enableLicense">
-                  <strong><i class="fas fa-gavel"></i> Add MIT License</strong>
-                </div>
+                <div class="checkbox-group"><input type="checkbox" id="enableLicense"><strong><i class="fas fa-gavel"></i> Add MIT License</strong></div>
                 <div id="licensePreview" style="display:none; background: var(--bg-inset); padding: 12px; border-radius: 8px; margin-top: 12px; font-family: monospace; font-size: 11px; max-height: 150px; overflow-y: auto;"></div>
               </div>
               
-              <!-- .gitignore Toggle -->
               <div style="padding: 0 20px; margin-top: 16px;">
-                <div class="checkbox-group">
-                  <input type="checkbox" id="enableGitignore">
-                  <strong><i class="fas fa-ban"></i> Add .gitignore</strong>
-                </div>
+                <div class="checkbox-group"><input type="checkbox" id="enableGitignore"><strong><i class="fas fa-ban"></i> Add .gitignore</strong></div>
                 <div id="gitignoreSection" style="display:none; margin-top: 12px;">
                   <select id="gitignoreTemplateSelect" class="modern-input" style="margin-bottom: 12px;">
                     <option value="">Select template...</option>
@@ -492,88 +451,76 @@
                 <div id="fileTreePreview" class="file-tree" style="background: var(--bg-inset); border-radius: 8px; padding: 12px; max-height: 200px; overflow-y: auto;"></div>
               </div>
               
-              <!-- File List Header -->
               <div class="file-list-header" id="fileListHeader" style="display: none;">
-                <div class="file-stats">
-                  <span><i class="fas fa-file"></i> <span id="fileCount">0</span> files</span>
-                  <span><i class="fas fa-database"></i> <span id="totalSize">0 KB</span></span>
-                </div>
-                <div class="view-toggle">
-                  <button class="view-btn active" data-view="list"><i class="fas fa-list"></i> List</button>
-                  <button class="view-btn" data-view="grid"><i class="fas fa-th"></i> Grid</button>
-                </div>
+                <div class="file-stats"><span><i class="fas fa-file"></i> <span id="fileCount">0</span> files</span><span><i class="fas fa-database"></i> <span id="totalSize">0 KB</span></span></div>
+                <div class="view-toggle"><button class="view-btn active" data-view="list"><i class="fas fa-list"></i> List</button><button class="view-btn" data-view="grid"><i class="fas fa-th"></i> Grid</button></div>
               </div>
-              
-              <!-- Search -->
-              <div class="file-search" id="fileSearch" style="display: none;">
-                <input type="text" id="searchFiles" placeholder="Search files...">
-              </div>
-              
-              <!-- File List Container -->
+              <div class="file-search" id="fileSearch" style="display: none;"><input type="text" id="searchFiles" placeholder="Search files..."></div>
               <div id="fileListModern1" class="file-list-container list-view"></div>
-              
-              <!-- Commit Preview -->
-              <div class="commit-preview" id="commitPreview" style="display: none;">
-                <h4><i class="fas fa-code-branch"></i> Commit Preview</h4>
-                <div class="commit-file-list" id="commitFileList"></div>
-              </div>
-              
-              <!-- Upload Button -->
-              <div style="padding: 0 20px 20px 20px;">
-                <button id="startUploadBtn1" class="btn-primary" style="display: none;">
-                  <i class="fas fa-rocket"></i> Upload Project
-                </button>
-              </div>
+              <div class="commit-preview" id="commitPreview" style="display: none;"><h4><i class="fas fa-code-branch"></i> Commit Preview</h4><div class="commit-file-list" id="commitFileList"></div></div>
+              <div style="padding: 0 20px 20px 20px;"><button id="startUploadBtn1" class="btn-primary" style="display: none;"><i class="fas fa-rocket"></i> Upload Project</button></div>
             </div>
           </div>
 
           <!-- Mode 2: ZIP Archive -->
           <div id="mode2Container" class="mode-container" style="display: none;">
             <div class="upload-modern-container">
-              <div class="drop-zone" id="dropZone2">
-                <i class="fas fa-file-archive"></i>
-                <p>Drag & drop ZIP file di sini atau klik untuk memilih</p>
-                <p class="small">Support: .zip files only</p>
-                <input type="file" id="fileInputModern2" accept=".zip" style="display: none;">
-              </div>
-              <div style="padding: 0 20px;">
-                <div class="input-group"><label>Target Repository</label><input type="text" id="targetRepoName2" placeholder="repository-name" class="modern-input"></div>
-                <div class="input-group"><label>Branch</label><input type="text" id="branchName2" placeholder="main" class="modern-input" value="main"></div>
-                <div class="input-group"><label>Commit Message</label><input type="text" id="commitMsg2" placeholder="Upload archive via RepoFlow" class="modern-input" value="Upload archive via RepoFlow"></div>
-              </div>
-              <div id="zipPreviewContainer" style="display: none;">
-                <div class="file-list-header"><div class="file-stats"><span><i class="fas fa-folder-tree"></i> ZIP Structure</span><span><i class="fas fa-file"></i> <span id="zipFileCount">0</span> files</span></div></div>
-                <div id="zipTreeView" class="zip-tree"></div>
-              </div>
-              <div style="padding: 0 20px 20px 20px;">
-                <button id="startUploadBtn2" class="btn-primary" style="display: none;"><i class="fas fa-rocket"></i> Extract & Upload</button>
-              </div>
+              <div class="drop-zone" id="dropZone2"><i class="fas fa-file-archive"></i><p>Drag & drop ZIP file di sini atau klik untuk memilih</p><p class="small">Support: .zip files only</p><input type="file" id="fileInputModern2" accept=".zip" style="display: none;"></div>
+              <div style="padding: 0 20px;"><div class="input-group"><label>Target Repository</label><input type="text" id="targetRepoName2" placeholder="repository-name" class="modern-input"></div><div class="input-group"><label>Branch</label><input type="text" id="branchName2" placeholder="main" class="modern-input" value="main"></div><div class="input-group"><label>Commit Message</label><input type="text" id="commitMsg2" placeholder="Upload archive via RepoFlow" class="modern-input" value="Upload archive via RepoFlow"></div></div>
+              <div id="zipPreviewContainer" style="display: none;"><div class="file-list-header"><div class="file-stats"><span><i class="fas fa-folder-tree"></i> ZIP Structure</span><span><i class="fas fa-file"></i> <span id="zipFileCount">0</span> files</span></div></div><div id="zipTreeView" class="zip-tree"></div></div>
+              <div style="padding: 0 20px 20px 20px;"><button id="startUploadBtn2" class="btn-primary" style="display: none;"><i class="fas fa-rocket"></i> Extract & Upload</button></div>
             </div>
           </div>
         </div>
 
-        <!-- Repositories Page -->
+        <!-- Repositories Page - Enhanced -->
         <div class="page" id="reposPage" style="display: none;">
-          <div class="section-header">
-            <h2><i class="fas fa-list"></i> Repositories</h2>
-            <p>Kelola semua repository GitHub Anda</p>
+          <div class="repos-header">
+            <div class="repos-title-section">
+              <h2><i class="fas fa-book"></i> Repositories</h2>
+              <p>Kelola semua repository GitHub Anda</p>
+            </div>
             <button id="refreshReposBtn" class="btn-primary-small"><i class="fas fa-sync-alt"></i> Refresh</button>
           </div>
-          <div class="repo-stats-header" id="repoStatsHeader" style="display: none;">
-            <div class="stat-card"><i class="fas fa-code-branch"></i><div class="stat-number" id="totalReposCount">0</div><div class="stat-label">Total Repositories</div></div>
-            <div class="stat-card"><i class="fas fa-star"></i><div class="stat-number" id="totalStarsCount">0</div><div class="stat-label">Total Stars</div></div>
-            <div class="stat-card"><i class="fas fa-code-fork"></i><div class="stat-number" id="totalForksCount">0</div><div class="stat-label">Total Forks</div></div>
-            <div class="stat-card"><i class="fas fa-database"></i><div class="stat-number" id="totalSizeCount">0</div><div class="stat-label">Total Size (MB)</div></div>
+          
+          <!-- Stats Cards -->
+          <div class="repo-stats-grid" id="repoStatsHeader" style="display: none;">
+            <div class="stat-card-mini"><i class="fas fa-code-branch"></i><div><div class="stat-number-mini" id="totalReposCount">0</div><div class="stat-label-mini">Repositories</div></div></div>
+            <div class="stat-card-mini"><i class="fas fa-star"></i><div><div class="stat-number-mini" id="totalStarsCount">0</div><div class="stat-label-mini">Stars</div></div></div>
+            <div class="stat-card-mini"><i class="fas fa-code-fork"></i><div><div class="stat-number-mini" id="totalForksCount">0</div><div class="stat-label-mini">Forks</div></div></div>
+            <div class="stat-card-mini"><i class="fas fa-database"></i><div><div class="stat-number-mini" id="totalSizeCount">0</div><div class="stat-label-mini">Size (MB)</div></div></div>
           </div>
-          <div class="repo-controls-bar">
-            <div class="search-filter-group">
-              <div class="repo-search"><i class="fas fa-search"></i><input type="text" id="repoSearchInput" placeholder="Search repositories..."></div>
-              <div class="filter-group"><button class="filter-btn active" data-filter="all">All</button><button class="filter-btn" data-filter="public">Public</button><button class="filter-btn" data-filter="private">Private</button></div>
-              <div class="sort-group"><select id="sortSelect" class="sort-select"><option value="updated">Last Updated</option><option value="name">Name (A-Z)</option><option value="stars">Stars ⭐</option><option value="size">Size</option></select></div>
+          
+          <!-- Controls Bar -->
+          <div class="repos-controls">
+            <div class="search-wrapper">
+              <i class="fas fa-search"></i>
+              <input type="text" id="repoSearchInput" placeholder="Search repositories...">
+            </div>
+            <div class="filter-wrapper">
+              <button class="filter-chip active" data-filter="all">All</button>
+              <button class="filter-chip" data-filter="public">Public</button>
+              <button class="filter-chip" data-filter="private">Private</button>
+            </div>
+            <div class="sort-wrapper">
+              <select id="sortSelect" class="sort-select-modern">
+                <option value="updated">Last Updated</option>
+                <option value="name">Name (A-Z)</option>
+                <option value="stars">Stars ⭐</option>
+                <option value="size">Size</option>
+              </select>
             </div>
           </div>
-          <div id="repoListContainerEnhanced" class="repo-grid-enhanced"></div>
-          <div class="pagination-container" id="paginationContainer" style="display: none;"><button class="pagination-btn" id="prevPageBtn" disabled>Previous</button><span class="page-info" id="pageInfo">Page 1</span><button class="pagination-btn" id="nextPageBtn">Next</button></div>
+          
+          <!-- Repository List Container -->
+          <div id="repoListContainerEnhanced" class="repos-grid"></div>
+          
+          <!-- Pagination -->
+          <div class="pagination-wrapper" id="paginationContainer" style="display: none;">
+            <button class="pagination-btn" id="prevPageBtn" disabled><i class="fas fa-chevron-left"></i> Previous</button>
+            <span class="page-info" id="pageInfo">Page 1</span>
+            <button class="pagination-btn" id="nextPageBtn">Next <i class="fas fa-chevron-right"></i></button>
+          </div>
         </div>
       </div>
 
