@@ -1,6 +1,5 @@
 // ========================================
 // REPOFLOW - COMPLETE GITHUB MANAGER
-// With README Generator, MIT License, .gitignore
 // ========================================
 
 // =============== STATE MANAGEMENT ===============
@@ -10,16 +9,6 @@ let isAuthenticated = false;
 let modernFiles = [];
 let extractedFiles = [];
 let activityLog = [];
-let uploadCount = 0;
-let commitCount = 0;
-let isLoadingRepos = false;
-let isTypingActive = false;
-let typingTimeout = null;
-let currentView = 'list';
-let searchQuery = '';
-let currentMode = 'mode1';
-
-// Enhanced Repositories State
 let allRepositories = [];
 let filteredRepositories = [];
 let currentFilter = 'all';
@@ -31,43 +20,30 @@ let currentDeleteTarget = null;
 let currentCloneTarget = null;
 let isLoadingReposEnhanced = false;
 let searchDebounceTimer = null;
-
-// README Generator State
+let currentView = 'list';
+let searchQuery = '';
+let currentMode = 'mode1';
 let features = [""];
 let techStack = [];
 let commitChart = null;
+let typingTimeout = null;
+let isTypingActive = false;
 
-// Blocked extensions
-const BLOCKED_EXTENSIONS = ['.exe', '.bat', '.cmd', '.sh', '.php', '.asp', '.aspx', '.jsp', '.env', '.pem', '.key', '.crt'];
-const MAX_FILES = 100;
-const MAX_FILE_SIZE = 100 * 1024 * 1024;
+// Gitignore templates
+const gitignoreTemplates = {
+  node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log`,
+  react: `node_modules/\nbuild/\n.env\n.DS_Store\n*.log`,
+  python: `__pycache__/\n*.py[cod]\n.env\nvenv/\n*.pyc`,
+  java: `*.class\ntarget/\n*.log\n.settings/\n.project`
+};
 
 const languageColors = {
   'JavaScript': '#f1e05a', 'TypeScript': '#3178c6', 'Python': '#3572A5',
-  'Java': '#b07219', 'Go': '#00ADD8', 'Rust': '#dea584', 'default': '#8b949e'
-};
-
-const gitignoreTemplates = {
-  node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
-  react: `node_modules/\nbuild/\n.env\n.DS_Store\n*.log\ncoverage/`,
-  python: `__pycache__/\n*.py[cod]\n.env\nvenv/\n*.pyc\n.pytest_cache/`,
-  java: `*.class\ntarget/\n*.log\n.settings/\n.project\n.classpath`,
-  laravel: `/vendor\n.env\n.phpunit.result.cache\nHomestead.json\nnode_modules/`
+  'Java': '#b07219', 'Go': '#00ADD8', 'default': '#8b949e'
 };
 
 // =============== INITIALIZATION ===============
 document.addEventListener('DOMContentLoaded', () => {
-  // DOM Elements
-  const sidebar = document.getElementById('sidebar');
-  const menuToggle = document.getElementById('menuToggle');
-  const pagesContainer = document.getElementById('pagesContainer');
-  const terminalContainer = document.getElementById('terminalContainer');
-  const terminalBody = document.getElementById('terminalBody');
-  const progressWrapper = document.getElementById('progressWrapper');
-  const progressFill = document.getElementById('progressFill');
-  const progressPercent = document.getElementById('progressPercent');
-  const progressText = document.getElementById('progressText');
-  
   loadPinnedRepos();
   
   // Navigation
@@ -75,19 +51,23 @@ document.addEventListener('DOMContentLoaded', () => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
       navigateTo(item.dataset.page);
-      if (window.innerWidth <= 768) sidebar.classList.remove('open');
+      if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
     });
   });
   
   // Menu Toggle
-  if (menuToggle) {
-    menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
-  }
+  document.getElementById('menuToggle')?.addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
   
   // Close sidebar on outside click
   document.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
-      sidebar.classList.remove('open');
+    if (window.innerWidth <= 768) {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.getElementById('menuToggle');
+      if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
+        sidebar.classList.remove('open');
+      }
     }
   });
   
@@ -109,8 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   
   // Login
-  const showLoginBtn = document.getElementById('showLoginBtn');
-  if (showLoginBtn) showLoginBtn.addEventListener('click', showLoginModal);
+  document.getElementById('showLoginBtn')?.addEventListener('click', () => showLoginModal());
   document.getElementById('authBtn')?.addEventListener('click', authenticateAndVerify);
   document.getElementById('closeLoginModal')?.addEventListener('click', () => closeModal('loginModal'));
   document.getElementById('logoutBtn')?.addEventListener('click', logout);
@@ -126,19 +105,17 @@ document.addEventListener('DOMContentLoaded', () => {
   initEnhancedRepositories();
   
   // Refresh repos
-  const refreshBtn = document.getElementById('refreshReposBtn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', async () => {
-      if (!isAuthenticated) return addSystemLog('[WARNING] Please login first', 'warning');
-      refreshBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
-      await loadRepositoriesEnhanced(true);
-      refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-    });
-  }
+  document.getElementById('refreshReposBtn')?.addEventListener('click', async () => {
+    if (!isAuthenticated) return addSystemLog('[WARNING] Please login first', 'warning');
+    const btn = document.getElementById('refreshReposBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
+    await loadRepositoriesEnhanced(true);
+    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+  });
   
   // Close terminal
   document.getElementById('closeTerminalBtn')?.addEventListener('click', () => {
-    terminalContainer.style.display = 'none';
+    document.getElementById('terminalContainer').style.display = 'none';
     if (typingTimeout) clearTimeout(typingTimeout);
     isTypingActive = false;
   });
@@ -171,86 +148,78 @@ document.addEventListener('DOMContentLoaded', () => {
     } else showToast('Repository name does not match!', 'error');
   });
   
-  // README Generator Event Listeners
+  // README Generator
   initReadmeGenerator();
   
-  // Profile Modal Events
-  initProfileModal();
+  // Profile Page
+  initProfilePage();
+  
+  // Sidebar profile button
+  document.getElementById('sidebarProfileBtn')?.addEventListener('click', () => {
+    navigateTo('profile');
+    if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+  });
+  
+  // Copy Instagram from profile
+  document.getElementById('copyInstagramProfileBtn')?.addEventListener('click', copyInstagram);
+  document.getElementById('instagramLink')?.addEventListener('click', (e) => { e.preventDefault(); copyInstagram(); });
   
   // Terminal welcome
   setTimeout(() => {
-    if (terminalBody && terminalBody.children.length === 0 && !isAuthenticated) {
+    if (document.getElementById('terminalBody')?.children.length === 0 && !isAuthenticated) {
       startTerminalWelcomeTyping();
     }
   }, 500);
 });
 
-// =============== PROFILE MODAL ===============
-function initProfileModal() {
-  const sidebarProfileBtn = document.getElementById('sidebarProfileBtn');
-  if (sidebarProfileBtn) {
-    sidebarProfileBtn.addEventListener('click', showProfileModal);
-  }
-  
-  const closeProfileModal = document.getElementById('closeProfileModal');
-  if (closeProfileModal) {
-    closeProfileModal.addEventListener('click', () => closeModal('profileTool'));
-  }
-  
-  const backToDashboardBtn = document.getElementById('backToDashboardBtn');
-  if (backToDashboardBtn) {
-    backToDashboardBtn.addEventListener('click', () => {
-      closeModal('profileTool');
-      navigateTo('dashboard');
-    });
-  }
-  
-  const copyInstagramBtn = document.getElementById('copyInstagramBtn');
-  if (copyInstagramBtn) {
-    copyInstagramBtn.addEventListener('click', copyInstagram);
-  }
-  
-  const profileTool = document.getElementById('profileTool');
-  if (profileTool) {
-    profileTool.addEventListener('click', (e) => {
-      if (e.target === profileTool) {
-        profileTool.classList.remove('active');
-      }
-    });
-  }
+// =============== PROFILE PAGE ===============
+function initProfilePage() {
+  updateProfilePage();
 }
 
-function showProfileModal() {
-  const modal = document.getElementById('profileTool');
-  if (modal) modal.classList.add('active');
-}
-
-function copyInstagram() {
-  const instagramUsername = "@jhon_production";
-  navigator.clipboard.writeText(instagramUsername);
-  showToast("Instagram username copied: " + instagramUsername, "success");
-}
-
-function updateSidebarProfile() {
-  const sidebarName = document.getElementById('sidebarName');
-  const sidebarAvatar = document.getElementById('sidebarAvatar');
-  const profileName = document.getElementById('profileName');
-  const profileAvatar = document.getElementById('profileAvatar');
+function updateProfilePage() {
+  const profileName = document.getElementById('profilePageName');
+  const profileAvatar = document.getElementById('profilePageAvatar');
+  const profileReposCount = document.getElementById('profileReposCount');
+  const profileStarsCount = document.getElementById('profileStarsCount');
+  const profileForksCount = document.getElementById('profileForksCount');
   
   if (isAuthenticated && gitUsername) {
-    if (sidebarName) sidebarName.textContent = gitUsername;
     if (profileName) profileName.textContent = gitUsername;
+    if (profileReposCount) profileReposCount.textContent = allRepositories.length;
+    if (profileStarsCount) profileStarsCount.textContent = allRepositories.reduce((s, r) => s + r.stargazers_count, 0);
+    if (profileForksCount) profileForksCount.textContent = allRepositories.reduce((s, r) => s + r.forks_count, 0);
+    
     fetch(`https://api.github.com/users/${gitUsername}`, {
       headers: { 'Authorization': `Bearer ${gitToken}` }
     })
     .then(res => res.json())
     .then(data => {
-      if (data.avatar_url) {
-        if (sidebarAvatar) sidebarAvatar.src = data.avatar_url;
-        if (profileAvatar) profileAvatar.src = data.avatar_url;
-      }
+      if (data.avatar_url && profileAvatar) profileAvatar.src = data.avatar_url;
+    }).catch(() => {});
+  }
+}
+
+function copyInstagram() {
+  navigator.clipboard.writeText("@jhon_production");
+  showToast("Instagram username copied: @jhon_production", "success");
+}
+
+function updateSidebarProfile() {
+  const sidebarName = document.getElementById('sidebarName');
+  const sidebarAvatar = document.getElementById('sidebarAvatar');
+  if (isAuthenticated && gitUsername) {
+    if (sidebarName) sidebarName.textContent = gitUsername;
+    fetch(`https://api.github.com/users/${gitUsername}`, {
+      headers: { 'Authorization': `Bearer ${gitToken}` }
     })
-    .catch(() => {});
+    .then(res => res.json())
+    .then(data => {
+      if (data.avatar_url && sidebarAvatar) sidebarAvatar.src = data.avatar_url;
+    }).catch(() => {});
+  } else {
+    if (sidebarName) sidebarName.textContent = 'jhon ofc';
+    if (sidebarAvatar) sidebarAvatar.src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
   }
 }
 
@@ -296,7 +265,6 @@ function initReadmeGenerator() {
   document.getElementById('projectDesc')?.addEventListener('input', updateReadmePreview);
   document.getElementById('installSteps')?.addEventListener('input', updateReadmePreview);
   document.getElementById('usageSteps')?.addEventListener('input', updateReadmePreview);
-  document.getElementById('screenshotUrl')?.addEventListener('input', updateReadmePreview);
   document.getElementById('authorName')?.addEventListener('input', updateReadmePreview);
   
   document.getElementById('enableLicense')?.addEventListener('change', () => {
@@ -304,15 +272,14 @@ function initReadmeGenerator() {
     if (document.getElementById('enableLicense').checked) {
       const author = document.getElementById('authorName').value.trim() || gitUsername || "Anonymous";
       const year = new Date().getFullYear();
-      preview.innerHTML = `<strong>MIT License Preview:</strong><pre style="margin-top:8px; white-space:pre-wrap">MIT License\n\nCopyright (c) ${year} ${author}\n\nPermission is hereby granted...</pre>`;
+      preview.innerHTML = `<strong>MIT License:</strong><pre style="margin-top:8px">MIT License\n\nCopyright (c) ${year} ${author}\n\nPermission is hereby granted...</pre>`;
       preview.style.display = 'block';
     } else preview.style.display = 'none';
     updateFileTreePreview();
   });
   
   document.getElementById('enableGitignore')?.addEventListener('change', () => {
-    const section = document.getElementById('gitignoreSection');
-    section.style.display = document.getElementById('enableGitignore').checked ? 'block' : 'none';
+    document.getElementById('gitignoreSection').style.display = document.getElementById('enableGitignore').checked ? 'block' : 'none';
     updateFileTreePreview();
   });
   document.getElementById('gitignoreTemplateSelect')?.addEventListener('change', (e) => {
@@ -372,7 +339,6 @@ function generateReadme() {
   const tech = techStack;
   const install = document.getElementById('installSteps')?.value.trim();
   const usage = document.getElementById('usageSteps')?.value.trim();
-  const screenshot = document.getElementById('screenshotUrl')?.value.trim();
   const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
   const year = new Date().getFullYear();
   
@@ -382,7 +348,6 @@ function generateReadme() {
   if (tech.length) { markdown += `## 🛠️ Tech Stack\n\n`; tech.forEach(t => markdown += `* ${t}\n`); markdown += `\n`; }
   if (install) { markdown += `## 📦 Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n`; }
   if (usage) { markdown += `## 🚀 Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n`; }
-  if (screenshot) markdown += `## 📸 Screenshots\n\n![Screenshot](${screenshot})\n\n`;
   markdown += `## 🤝 Contributing\n\nPull requests are welcome.\n\n## 📜 License\n\nMIT License © ${year} ${author}\n`;
   return markdown;
 }
@@ -390,16 +355,14 @@ function generateReadme() {
 function updateReadmePreview() {
   const md = generateReadme();
   const previewDiv = document.getElementById('readmePreview');
-  if (previewDiv && typeof marked !== 'undefined') {
-    previewDiv.innerHTML = marked.parse(md);
-  }
+  if (previewDiv && typeof marked !== 'undefined') previewDiv.innerHTML = marked.parse(md);
   updateFileTreePreview();
 }
 
 function generateLicenseContent() {
   const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
   const year = new Date().getFullYear();
-  return `MIT License\n\nCopyright (c) ${year} ${author}\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
+  return `MIT License\n\nCopyright (c) ${year} ${author}\n\nPermission is hereby granted...`;
 }
 
 function updateFileTreePreview() {
@@ -482,10 +445,7 @@ function logout() {
   document.getElementById('showLoginBtn').style.display = 'flex';
   document.getElementById('logoutBtn').style.display = 'none';
   updateConnectionStatus(false);
-  document.getElementById('sidebarName').textContent = 'jhon ofc';
-  document.getElementById('sidebarAvatar').src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
-  document.getElementById('profileName').textContent = 'jhon ofc';
-  document.getElementById('profileAvatar').src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
+  updateSidebarProfile();
   showLoginModal();
   showToast('Logged out', 'info');
 }
@@ -523,9 +483,7 @@ function showToast(message, type) {
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
-
-let typingTimeoutGlobal;
-function stopTypingEffect() { if (typingTimeoutGlobal) clearTimeout(typingTimeoutGlobal); isTypingActive = false; }
+function stopTypingEffect() { if (typingTimeout) clearTimeout(typingTimeout); isTypingActive = false; }
 function startTerminalWelcomeTyping() { /* kept for compatibility */ }
 
 // =============== GITHUB API ===============
@@ -622,6 +580,7 @@ async function loadRepositoriesEnhanced(force = false) {
     isLoadingReposEnhanced = false;
     updateDashboard();
     updateHeroStats();
+    updateProfilePage();
     return;
   }
   addSystemLog('[SYSTEM] Fetching repositories...', 'info');
@@ -639,6 +598,7 @@ async function loadRepositoriesEnhanced(force = false) {
     processRepositories();
     updateDashboard();
     updateHeroStats();
+    updateProfilePage();
   } catch (err) { addSystemLog(`[ERROR] ${err.message}`, 'error'); showErrorStateRepos(err.message); }
   isLoadingReposEnhanced = false;
 }
@@ -730,9 +690,6 @@ function setupDropZone(zone, input, onSelect) {
 function handleFilesSelected(files) {
   const existing = new Set(modernFiles.map(f=>f.file.name));
   for(const file of files) {
-    const ext = '.'+file.name.split('.').pop()?.toLowerCase();
-    if(BLOCKED_EXTENSIONS.includes(ext)) { showToast(`Blocked: ${file.name}`, 'error'); continue; }
-    if(file.size > MAX_FILE_SIZE) { showToast(`Too large: ${file.name}`, 'error'); continue; }
     if(!existing.has(file.name)) modernFiles.push({ file, preview: null, status:'pending', progress:0, textPreview:null });
   }
   generatePreviews();
@@ -778,10 +735,10 @@ function renderFileList() {
   document.getElementById('totalSize').textContent = formatFileSize(totalBytes);
   document.getElementById('commitFileList').innerHTML = modernFiles.map(f=>`<div><i class="fas fa-file"></i> ${escapeHtml(f.file.name)} (${formatFileSize(f.file.size)})</div>`).join('');
   container.className = `file-list-container ${currentView}-view`;
-  container.innerHTML = modernFiles.map((item,idx)=>`<div class="file-item ${currentView}-view"><div class="file-preview">${item.preview?`<img src="${item.preview}">`:`<i class="${getFileIcon(item.file)}"></i>`}</div><div class="file-info"><div class="file-name">${escapeHtml(item.file.name)}</div><div class="file-size">${formatFileSize(item.file.size)}</div>${item.textPreview?`<div class="text-preview">${escapeHtml(item.textPreview)}...</div>`:''}${item.status==='uploading'?`<div class="upload-progress"><div class="progress-bar-item"><div class="progress-fill-item" style="width:${item.progress}%"></div></div></div>`:''}</div><div class="file-actions"><button class="remove-file" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button></div></div>`).join('');
+  container.innerHTML = modernFiles.map((item,idx)=>`<div class="file-item ${currentView}-view"><div class="file-preview">${item.preview?`<img src="${item.preview}">`:`<i class="fas fa-file"></i>`}</div><div class="file-info"><div class="file-name">${escapeHtml(item.file.name)}</div><div class="file-size">${formatFileSize(item.file.size)}</div>${item.textPreview?`<div class="text-preview">${escapeHtml(item.textPreview)}...</div>`:''}</div><div class="file-actions"><button class="remove-file" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button></div></div>`).join('');
   document.querySelectorAll('.remove-file').forEach(btn => btn.addEventListener('click',()=>{ modernFiles.splice(parseInt(btn.dataset.idx),1); renderFileList(); updateFileTreePreview(); }));
 }
-function getFileIcon(file) { return 'fas fa-file'; }
+
 function formatFileSize(bytes) { if(bytes===0) return '0 Bytes'; const k=1024, sizes=['Bytes','KB','MB']; const i=Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(2))+' '+sizes[i]; }
 
 async function handleZipSelected(files) {
@@ -791,17 +748,8 @@ async function handleZipSelected(files) {
   document.getElementById('startUploadBtn2').style.display = 'block';
   try {
     const zip = await JSZip.loadAsync(zipFile);
-    const structure = {};
-    for(const [path, entry] of Object.entries(zip.files)) {
-      if(!entry.dir) {
-        const parts = path.split('/');
-        let curr = structure;
-        for(let i=0;i<parts.length-1;i++) { if(!curr[parts[i]]) curr[parts[i]]={}; curr=curr[parts[i]]; }
-        curr[parts[parts.length-1]] = true;
-      }
-    }
     document.getElementById('zipFileCount').textContent = Object.keys(zip.files).filter(p=>!zip.files[p].dir).length;
-    document.getElementById('zipTreeView').innerHTML = renderZipTree(structure);
+    document.getElementById('zipTreeView').innerHTML = '<div class="tree-item">Extracted successfully</div>';
     window.extractedZipFiles = [];
     for(const [path, entry] of Object.entries(zip.files)) {
       if(!entry.dir) {
@@ -813,7 +761,6 @@ async function handleZipSelected(files) {
     }
   } catch(e) { showToast('Error extracting ZIP','error'); }
 }
-function renderZipTree(obj, level=0) { let html=''; for(const [name, children] of Object.entries(obj)) { if(children===true) html+=`<div class="tree-item tree-file" style="padding-left:${level*20}px"><i class="fas fa-file"></i> ${escapeHtml(name)}</div>`; else html+=`<div class="tree-item tree-folder" style="padding-left:${level*20}px" onclick="toggleFolder(this)"><i class="fas fa-folder"></i> ${escapeHtml(name)}</div><div class="folder-children">${renderZipTree(children, level+1)}</div>`; } return html; }
 
 async function startModernUpload() {
   const repo = document.getElementById('targetRepoName1')?.value.trim();
@@ -902,8 +849,8 @@ function navigateTo(page) {
   [...document.querySelectorAll('.nav-item')].find(n=>n.dataset.page===page)?.classList.add('active');
   if(page==='repos' && isAuthenticated) loadRepositoriesEnhanced();
   if(page==='dashboard' && isAuthenticated) updateDashboard();
+  if(page==='profile') updateProfilePage();
 }
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
 window.navigateTo = navigateTo;
 window.loadRepositoriesEnhanced = loadRepositoriesEnhanced;
-window.toggleFolder = toggleFolder;
