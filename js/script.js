@@ -47,7 +47,6 @@ const languageColors = {
   'Java': '#b07219', 'Go': '#00ADD8', 'Rust': '#dea584', 'default': '#8b949e'
 };
 
-// Gitignore templates
 const gitignoreTemplates = {
   node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
   react: `node_modules/\nbuild/\n.env\n.DS_Store\n*.log\ncoverage/`,
@@ -106,13 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('mode1Container').style.display = mode === 'mode1' ? 'block' : 'none';
       document.getElementById('mode2Container').style.display = mode === 'mode2' ? 'block' : 'none';
       currentMode = mode;
-    });
-  });
-  
-  // FAQ Toggle
-  document.querySelectorAll('.faq-question').forEach(question => {
-    question.addEventListener('click', () => {
-      question.parentElement.classList.toggle('active');
     });
   });
   
@@ -182,6 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // README Generator Event Listeners
   initReadmeGenerator();
   
+  // Profile Modal Events
+  initProfileModal();
+  
   // Terminal welcome
   setTimeout(() => {
     if (terminalBody && terminalBody.children.length === 0 && !isAuthenticated) {
@@ -189,6 +184,100 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 500);
 });
+
+// =============== PROFILE MODAL ===============
+function initProfileModal() {
+  const sidebarProfileBtn = document.getElementById('sidebarProfileBtn');
+  if (sidebarProfileBtn) {
+    sidebarProfileBtn.addEventListener('click', showProfileModal);
+  }
+  
+  const closeProfileModal = document.getElementById('closeProfileModal');
+  if (closeProfileModal) {
+    closeProfileModal.addEventListener('click', () => closeModal('profileTool'));
+  }
+  
+  const backToDashboardBtn = document.getElementById('backToDashboardBtn');
+  if (backToDashboardBtn) {
+    backToDashboardBtn.addEventListener('click', () => {
+      closeModal('profileTool');
+      navigateTo('dashboard');
+    });
+  }
+  
+  const copyInstagramBtn = document.getElementById('copyInstagramBtn');
+  if (copyInstagramBtn) {
+    copyInstagramBtn.addEventListener('click', copyInstagram);
+  }
+  
+  const profileTool = document.getElementById('profileTool');
+  if (profileTool) {
+    profileTool.addEventListener('click', (e) => {
+      if (e.target === profileTool) {
+        profileTool.classList.remove('active');
+      }
+    });
+  }
+}
+
+function showProfileModal() {
+  const modal = document.getElementById('profileTool');
+  if (modal) modal.classList.add('active');
+}
+
+function copyInstagram() {
+  const instagramUsername = "@jhon_production";
+  navigator.clipboard.writeText(instagramUsername);
+  showToast("Instagram username copied: " + instagramUsername, "success");
+}
+
+function updateSidebarProfile() {
+  const sidebarName = document.getElementById('sidebarName');
+  const sidebarAvatar = document.getElementById('sidebarAvatar');
+  const profileName = document.getElementById('profileName');
+  const profileAvatar = document.getElementById('profileAvatar');
+  
+  if (isAuthenticated && gitUsername) {
+    if (sidebarName) sidebarName.textContent = gitUsername;
+    if (profileName) profileName.textContent = gitUsername;
+    fetch(`https://api.github.com/users/${gitUsername}`, {
+      headers: { 'Authorization': `Bearer ${gitToken}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.avatar_url) {
+        if (sidebarAvatar) sidebarAvatar.src = data.avatar_url;
+        if (profileAvatar) profileAvatar.src = data.avatar_url;
+      }
+    })
+    .catch(() => {});
+  }
+}
+
+function updateConnectionStatus(connected) {
+  const statusDiv = document.getElementById('connectionStatus');
+  if (statusDiv) {
+    if (connected) {
+      statusDiv.classList.add('connected');
+      statusDiv.querySelector('span').textContent = 'Connected';
+    } else {
+      statusDiv.classList.remove('connected');
+      statusDiv.querySelector('span').textContent = 'Disconnected';
+    }
+  }
+}
+
+function updateHeroStats() {
+  const heroTotalRepos = document.getElementById('heroTotalRepos');
+  const quickTotalRepos = document.getElementById('quickTotalRepos');
+  const quickTotalStars = document.getElementById('quickTotalStars');
+  const quickTotalForks = document.getElementById('quickTotalForks');
+  
+  if (heroTotalRepos) heroTotalRepos.textContent = allRepositories.length;
+  if (quickTotalRepos) quickTotalRepos.textContent = allRepositories.length;
+  if (quickTotalStars) quickTotalStars.textContent = allRepositories.reduce((s, r) => s + r.stargazers_count, 0);
+  if (quickTotalForks) quickTotalForks.textContent = allRepositories.reduce((s, r) => s + r.forks_count, 0);
+}
 
 // =============== README GENERATOR ===============
 function initReadmeGenerator() {
@@ -210,7 +299,6 @@ function initReadmeGenerator() {
   document.getElementById('screenshotUrl')?.addEventListener('input', updateReadmePreview);
   document.getElementById('authorName')?.addEventListener('input', updateReadmePreview);
   
-  // License toggle
   document.getElementById('enableLicense')?.addEventListener('change', () => {
     const preview = document.getElementById('licensePreview');
     if (document.getElementById('enableLicense').checked) {
@@ -222,7 +310,6 @@ function initReadmeGenerator() {
     updateFileTreePreview();
   });
   
-  // Gitignore toggle
   document.getElementById('enableGitignore')?.addEventListener('change', () => {
     const section = document.getElementById('gitignoreSection');
     section.style.display = document.getElementById('enableGitignore').checked ? 'block' : 'none';
@@ -362,15 +449,14 @@ async function authenticateAndVerify() {
     document.getElementById('userName').textContent = gitUsername;
     document.getElementById('showLoginBtn').style.display = 'none';
     document.getElementById('logoutBtn').style.display = 'flex';
-    document.getElementById('connectionStatus').classList.add('connected');
-    document.getElementById('connectionStatus').querySelector('span').textContent = 'Connected';
+    updateConnectionStatus(true);
+    updateSidebarProfile();
     
     await loadRepositoriesEnhanced();
     navigateTo('home');
     addSystemLog('[READY] System online.', 'success');
     showToast(`Welcome ${gitUsername}!`, 'success');
     
-    // Auto-fill author name
     if (document.getElementById('authorName') && !document.getElementById('authorName').value) {
       document.getElementById('authorName').value = gitUsername;
       updateReadmePreview();
@@ -395,8 +481,11 @@ function logout() {
   document.getElementById('userName').textContent = 'Guest';
   document.getElementById('showLoginBtn').style.display = 'flex';
   document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('connectionStatus').classList.remove('connected');
-  document.getElementById('connectionStatus').querySelector('span').textContent = 'Disconnected';
+  updateConnectionStatus(false);
+  document.getElementById('sidebarName').textContent = 'jhon ofc';
+  document.getElementById('sidebarAvatar').src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
+  document.getElementById('profileName').textContent = 'jhon ofc';
+  document.getElementById('profileAvatar').src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
   showLoginModal();
   showToast('Logged out', 'info');
 }
@@ -417,7 +506,6 @@ function addTerminalLog(message, type = 'info') {
   updateDashboard();
 }
 function addSystemLog(message, type) { addTerminalLog(`[${new Date().toLocaleTimeString()}] > ${message}`, type); }
-function scrollTerminalToBottom() { const b = document.getElementById('terminalBody'); if(b) b.scrollTop = b.scrollHeight; }
 function updateProgress(percent, text) {
   const fill = document.getElementById('progressFill');
   const percentSpan = document.getElementById('progressPercent');
@@ -507,9 +595,9 @@ function initEnhancedRepositories() {
     if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => { currentPage = 1; applyFiltersAndSort(); }, 300);
   });
-  document.querySelectorAll('.filter-btn').forEach(btn => {
+  document.querySelectorAll('.filter-chip').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentFilter = btn.dataset.filter;
       currentPage = 1;
@@ -533,6 +621,7 @@ async function loadRepositoriesEnhanced(force = false) {
     processRepositories();
     isLoadingReposEnhanced = false;
     updateDashboard();
+    updateHeroStats();
     return;
   }
   addSystemLog('[SYSTEM] Fetching repositories...', 'info');
@@ -549,6 +638,7 @@ async function loadRepositoriesEnhanced(force = false) {
     localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
     processRepositories();
     updateDashboard();
+    updateHeroStats();
   } catch (err) { addSystemLog(`[ERROR] ${err.message}`, 'error'); showErrorStateRepos(err.message); }
   isLoadingReposEnhanced = false;
 }
@@ -785,7 +875,6 @@ async function startModernZipUpload() {
 }
 
 function updateUI() { renderFileList(); updateFileTreePreview(); }
-function resetMode1State() { modernFiles = []; renderFileList(); updateFileTreePreview(); }
 function setupMode1UploadHandlers() { document.getElementById('startUploadBtn1')?.addEventListener('click', startModernUpload); }
 function setupMode2UploadHandlers() { document.getElementById('startUploadBtn2')?.addEventListener('click', startModernZipUpload); }
 
@@ -795,6 +884,7 @@ function updateDashboard() {
   document.getElementById('publicRepos').textContent = allRepositories.filter(r=>!r.private).length;
   document.getElementById('privateRepos').textContent = allRepositories.filter(r=>r.private).length;
   document.getElementById('totalStars').textContent = allRepositories.reduce((s,r)=>s+r.stargazers_count,0);
+  document.getElementById('totalForks').textContent = allRepositories.reduce((s,r)=>s+r.forks_count,0);
   const activityDiv = document.getElementById('activityList');
   if(activityDiv) activityDiv.innerHTML = activityLog.slice(0,5).map(log=>`<div class="activity-item">${escapeHtml(log.message.substring(0,80))}</div>`).join('');
   if(document.getElementById('commitChart')) {
