@@ -17,7 +17,6 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
-  
 </head>
 <body>
   <div class="app">
@@ -39,30 +38,35 @@
       </div>
 
       <nav class="sidebar-nav">
+        <!-- Always visible -->
         <a href="#" class="nav-item active" data-page="home" data-tooltip="Home">
           <i class="fas fa-home"></i>
           <span>Home</span>
         </a>
-        <a href="#" class="nav-item" data-page="dashboard" data-tooltip="Dashboard">
+        
+        <!-- Only visible when logged in (require-login class) -->
+        <a href="#" class="nav-item require-login" data-page="dashboard" data-tooltip="Dashboard">
           <i class="fas fa-chart-line"></i>
           <span>Dashboard</span>
         </a>
-        <a href="#" class="nav-item" data-page="create" data-tooltip="Create Repo">
+        <a href="#" class="nav-item require-login" data-page="create" data-tooltip="Create Repo">
           <i class="fas fa-plus-circle"></i>
           <span>Create Repo</span>
         </a>
-        <a href="#" class="nav-item" data-page="delete" data-tooltip="Delete Repo">
+        <a href="#" class="nav-item require-login" data-page="delete" data-tooltip="Delete Repo">
           <i class="fas fa-trash-alt"></i>
           <span>Delete Repo</span>
         </a>
-        <a href="#" class="nav-item" data-page="upload" data-tooltip="Upload">
+        <a href="#" class="nav-item require-login" data-page="upload" data-tooltip="Upload">
           <i class="fas fa-cloud-upload-alt"></i>
           <span>Upload</span>
         </a>
-        <a href="#" class="nav-item" data-page="repos" data-tooltip="Repositories">
+        <a href="#" class="nav-item require-login" data-page="repos" data-tooltip="Repositories">
           <i class="fas fa-list"></i>
           <span>Repositories</span>
         </a>
+        
+        <!-- Always visible -->
         <a href="#" class="nav-item" data-page="profile" data-tooltip="Profile">
           <i class="fas fa-user-circle"></i>
           <span>Profile</span>
@@ -122,16 +126,18 @@
               RepoFlow adalah platform manajemen repository GitHub profesional dengan fitur upload canggih, 
               live terminal, dan dashboard analitik lengkap.
             </p>
-            <div class="hero-buttons">
-              <button class="btn btn-primary" onclick="navigateTo('create')">
-                <i class="fas fa-plus-circle"></i> Create Repository
-              </button>
-              <button class="btn btn-outline" onclick="navigateTo('upload')">
-                <i class="fas fa-cloud-upload-alt"></i> Upload Project
-              </button>
-              <button class="btn btn-outline" onclick="navigateTo('dashboard')">
-                <i class="fas fa-chart-line"></i> Dashboard
-              </button>
+            
+            <!-- Social Media Buttons -->
+            <div class="social-buttons">
+              <a href="https://instagram.com/jhon_production" target="_blank" class="social-btn instagram">
+                <i class="fab fa-instagram"></i> Instagram
+              </a>
+              <a href="https://github.com/cpm_jhon" target="_blank" class="social-btn github">
+                <i class="fab fa-github"></i> GitHub
+              </a>
+              <a href="https://t.me/jhon_production" target="_blank" class="social-btn telegram">
+                <i class="fab fa-telegram-plane"></i> Telegram
+              </a>
             </div>
           </div>
 
