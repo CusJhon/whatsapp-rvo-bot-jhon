@@ -12,16 +12,163 @@
     let currentTemplate = 'cyberpunk';
     let features = [""];
     let techStack = [];
+    let currentLicense = "mit";
     
+    // Gitignore templates
     const gitignoreTemplates = {
       Node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
       Python: `__pycache__/\n*.py[cod]\n.env\nvenv/\n*.pyc\n.pytest_cache/`,
       Java: `*.class\ntarget/\n*.log\n.settings/\n.project\n.classpath`
     };
     
+    // Language colors
     const languageColors = {
       'JavaScript': '#f1e05a', 'TypeScript': '#3178c6', 'Python': '#3572A5',
       'Java': '#b07219', 'Go': '#00ADD8', 'Rust': '#dea584', 'default': '#8b949e'
+    };
+    
+    // License Templates - Complete and Professional
+    const licenseTemplates = {
+      'mit': `MIT License
+
+Copyright (c) {year} {author}
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`,
+      'gpl-3.0': `                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+                            Preamble
+
+  The GNU General Public License is a free, copyleft license for
+software and other kinds of works.
+
+Copyright (C) {year} {author}
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.`,
+      'apache-2.0': `Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+Copyright (C) {year} {author}
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.`,
+      'bsd-3-clause': `BSD 3-Clause License
+
+Copyright (c) {year}, {author}
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`,
+      'isc': `ISC License
+
+Copyright (c) {year}, {author}
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.`,
+      'cc0-1.0': `Creative Commons Legal Code
+
+CC0 1.0 Universal
+
+CREATIVE COMMONS CORPORATION IS NOT A LAW FIRM AND DOES NOT PROVIDE
+LEGAL SERVICES. DISTRIBUTION OF THIS DOCUMENT DOES NOT CREATE AN
+ATTORNEY-CLIENT RELATIONSHIP. CREATIVE COMMONS PROVIDES THIS
+INFORMATION ON AN "AS-IS" BASIS. CREATIVE COMMONS MAKES NO WARRANTIES
+REGARDING THE USE OF THIS DOCUMENT OR THE INFORMATION OR WORKS
+PROVIDED HEREUNDER, AND DISCLAIMS LIABILITY FOR DAMAGES RESULTING FROM
+THE USE OF THIS DOCUMENT OR THE INFORMATION OR WORKS PROVIDED
+HEREUNDER.
+
+Statement of Purpose
+
+The person who associated a work with this deed has dedicated the work to
+the public domain by waiving all of his or her rights to the work worldwide
+under copyright law, including all related and neighboring rights, to the
+extent allowed by law.
+
+You can copy, modify, distribute and perform the work, even for commercial
+purposes, all without asking permission. See Other Information below.
+
+https://creativecommons.org/publicdomain/zero/1.0/`,
+      'unlicense': `This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+For more information, please refer to <https://unlicense.org>`
     };
     
     // Helper Functions
@@ -39,6 +186,39 @@
     function copyToClipboard(text) { navigator.clipboard.writeText(text); showToast('Copied to clipboard!', 'success'); }
     
     function updateUIBasedOnAuth() { if (isAuthenticated) { document.body.classList.add('logged-in'); const ss = document.getElementById('statsSection'); if (ss) ss.style.display = 'grid'; } else { document.body.classList.remove('logged-in'); const ss = document.getElementById('statsSection'); if (ss) ss.style.display = 'none'; } }
+    
+    // License Functions
+    function getSelectedLicense() {
+      const radios = document.getElementsByName('licenseType');
+      for (let i = 0; i < radios.length; i++) {
+        if (radios[i].checked) return radios[i].value;
+      }
+      return 'mit';
+    }
+    
+    function generateLicenseContent() {
+      const licenseType = getSelectedLicense();
+      const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
+      const year = new Date().getFullYear();
+      let content = licenseTemplates[licenseType] || licenseTemplates.mit;
+      content = content.replace(/{year}/g, year).replace(/{author}/g, author);
+      return content;
+    }
+    
+    function updateLicenseInfoLink() {
+      const licenseType = getSelectedLicense();
+      const linkMap = {
+        'mit': 'https://opensource.org/licenses/MIT',
+        'gpl-3.0': 'https://www.gnu.org/licenses/gpl-3.0.html',
+        'apache-2.0': 'https://www.apache.org/licenses/LICENSE-2.0',
+        'bsd-3-clause': 'https://opensource.org/licenses/BSD-3-Clause',
+        'isc': 'https://opensource.org/licenses/ISC',
+        'cc0-1.0': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'unlicense': 'https://unlicense.org/'
+      };
+      const link = document.getElementById('licenseInfoLink');
+      if (link) link.href = linkMap[licenseType] || '#';
+    }
     
     // SIDEBAR FUNCTIONS
     let isCollapsed = false, isMobile = window.innerWidth <= 768;
@@ -95,7 +275,6 @@
         addSystemLog(`[SUCCESS] Authenticated as ${gitUsername}`, 'success');
         closeModal('loginModal');
         
-        // Safe DOM updates with null checks
         const userNameSpan = document.getElementById('userName');
         const sidebarNameEl = document.getElementById('sidebarName');
         const sidebarRoleEl = document.getElementById('sidebarRole');
@@ -114,7 +293,6 @@
         
         updateUIBasedOnAuth();
         
-        // Safe avatar update
         const sidebarAvatar = document.getElementById('sidebarAvatar');
         const profileAvatar = document.getElementById('profileAvatar');
         if (data.avatar_url) {
@@ -167,7 +345,6 @@
     const closeLoginModalEl = document.getElementById('closeLoginModal');
     const authBtnEl = document.getElementById('authBtn');
     const logoutBtnEl = document.getElementById('logoutBtn');
-    
     if (showLoginBtnEl) showLoginBtnEl.addEventListener('click', () => showModal('loginModal'));
     if (closeLoginModalEl) closeLoginModalEl.addEventListener('click', () => closeModal('loginModal'));
     if (authBtnEl) authBtnEl.addEventListener('click', authenticateAndVerify);
@@ -319,7 +496,9 @@
     
     // README GENERATOR FUNCTIONS
     function renderFeatures() { const container = document.getElementById('featuresList'); if (!container) return; container.innerHTML = features.map((f, i) => `<div class="list-item"><input type="text" class="form-input" value="${escapeHtml(f)}" data-feature-idx="${i}" placeholder="Feature"><button class="btn btn-secondary" style="padding:6px 12px" data-remove-feature="${i}"><i class="fas fa-trash"></i></button></div>`).join(''); document.querySelectorAll('[data-feature-idx]').forEach(inp => { inp.addEventListener('change', (e) => { features[parseInt(inp.dataset.featureIdx)] = inp.value; updateReadmePreview(); }); }); document.querySelectorAll('[data-remove-feature]').forEach(btn => { btn.addEventListener('click', () => { features.splice(parseInt(btn.dataset.removeFeature), 1); if(features.length===0) features=['']; renderFeatures(); updateReadmePreview(); }); }); }
+    
     function renderTechTags() { const container = document.getElementById('techTags'); if (!container) return; container.innerHTML = techStack.map(t => `<span class="tag">${escapeHtml(t)} <span class="tag-remove" data-tech="${escapeHtml(t)}">&times;</span></span>`).join('') + `<input type="text" class="tag-input" id="techInput" placeholder="Add tech...">`; document.querySelectorAll('.tag-remove').forEach(btn => { btn.addEventListener('click', () => { techStack = techStack.filter(t => t !== btn.dataset.tech); renderTechTags(); updateReadmePreview(); }); }); const techInput = document.getElementById('techInput'); if (techInput) { techInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && techInput.value.trim()) { techStack.push(techInput.value.trim()); techInput.value = ''; renderTechTags(); updateReadmePreview(); } }); } }
+    
     function generateReadmeContent() {
       const name = document.getElementById('projectName')?.value.trim() || "My Awesome Project";
       const tagline = document.getElementById('projectTagline')?.value.trim() || "⚡ Next-gen Tool ⚡";
@@ -332,13 +511,26 @@
       const socialGithub = document.getElementById('socialGithub')?.value.trim();
       const socialInstagram = document.getElementById('socialInstagram')?.value.trim();
       const hasLicense = document.getElementById('enableLicense')?.checked || false;
+      const licenseType = getSelectedLicense();
+      const licenseNameMap = {
+        'mit': 'MIT',
+        'gpl-3.0': 'GPL-3.0',
+        'apache-2.0': 'Apache-2.0',
+        'bsd-3-clause': 'BSD-3-Clause',
+        'isc': 'ISC',
+        'cc0-1.0': 'CC0-1.0',
+        'unlicense': 'Unlicense'
+      };
+      const licenseName = licenseNameMap[licenseType] || 'MIT';
       const year = new Date().getFullYear();
       let markdown = '';
+      
       if (currentTemplate === 'cyberpunk') {
         markdown = `<div align="center">\n\n# ⚡ ${name} ⚡\n\n### ${tagline}\n\n`;
         if (desc) markdown += `${desc}\n\n`;
         markdown += `![GitHub stars](https://img.shields.io/github/stars/${socialGithub || 'username'}/${name.replace(/ /g, '-')}?style=for-the-badge&color=cyan)\n`;
-        markdown += `![License](https://img.shields.io/badge/License-MIT-cyan?style=for-the-badge)\n\n---\n\n`;
+        if (hasLicense) markdown += `![License](https://img.shields.io/badge/License-${licenseName}-cyan?style=for-the-badge)\n`;
+        markdown += `![Version](https://img.shields.io/badge/version-1.0.0-purple?style=for-the-badge)\n\n---\n\n`;
         if (featuresList.length) { markdown += `## ✨ Features\n\n`; featuresList.forEach(f => markdown += `- ⚡ ${f}\n`); markdown += `\n---\n\n`; }
         if (tech.length) { markdown += `## 🛠️ Tech Stack\n\n`; tech.forEach(t => markdown += `<code>⚡ ${t}</code> `); markdown += `\n\n---\n\n`; }
         if (install) markdown += `## 📦 Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n---\n\n`;
@@ -347,40 +539,67 @@
         if (socialGithub) markdown += `[![GitHub](https://img.shields.io/badge/GitHub-${socialGithub}-cyan?style=flat-square&logo=github)](https://github.com/${socialGithub}) `;
         if (socialInstagram) markdown += `[![Instagram](https://img.shields.io/badge/Instagram-${socialInstagram}-purple?style=flat-square&logo=instagram)](https://instagram.com/${socialInstagram}) `;
         markdown += `\n\n---\n\n`;
-        if (hasLicense) markdown += `## 📜 License\n\nMIT License © ${year} ${author}\n\n---\n\n`;
+        markdown += `## 🤝 Contributing\n\nContributions, issues, and feature requests are welcome!\n\n---\n\n`;
+        if (hasLicense) markdown += `## 📜 License\n\nCopyright © ${year} ${author}.\nThis project is licensed under the **${licenseName}** license.\n\n[![License](https://img.shields.io/badge/License-${licenseName}-cyan.svg)](https://opensource.org/licenses/${licenseType === 'mit' ? 'MIT' : licenseType === 'gpl-3.0' ? 'GPL-3.0' : licenseType === 'apache-2.0' ? 'Apache-2.0' : licenseType === 'bsd-3-clause' ? 'BSD-3-Clause' : licenseType === 'isc' ? 'ISC' : licenseType === 'cc0-1.0' ? 'CC0-1.0' : 'Unlicense'})\n\n---\n\n`;
         markdown += `<div align="center">\n\n### ⚡ Built with RepoFlow Pro ⚡\n\n</div>`;
       } else if (currentTemplate === 'minimal') {
         markdown = `# ${name}\n\n${tagline}\n\n${desc}\n\n## Features\n\n`;
         featuresList.forEach(f => markdown += `- ${f}\n`);
-        if (install) markdown += `\n## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n`;
-        if (usage) markdown += `\n## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n`;
-        if (hasLicense) markdown += `\n## License\n\nMIT © ${year} ${author}\n`;
-      } else {
-        markdown = `# ${name}\n\n> ${tagline}\n\n${desc}\n\n## Features\n\n`;
-        featuresList.forEach(f => markdown += `- ${f}\n`);
-        if (tech.length) { markdown += `\n## Tech Stack\n\n`; tech.forEach(t => markdown += `- ${t}\n`); }
+        if (tech.length) markdown += `\n## Tech Stack\n\n${tech.map(t => `- ${t}`).join('\n')}\n`;
         if (install) markdown += `\n## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n`;
         if (usage) markdown += `\n## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n`;
         markdown += `\n## Author\n\n**${author}**\n\n`;
-        if (hasLicense) markdown += `\n## License\n\nMIT © ${year} ${author}\n`;
+        if (hasLicense) markdown += `\n## License\n\n${licenseName} © ${year} ${author}\n`;
+      } else {
+        markdown = `# ${name}\n\n> ${tagline}\n\n${desc}\n\n## Features\n\n`;
+        featuresList.forEach(f => markdown += `- ${f}\n`);
+        if (tech.length) markdown += `\n## Tech Stack\n\n${tech.map(t => `- ${t}`).join('\n')}\n`;
+        if (install) markdown += `\n## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n`;
+        if (usage) markdown += `\n## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n`;
+        markdown += `\n## Author\n\n**${author}**\n\n`;
+        if (hasLicense) markdown += `\n## License\n\n${licenseName} © ${year} ${author}\n`;
       }
       return markdown;
     }
+    
     function updateReadmePreview() { const md = generateReadmeContent(); const previewDiv = document.getElementById('readmePreview'); if (previewDiv && typeof marked !== 'undefined') { marked.setOptions({ breaks: true, gfm: true }); previewDiv.innerHTML = marked.parse(md); } }
     function copyMarkdownToClipboard() { navigator.clipboard.writeText(generateReadmeContent()); showToast('README markdown copied!', 'success'); }
     function downloadReadmeFile() { const blob = new Blob([generateReadmeContent()], { type: 'text/markdown' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'README.md'; a.click(); URL.revokeObjectURL(url); showToast('README.md downloaded!', 'success'); }
     
+    // README Generator Event Listeners
     const addFeatureBtn = document.getElementById('addFeatureBtn');
     const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
     const downloadReadmeBtn = document.getElementById('downloadReadmeBtn');
     if (addFeatureBtn) addFeatureBtn.addEventListener('click', () => { features.push(''); renderFeatures(); updateReadmePreview(); });
     if (copyMarkdownBtn) copyMarkdownBtn.addEventListener('click', copyMarkdownToClipboard);
     if (downloadReadmeBtn) downloadReadmeBtn.addEventListener('click', downloadReadmeFile);
+    
     document.querySelectorAll('.template-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentTemplate = btn.dataset.template; updateReadmePreview(); }); });
+    
     const readmeInputs = ['projectName', 'projectTagline', 'projectDesc', 'installSteps', 'usageSteps', 'authorName', 'socialGithub', 'socialInstagram'];
     readmeInputs.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', updateReadmePreview); });
-    const enableLicense = document.getElementById('enableLicense');
-    if (enableLicense) enableLicense.addEventListener('change', updateReadmePreview);
+    
+    // License Selector Event Listeners
+    const enableLicenseCheckbox = document.getElementById('enableLicense');
+    const licenseSelector = document.getElementById('licenseSelector');
+    if (enableLicenseCheckbox) {
+      enableLicenseCheckbox.addEventListener('change', (e) => {
+        if (licenseSelector) licenseSelector.style.display = e.target.checked ? 'block' : 'none';
+        updateReadmePreview();
+      });
+    }
+    
+    const licenseRadios = document.querySelectorAll('input[name="licenseType"]');
+    licenseRadios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        currentLicense = getSelectedLicense();
+        updateLicenseInfoLink();
+        updateReadmePreview();
+      });
+    });
+    
+    const licenseInfoLink = document.getElementById('licenseInfoLink');
+    if (licenseInfoLink) licenseInfoLink.addEventListener('click', (e) => { e.preventDefault(); window.open(licenseInfoLink.href, '_blank'); });
     
     // DASHBOARD & STATS
     function updateStats() { const totalRepos = allRepositories.length, publicRepos = allRepositories.filter(r => !r.private).length, privateRepos = allRepositories.filter(r => r.private).length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0); const totalReposEl = document.getElementById('totalRepos'); const publicReposEl = document.getElementById('publicRepos'); const privateReposEl = document.getElementById('privateRepos'); const totalStarsEl = document.getElementById('totalStars'); if (totalReposEl) totalReposEl.textContent = totalRepos; if (publicReposEl) publicReposEl.textContent = publicRepos; if (privateReposEl) privateReposEl.textContent = privateRepos; if (totalStarsEl) totalStarsEl.textContent = totalStars; if (commitChart) commitChart.destroy(); const ctx = document.getElementById('commitChart')?.getContext('2d'); if (ctx) { commitChart = new Chart(ctx, { type: 'line', data: { labels: allRepositories.slice(0,7).map(r=>r.name.substring(0,12)), datasets: [{ label: 'Stars', data: allRepositories.slice(0,7).map(r=>r.stargazers_count), borderColor: '#2f81f7', backgroundColor: 'rgba(47,129,247,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: 'var(--text-secondary)' } } } } }); } }
@@ -415,6 +634,12 @@
     renderTechTags();
     updateReadmePreview();
     
+    // Set initial license selector visibility
+    if (licenseSelector && enableLicenseCheckbox) {
+      licenseSelector.style.display = enableLicenseCheckbox.checked ? 'block' : 'none';
+    }
+    updateLicenseInfoLink();
+    
     setTimeout(() => { const body = document.getElementById('terminalBody'); if (body && body.children.length === 0 && !isAuthenticated) { addSystemLog('[SYSTEM] Welcome to RepoFlow Pro!', 'success'); addSystemLog('[SYSTEM] Please login to manage your GitHub repositories', 'info'); } }, 500);
     
     window.navigateTo = navigateTo;
@@ -422,3 +647,4 @@
     window.showDeleteModal = showDeleteModal;
     window.showCloneModal = showCloneModal;
     window.loadRepositories = loadRepositories;
+ 
