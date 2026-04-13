@@ -12,7 +12,6 @@
     let currentTemplate = 'cyberpunk';
     let features = [""];
     let techStack = [];
-    let previewImages = [""];
     
     const gitignoreTemplates = {
       Node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
@@ -51,9 +50,12 @@
     function toggleMobileDrawer() { const sidebar = document.getElementById('sidebar'); if (sidebar && sidebar.classList.contains('mobile-open')) closeMobileDrawer(); else openMobileDrawer(); }
     function handleResize() { const wasMobile = isMobile; isMobile = window.innerWidth <= 768; if (isMobile && !wasMobile) { const sidebar = document.getElementById('sidebar'); if (sidebar) { sidebar.classList.remove('collapsed'); closeMobileDrawer(); isCollapsed = false; } } else if (!isMobile && wasMobile) { closeMobileDrawer(); loadSidebarState(); } }
     
-    document.getElementById('collapseToggleBtn').addEventListener('click', toggleCollapse);
-    document.getElementById('menuToggle').addEventListener('click', toggleMobileDrawer);
-    document.getElementById('sidebarOverlay').addEventListener('click', closeMobileDrawer);
+    const collapseToggle = document.getElementById('collapseToggleBtn');
+    const menuToggleEl = document.getElementById('menuToggle');
+    const sidebarOverlayEl = document.getElementById('sidebarOverlay');
+    if (collapseToggle) collapseToggle.addEventListener('click', toggleCollapse);
+    if (menuToggleEl) menuToggleEl.addEventListener('click', toggleMobileDrawer);
+    if (sidebarOverlayEl) sidebarOverlayEl.addEventListener('click', closeMobileDrawer);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMobileDrawer(); });
     window.addEventListener('resize', handleResize);
     
@@ -73,13 +75,14 @@
     }
     
     document.querySelectorAll('.nav-item').forEach(item => { item.addEventListener('click', (e) => { e.preventDefault(); const page = item.dataset.page; if (page) navigateTo(page); }); });
-    document.getElementById('sidebarProfileBtn').addEventListener('click', () => navigateTo('profile'));
+    const sidebarProfileBtn = document.getElementById('sidebarProfileBtn');
+    if (sidebarProfileBtn) sidebarProfileBtn.addEventListener('click', () => navigateTo('profile'));
     document.querySelectorAll('.quick-action-card').forEach(card => { card.addEventListener('click', () => { const page = card.dataset.page; if (page) navigateTo(page); }); });
     
     // AUTHENTICATION
     async function authenticateAndVerify() {
-      const user = document.getElementById('githubUsername').value.trim();
-      const token = document.getElementById('githubToken').value.trim();
+      const user = document.getElementById('githubUsername')?.value.trim();
+      const token = document.getElementById('githubToken')?.value.trim();
       if (!user || !token) { showToast('Username and token required!', 'error'); return; }
       showTerminal();
       addSystemLog('[AUTH] Connecting to GitHub API...', 'info');
@@ -91,21 +94,39 @@
         gitUsername = user; gitToken = token; isAuthenticated = true;
         addSystemLog(`[SUCCESS] Authenticated as ${gitUsername}`, 'success');
         closeModal('loginModal');
-        document.getElementById('userName').textContent = gitUsername;
-        document.getElementById('sidebarName').textContent = gitUsername;
-        document.getElementById('sidebarRole').textContent = 'Connected to GitHub';
-        document.getElementById('showLoginBtn').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'flex';
-        document.getElementById('statusDot').classList.add('connected');
-        document.getElementById('statusText').textContent = 'Connected';
+        
+        // Safe DOM updates with null checks
+        const userNameSpan = document.getElementById('userName');
+        const sidebarNameEl = document.getElementById('sidebarName');
+        const sidebarRoleEl = document.getElementById('sidebarRole');
+        const showLoginBtnEl = document.getElementById('showLoginBtn');
+        const logoutBtnEl = document.getElementById('logoutBtn');
+        const statusDotEl = document.getElementById('statusDot');
+        const statusTextEl = document.getElementById('statusText');
+        
+        if (userNameSpan) userNameSpan.textContent = gitUsername;
+        if (sidebarNameEl) sidebarNameEl.textContent = gitUsername;
+        if (sidebarRoleEl) sidebarRoleEl.textContent = 'Connected to GitHub';
+        if (showLoginBtnEl) showLoginBtnEl.style.display = 'none';
+        if (logoutBtnEl) logoutBtnEl.style.display = 'flex';
+        if (statusDotEl) statusDotEl.classList.add('connected');
+        if (statusTextEl) statusTextEl.textContent = 'Connected';
+        
         updateUIBasedOnAuth();
+        
+        // Safe avatar update
+        const sidebarAvatar = document.getElementById('sidebarAvatar');
+        const profileAvatar = document.getElementById('profileAvatar');
         if (data.avatar_url) {
-          document.getElementById('sidebarAvatar').src = data.avatar_url;
-          document.getElementById('profileAvatar').src = data.avatar_url;
-          document.getElementById('profilePageAvatar').src = data.avatar_url;
+          if (sidebarAvatar) sidebarAvatar.src = data.avatar_url;
+          if (profileAvatar) profileAvatar.src = data.avatar_url;
         }
-        document.getElementById('authorName').value = gitUsername;
-        document.getElementById('socialGithub').value = gitUsername;
+        
+        const authorNameInput = document.getElementById('authorName');
+        const socialGithubInput = document.getElementById('socialGithub');
+        if (authorNameInput) authorNameInput.value = gitUsername;
+        if (socialGithubInput) socialGithubInput.value = gitUsername;
+        
         await loadRepositories();
         navigateTo('home');
         updateHomeStats();
@@ -116,24 +137,41 @@
     function logout() {
       addSystemLog('[SYSTEM] Disconnecting...', 'warning');
       gitUsername = ""; gitToken = ""; isAuthenticated = false; allRepositories = [];
-      document.getElementById('userName').textContent = 'Guest';
-      document.getElementById('sidebarName').textContent = 'Guest';
-      document.getElementById('sidebarRole').textContent = 'Not logged in';
-      document.getElementById('showLoginBtn').style.display = 'flex';
-      document.getElementById('logoutBtn').style.display = 'none';
-      document.getElementById('statusDot').classList.remove('connected');
-      document.getElementById('statusText').textContent = 'Disconnected';
+      
+      const userNameSpan = document.getElementById('userName');
+      const sidebarNameEl = document.getElementById('sidebarName');
+      const sidebarRoleEl = document.getElementById('sidebarRole');
+      const showLoginBtnEl = document.getElementById('showLoginBtn');
+      const logoutBtnEl = document.getElementById('logoutBtn');
+      const statusDotEl = document.getElementById('statusDot');
+      const statusTextEl = document.getElementById('statusText');
+      const sidebarAvatar = document.getElementById('sidebarAvatar');
+      const profileAvatar = document.getElementById('profileAvatar');
+      
+      if (userNameSpan) userNameSpan.textContent = 'Guest';
+      if (sidebarNameEl) sidebarNameEl.textContent = 'Guest';
+      if (sidebarRoleEl) sidebarRoleEl.textContent = 'Not logged in';
+      if (showLoginBtnEl) showLoginBtnEl.style.display = 'flex';
+      if (logoutBtnEl) logoutBtnEl.style.display = 'none';
+      if (statusDotEl) statusDotEl.classList.remove('connected');
+      if (statusTextEl) statusTextEl.textContent = 'Disconnected';
+      if (sidebarAvatar) sidebarAvatar.src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
+      if (profileAvatar) profileAvatar.src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
+      
       updateUIBasedOnAuth();
-      document.getElementById('sidebarAvatar').src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
-      document.getElementById('profileAvatar').src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
       navigateTo('home');
       showToast('Logged out', 'info');
     }
     
-    document.getElementById('showLoginBtn').addEventListener('click', () => showModal('loginModal'));
-    document.getElementById('closeLoginModal').addEventListener('click', () => closeModal('loginModal'));
-    document.getElementById('authBtn').addEventListener('click', authenticateAndVerify);
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    const showLoginBtnEl = document.getElementById('showLoginBtn');
+    const closeLoginModalEl = document.getElementById('closeLoginModal');
+    const authBtnEl = document.getElementById('authBtn');
+    const logoutBtnEl = document.getElementById('logoutBtn');
+    
+    if (showLoginBtnEl) showLoginBtnEl.addEventListener('click', () => showModal('loginModal'));
+    if (closeLoginModalEl) closeLoginModalEl.addEventListener('click', () => closeModal('loginModal'));
+    if (authBtnEl) authBtnEl.addEventListener('click', authenticateAndVerify);
+    if (logoutBtnEl) logoutBtnEl.addEventListener('click', logout);
     
     // GITHUB API
     async function githubRequest(endpoint, method = 'GET', body = null) {
@@ -145,11 +183,11 @@
     
     // CREATE REPOSITORY
     async function executeCreateRepo() {
-      const name = document.getElementById('newRepoName').value.trim();
-      const desc = document.getElementById('repoDesc').value || '';
-      const isPrivate = document.getElementById('repoPrivate').checked || false;
-      const initReadme = document.getElementById('initReadme').checked || false;
-      const gitignore = document.getElementById('gitignoreTemplate').value;
+      const name = document.getElementById('newRepoName')?.value.trim();
+      const desc = document.getElementById('repoDesc')?.value || '';
+      const isPrivate = document.getElementById('repoPrivate')?.checked || false;
+      const initReadme = document.getElementById('initReadme')?.checked || false;
+      const gitignore = document.getElementById('gitignoreTemplate')?.value;
       if (!name) { showToast('Repository name required!', 'error'); return; }
       if (!/^[a-zA-Z0-9_.-]+$/.test(name)) { showToast('Invalid repository name!', 'error'); return; }
       showTerminal();
@@ -160,25 +198,38 @@
           try { const content = btoa(unescape(encodeURIComponent(gitignoreTemplates[gitignore]))); await githubRequest(`/repos/${gitUsername}/${name}/contents/.gitignore`, 'PUT', { message: 'Add .gitignore', content: content, branch: 'main' }); addSystemLog(`[SUCCESS] Added .gitignore for ${gitignore}`, 'success'); } catch (err) { addSystemLog(`[WARNING] Could not add .gitignore: ${err.message}`, 'warning'); }
         }
         addSystemLog(`[SUCCESS] Repository "${name}" created!`, 'success');
-        document.getElementById('newRepoName').value = '';
-        document.getElementById('repoDesc').value = '';
+        const newRepoName = document.getElementById('newRepoName');
+        const repoDesc = document.getElementById('repoDesc');
+        if (newRepoName) newRepoName.value = '';
+        if (repoDesc) repoDesc.value = '';
         await loadRepositories();
         showToast(`Repository "${name}" created!`, 'success');
       } catch (err) { addSystemLog(`[ERROR] ${err.message}`, 'error'); showToast(err.message, 'error'); }
     }
-    document.getElementById('confirmCreateRepo').addEventListener('click', executeCreateRepo);
+    const confirmCreateRepo = document.getElementById('confirmCreateRepo');
+    if (confirmCreateRepo) confirmCreateRepo.addEventListener('click', executeCreateRepo);
     
     // DELETE REPOSITORY
     function loadDeleteSelect() { const select = document.getElementById('deleteRepoSelect'); if (select) { select.innerHTML = '<option value="">-- Select repository --</option>' + allRepositories.map(r => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join(''); } }
-    function showDeleteModal(repoName) { currentDeleteTarget = repoName; document.getElementById('deleteRepoNameDisplay').textContent = repoName; document.getElementById('deleteConfirmInput').value = ''; showModal('deleteModal'); }
-    async function confirmDeleteFromModal() { const input = document.getElementById('deleteConfirmInput').value.trim(); if (input === currentDeleteTarget) { await executeDeleteRepo(currentDeleteTarget); closeModal('deleteModal'); await loadRepositories(); } else { showToast('Repository name does not match!', 'error'); } }
+    function showDeleteModal(repoName) { currentDeleteTarget = repoName; const display = document.getElementById('deleteRepoNameDisplay'); if (display) display.textContent = repoName; const input = document.getElementById('deleteConfirmInput'); if (input) input.value = ''; showModal('deleteModal'); }
+    async function confirmDeleteFromModal() { const input = document.getElementById('deleteConfirmInput')?.value.trim(); if (input === currentDeleteTarget) { await executeDeleteRepo(currentDeleteTarget); closeModal('deleteModal'); await loadRepositories(); } else { showToast('Repository name does not match!', 'error'); } }
     async function executeDeleteRepo(repoName) { showTerminal(); addSystemLog(`[DANGER] Deleting ${repoName}...`, 'warning'); try { await githubRequest(`/repos/${gitUsername}/${repoName}`, 'DELETE'); addSystemLog(`[SUCCESS] Deleted ${repoName}`, 'success'); await loadRepositories(); showToast(`Deleted ${repoName}`, 'success'); } catch (err) { addSystemLog(`[ERROR] ${err.message}`, 'error'); showToast(err.message, 'error'); } }
     
-    document.getElementById('confirmDeleteName').addEventListener('input', (e) => { const btn = document.getElementById('confirmDeleteRepoBtn'); const select = document.getElementById('deleteRepoSelect'); if (btn && select) { btn.disabled = !(select.value && select.value === e.target.value); } });
-    document.getElementById('confirmDeleteRepoBtn').addEventListener('click', async () => { const select = document.getElementById('deleteRepoSelect'); const confirm = document.getElementById('confirmDeleteName'); if (select && select.value && confirm && select.value === confirm.value) { await executeDeleteRepo(select.value); confirm.value = ''; select.value = '-- Select repository --'; } else { showToast('Repository name does not match!', 'error'); } });
-    document.getElementById('closeDeleteModalBtn').addEventListener('click', () => closeModal('deleteModal'));
-    document.getElementById('cancelDeleteBtn').addEventListener('click', () => closeModal('deleteModal'));
-    document.getElementById('confirmDeleteModalBtn').addEventListener('click', confirmDeleteFromModal);
+    const confirmDeleteName = document.getElementById('confirmDeleteName');
+    const confirmDeleteRepoBtn = document.getElementById('confirmDeleteRepoBtn');
+    const deleteRepoSelect = document.getElementById('deleteRepoSelect');
+    if (confirmDeleteName) {
+      confirmDeleteName.addEventListener('input', (e) => { if (confirmDeleteRepoBtn && deleteRepoSelect) { confirmDeleteRepoBtn.disabled = !(deleteRepoSelect.value && deleteRepoSelect.value === e.target.value); } });
+    }
+    if (confirmDeleteRepoBtn) {
+      confirmDeleteRepoBtn.addEventListener('click', async () => { if (deleteRepoSelect && deleteRepoSelect.value && confirmDeleteName && deleteRepoSelect.value === confirmDeleteName.value) { await executeDeleteRepo(deleteRepoSelect.value); if (confirmDeleteName) confirmDeleteName.value = ''; if (deleteRepoSelect) deleteRepoSelect.value = '-- Select repository --'; } else { showToast('Repository name does not match!', 'error'); } });
+    }
+    const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteModalBtn = document.getElementById('confirmDeleteModalBtn');
+    if (closeDeleteModalBtn) closeDeleteModalBtn.addEventListener('click', () => closeModal('deleteModal'));
+    if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', () => closeModal('deleteModal'));
+    if (confirmDeleteModalBtn) confirmDeleteModalBtn.addEventListener('click', confirmDeleteFromModal);
     
     // REPOSITORIES MANAGEMENT
     async function loadRepositories() {
@@ -201,7 +252,7 @@
     function renderRepositories() {
       const container = document.getElementById('repoListContainerEnhanced');
       if (!container) return;
-      const search = document.getElementById('repoSearchInput').value.toLowerCase() || '';
+      const search = document.getElementById('repoSearchInput')?.value.toLowerCase() || '';
       let filtered = allRepositories.filter(r => r.name.toLowerCase().includes(search) || (r.description && r.description.toLowerCase().includes(search)));
       if (currentFilter === 'public') filtered = filtered.filter(r => !r.private);
       if (currentFilter === 'private') filtered = filtered.filter(r => r.private);
@@ -216,48 +267,71 @@
     function togglePinRepo(name) { if (pinnedRepos.includes(name)) { pinnedRepos = pinnedRepos.filter(p => p !== name); } else { pinnedRepos.push(name); } localStorage.setItem('pinnedRepos', JSON.stringify(pinnedRepos)); renderRepositories(); }
     function loadPinnedRepos() { const saved = localStorage.getItem('pinnedRepos'); if (saved) { try { pinnedRepos = JSON.parse(saved); } catch(e) {} } }
     
-    document.getElementById('refreshReposBtn').addEventListener('click', () => { if (!isAuthenticated) { showToast('Please login first', 'warning'); return; } const btn = document.getElementById('refreshReposBtn'); btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>'; loadRepositories().finally(() => { btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh'; }); });
-    document.getElementById('repoSearchInput').addEventListener('input', () => { renderRepositories(); });
+    const refreshReposBtn = document.getElementById('refreshReposBtn');
+    const repoSearchInput = document.getElementById('repoSearchInput');
+    if (refreshReposBtn) {
+      refreshReposBtn.addEventListener('click', () => { if (!isAuthenticated) { showToast('Please login first', 'warning'); return; } refreshReposBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>'; loadRepositories().finally(() => { refreshReposBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh'; }); });
+    }
+    if (repoSearchInput) repoSearchInput.addEventListener('input', () => { renderRepositories(); });
     
     // CLONE FUNCTIONALITY
-    function showCloneModal(repoName) { const repo = allRepositories.find(r => r.name === repoName); if (repo) { currentCloneTarget = repo; document.getElementById('cloneUrlText').textContent = repo.clone_url; document.getElementById('cloneCommandText').textContent = repo.clone_url; showModal('cloneModal'); } }
+    function showCloneModal(repoName) { const repo = allRepositories.find(r => r.name === repoName); if (repo) { currentCloneTarget = repo; const urlText = document.getElementById('cloneUrlText'); const cmdText = document.getElementById('cloneCommandText'); if (urlText) urlText.textContent = repo.clone_url; if (cmdText) cmdText.textContent = repo.clone_url; showModal('cloneModal'); } }
     function copyCloneUrl() { if (currentCloneTarget) copyToClipboard(currentCloneTarget.clone_url); }
-    document.getElementById('closeCloneModalBtn').addEventListener('click', () => closeModal('cloneModal'));
-    document.getElementById('closeCloneModalFooterBtn').addEventListener('click', () => closeModal('cloneModal'));
-    document.getElementById('copyCloneUrlBtn').addEventListener('click', copyCloneUrl);
+    const closeCloneModalBtn = document.getElementById('closeCloneModalBtn');
+    const closeCloneModalFooterBtn = document.getElementById('closeCloneModalFooterBtn');
+    const copyCloneUrlBtn = document.getElementById('copyCloneUrlBtn');
+    if (closeCloneModalBtn) closeCloneModalBtn.addEventListener('click', () => closeModal('cloneModal'));
+    if (closeCloneModalFooterBtn) closeCloneModalFooterBtn.addEventListener('click', () => closeModal('cloneModal'));
+    if (copyCloneUrlBtn) copyCloneUrlBtn.addEventListener('click', copyCloneUrl);
     
     // UPLOAD SYSTEM
     function handleFilesSelected(files) { modernFiles = Array.from(files); renderFileList(); const uploadBtn = document.getElementById('startUploadBtn1'); if (uploadBtn) uploadBtn.style.display = modernFiles.length > 0 ? 'block' : 'none'; }
     function renderFileList() { const container = document.getElementById('fileListModern1'); if (!container) return; if (modernFiles.length === 0) { container.style.display = 'none'; return; } container.style.display = 'block'; container.innerHTML = modernFiles.map((file, idx) => `<div class="file-item"><div><i class="fas fa-file"></i> ${escapeHtml(file.name)} <span style="font-size:11px;color:var(--text-muted);">(${formatFileSize(file.size)})</span></div><button class="remove-file" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button></div>`).join(''); document.querySelectorAll('.remove-file').forEach(btn => { btn.addEventListener('click', () => { modernFiles.splice(parseInt(btn.dataset.idx), 1); renderFileList(); const uploadBtn = document.getElementById('startUploadBtn1'); if (uploadBtn) uploadBtn.style.display = modernFiles.length > 0 ? 'block' : 'none'; }); }); }
-    async function startModernUpload() { const repo = document.getElementById('targetRepoName1').value.trim(); const branch = document.getElementById('branchName1').value.trim() || 'main'; const msg = document.getElementById('commitMsg1').value.trim() || 'Upload via RepoFlow'; if (!repo) { showToast('Repository name required', 'error'); return; } if (!modernFiles.length) { showToast('No files selected', 'error'); return; } showTerminal(); addSystemLog(`[UPLOAD] Starting to ${gitUsername}/${repo}`, 'info'); let success = 0, error = 0; for (const file of modernFiles) { addSystemLog(`[UPLOAD] Uploading ${file.name}...`, 'info'); try { let sha = null; try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e) {} const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); }); await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha }); success++; addSystemLog(`[SUCCESS] Uploaded ${file.name}`, 'success'); } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${file.name}: ${err.message}`, 'error'); } } if (error === 0) { addSystemLog(`[SUCCESS] Upload complete! ${success} files uploaded`, 'success'); showToast(`Successfully uploaded ${success} files!`, 'success'); modernFiles = []; renderFileList(); document.getElementById('startUploadBtn1').style.display = 'none'; } else { addSystemLog(`[WARNING] Upload completed with ${error} errors`, 'warning'); showToast(`Uploaded: ${success} success, ${error} failed`, 'warning'); } }
+    async function startModernUpload() { const repo = document.getElementById('targetRepoName1')?.value.trim(); const branch = document.getElementById('branchName1')?.value.trim() || 'main'; const msg = document.getElementById('commitMsg1')?.value.trim() || 'Upload via RepoFlow'; if (!repo) { showToast('Repository name required', 'error'); return; } if (!modernFiles.length) { showToast('No files selected', 'error'); return; } showTerminal(); addSystemLog(`[UPLOAD] Starting to ${gitUsername}/${repo}`, 'info'); let success = 0, error = 0; for (const file of modernFiles) { addSystemLog(`[UPLOAD] Uploading ${file.name}...`, 'info'); try { let sha = null; try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e) {} const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); }); await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha }); success++; addSystemLog(`[SUCCESS] Uploaded ${file.name}`, 'success'); } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${file.name}: ${err.message}`, 'error'); } } if (error === 0) { addSystemLog(`[SUCCESS] Upload complete! ${success} files uploaded`, 'success'); showToast(`Successfully uploaded ${success} files!`, 'success'); modernFiles = []; renderFileList(); const uploadBtn = document.getElementById('startUploadBtn1'); if (uploadBtn) uploadBtn.style.display = 'none'; } else { addSystemLog(`[WARNING] Upload completed with ${error} errors`, 'warning'); showToast(`Uploaded: ${success} success, ${error} failed`, 'warning'); } }
     async function handleZipSelected(files) { if (!files.length || !files[0].name.endsWith('.zip')) { showToast('Only ZIP files supported', 'error'); return; } const zipFile = files[0]; const previewContainer = document.getElementById('zipPreviewContainer'); const uploadBtn = document.getElementById('startUploadBtn2'); if (previewContainer) previewContainer.style.display = 'block'; if (uploadBtn) uploadBtn.style.display = 'block'; try { const zip = await JSZip.loadAsync(zipFile); extractedFiles = []; for (const [path, entry] of Object.entries(zip.files)) { if (!entry.dir) { const content = await entry.async('blob'); const file = new File([content], path.split('/').pop(), { type: content.type }); Object.defineProperty(file, 'webkitRelativePath', { value: path }); extractedFiles.push(file); } } const zipFileList = document.getElementById('zipFileList'); if (zipFileList) { zipFileList.innerHTML = extractedFiles.map(f => `<div class="file-item"><i class="fas fa-file"></i> ${escapeHtml(f.webkitRelativePath || f.name)}</div>`).join(''); } addSystemLog(`[ZIP] Extracted ${extractedFiles.length} files`, 'success'); } catch (e) { showToast('Error extracting ZIP file', 'error'); addSystemLog(`[ERROR] ZIP extraction failed: ${e.message}`, 'error'); } }
-    async function startModernZipUpload() { const repo = document.getElementById('targetRepoName2').value.trim(); const branch = document.getElementById('branchName2').value.trim() || 'main'; const msg = document.getElementById('commitMsg2').value.trim() || 'Upload ZIP via RepoFlow'; if (!repo) { showToast('Repository name required', 'error'); return; } if (!extractedFiles.length) { showToast('No ZIP file selected', 'error'); return; } showTerminal(); addSystemLog(`[ZIP UPLOAD] Extracting ${extractedFiles.length} files to ${repo}`, 'info'); let success = 0, error = 0; for (const file of extractedFiles) { const path = file.webkitRelativePath || file.name; addSystemLog(`[UPLOAD] Uploading ${path}...`, 'info'); try { let sha = null; try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e) {} const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); }); await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha }); success++; addSystemLog(`[SUCCESS] Uploaded ${path}`, 'success'); } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${path}: ${err.message}`, 'error'); } } addSystemLog(`[ZIP UPLOAD] Complete: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning'); showToast(`ZIP upload: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning'); extractedFiles = []; document.getElementById('zipPreviewContainer').style.display = 'none'; document.getElementById('startUploadBtn2').style.display = 'none'; }
+    async function startModernZipUpload() { const repo = document.getElementById('targetRepoName2')?.value.trim(); const branch = document.getElementById('branchName2')?.value.trim() || 'main'; const msg = document.getElementById('commitMsg2')?.value.trim() || 'Upload ZIP via RepoFlow'; if (!repo) { showToast('Repository name required', 'error'); return; } if (!extractedFiles.length) { showToast('No ZIP file selected', 'error'); return; } showTerminal(); addSystemLog(`[ZIP UPLOAD] Extracting ${extractedFiles.length} files to ${repo}`, 'info'); let success = 0, error = 0; for (const file of extractedFiles) { const path = file.webkitRelativePath || file.name; addSystemLog(`[UPLOAD] Uploading ${path}...`, 'info'); try { let sha = null; try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e) {} const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); }); await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha }); success++; addSystemLog(`[SUCCESS] Uploaded ${path}`, 'success'); } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${path}: ${err.message}`, 'error'); } } addSystemLog(`[ZIP UPLOAD] Complete: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning'); showToast(`ZIP upload: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning'); extractedFiles = []; const previewContainer = document.getElementById('zipPreviewContainer'); if (previewContainer) previewContainer.style.display = 'none'; const uploadBtn = document.getElementById('startUploadBtn2'); if (uploadBtn) uploadBtn.style.display = 'none'; }
     
-    document.getElementById('startUploadBtn1').addEventListener('click', startModernUpload);
-    document.getElementById('startUploadBtn2').addEventListener('click', startModernZipUpload);
+    const startUploadBtn1 = document.getElementById('startUploadBtn1');
+    const startUploadBtn2 = document.getElementById('startUploadBtn2');
+    if (startUploadBtn1) startUploadBtn1.addEventListener('click', startModernUpload);
+    if (startUploadBtn2) startUploadBtn2.addEventListener('click', startModernZipUpload);
     
-    const dropZone1 = document.getElementById('dropZone1'), fileInput1 = document.getElementById('fileInputModern1');
-    if (dropZone1 && fileInput1) { dropZone1.addEventListener('click', () => fileInput1.click()); dropZone1.addEventListener('dragover', e => { e.preventDefault(); dropZone1.classList.add('drag-over'); }); dropZone1.addEventListener('dragleave', () => dropZone1.classList.remove('drag-over')); dropZone1.addEventListener('drop', e => { e.preventDefault(); dropZone1.classList.remove('drag-over'); handleFilesSelected(Array.from(e.dataTransfer.files)); }); fileInput1.addEventListener('change', e => { handleFilesSelected(Array.from(e.target.files)); fileInput1.value = ''; }); }
-    const dropZone2 = document.getElementById('dropZone2'), fileInput2 = document.getElementById('fileInputModern2');
-    if (dropZone2 && fileInput2) { dropZone2.addEventListener('click', () => fileInput2.click()); dropZone2.addEventListener('dragover', e => { e.preventDefault(); dropZone2.classList.add('drag-over'); }); dropZone2.addEventListener('dragleave', () => dropZone2.classList.remove('drag-over')); dropZone2.addEventListener('drop', e => { e.preventDefault(); dropZone2.classList.remove('drag-over'); handleZipSelected(Array.from(e.dataTransfer.files)); }); fileInput2.addEventListener('change', e => { handleZipSelected(Array.from(e.target.files)); fileInput2.value = ''; }); }
+    const dropZone1 = document.getElementById('dropZone1');
+    const fileInput1 = document.getElementById('fileInputModern1');
+    if (dropZone1 && fileInput1) { 
+      dropZone1.addEventListener('click', () => fileInput1.click()); 
+      dropZone1.addEventListener('dragover', e => { e.preventDefault(); dropZone1.classList.add('drag-over'); }); 
+      dropZone1.addEventListener('dragleave', () => dropZone1.classList.remove('drag-over')); 
+      dropZone1.addEventListener('drop', e => { e.preventDefault(); dropZone1.classList.remove('drag-over'); handleFilesSelected(Array.from(e.dataTransfer.files)); }); 
+      fileInput1.addEventListener('change', e => { handleFilesSelected(Array.from(e.target.files)); fileInput1.value = ''; }); 
+    }
+    const dropZone2 = document.getElementById('dropZone2');
+    const fileInput2 = document.getElementById('fileInputModern2');
+    if (dropZone2 && fileInput2) { 
+      dropZone2.addEventListener('click', () => fileInput2.click()); 
+      dropZone2.addEventListener('dragover', e => { e.preventDefault(); dropZone2.classList.add('drag-over'); }); 
+      dropZone2.addEventListener('dragleave', () => dropZone2.classList.remove('drag-over')); 
+      dropZone2.addEventListener('drop', e => { e.preventDefault(); dropZone2.classList.remove('drag-over'); handleZipSelected(Array.from(e.dataTransfer.files)); }); 
+      fileInput2.addEventListener('change', e => { handleZipSelected(Array.from(e.target.files)); fileInput2.value = ''; }); 
+    }
     
-    document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); const mode = tab.dataset.mode; document.querySelectorAll('.mode-container').forEach(c => c.style.display = 'none'); document.getElementById(`${mode}Container`).style.display = 'block'; }); });
+    document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); const mode = tab.dataset.mode; document.querySelectorAll('.mode-container').forEach(c => c.style.display = 'none'); const container = document.getElementById(`${mode}Container`); if (container) container.style.display = 'block'; }); });
     
     // README GENERATOR FUNCTIONS
     function renderFeatures() { const container = document.getElementById('featuresList'); if (!container) return; container.innerHTML = features.map((f, i) => `<div class="list-item"><input type="text" class="form-input" value="${escapeHtml(f)}" data-feature-idx="${i}" placeholder="Feature"><button class="btn btn-secondary" style="padding:6px 12px" data-remove-feature="${i}"><i class="fas fa-trash"></i></button></div>`).join(''); document.querySelectorAll('[data-feature-idx]').forEach(inp => { inp.addEventListener('change', (e) => { features[parseInt(inp.dataset.featureIdx)] = inp.value; updateReadmePreview(); }); }); document.querySelectorAll('[data-remove-feature]').forEach(btn => { btn.addEventListener('click', () => { features.splice(parseInt(btn.dataset.removeFeature), 1); if(features.length===0) features=['']; renderFeatures(); updateReadmePreview(); }); }); }
     function renderTechTags() { const container = document.getElementById('techTags'); if (!container) return; container.innerHTML = techStack.map(t => `<span class="tag">${escapeHtml(t)} <span class="tag-remove" data-tech="${escapeHtml(t)}">&times;</span></span>`).join('') + `<input type="text" class="tag-input" id="techInput" placeholder="Add tech...">`; document.querySelectorAll('.tag-remove').forEach(btn => { btn.addEventListener('click', () => { techStack = techStack.filter(t => t !== btn.dataset.tech); renderTechTags(); updateReadmePreview(); }); }); const techInput = document.getElementById('techInput'); if (techInput) { techInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && techInput.value.trim()) { techStack.push(techInput.value.trim()); techInput.value = ''; renderTechTags(); updateReadmePreview(); } }); } }
     function generateReadmeContent() {
-      const name = document.getElementById('projectName').value.trim() || "My Awesome Project";
-      const tagline = document.getElementById('projectTagline').value.trim() || "⚡ Next-gen Tool ⚡";
-      const desc = document.getElementById('projectDesc').value.trim() || "";
+      const name = document.getElementById('projectName')?.value.trim() || "My Awesome Project";
+      const tagline = document.getElementById('projectTagline')?.value.trim() || "⚡ Next-gen Tool ⚡";
+      const desc = document.getElementById('projectDesc')?.value.trim() || "";
       const featuresList = features.filter(f => f.trim());
       const tech = techStack;
-      const install = document.getElementById('installSteps').value.trim() || "";
-      const usage = document.getElementById('usageSteps').value.trim() || "";
-      const author = document.getElementById('authorName').value.trim() || gitUsername || "Anonymous";
-      const socialGithub = document.getElementById('socialGithub').value.trim();
-      const socialInstagram = document.getElementById('socialInstagram').value.trim();
-      const hasLicense = document.getElementById('enableLicense').checked || false;
+      const install = document.getElementById('installSteps')?.value.trim() || "";
+      const usage = document.getElementById('usageSteps')?.value.trim() || "";
+      const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
+      const socialGithub = document.getElementById('socialGithub')?.value.trim();
+      const socialInstagram = document.getElementById('socialInstagram')?.value.trim();
+      const hasLicense = document.getElementById('enableLicense')?.checked || false;
       const year = new Date().getFullYear();
       let markdown = '';
       if (currentTemplate === 'cyberpunk') {
@@ -296,31 +370,39 @@
     function copyMarkdownToClipboard() { navigator.clipboard.writeText(generateReadmeContent()); showToast('README markdown copied!', 'success'); }
     function downloadReadmeFile() { const blob = new Blob([generateReadmeContent()], { type: 'text/markdown' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'README.md'; a.click(); URL.revokeObjectURL(url); showToast('README.md downloaded!', 'success'); }
     
-    document.getElementById('addFeatureBtn').addEventListener('click', () => { features.push(''); renderFeatures(); updateReadmePreview(); });
-    document.getElementById('copyMarkdownBtn').addEventListener('click', copyMarkdownToClipboard);
-    document.getElementById('downloadReadmeBtn').addEventListener('click', downloadReadmeFile);
+    const addFeatureBtn = document.getElementById('addFeatureBtn');
+    const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
+    const downloadReadmeBtn = document.getElementById('downloadReadmeBtn');
+    if (addFeatureBtn) addFeatureBtn.addEventListener('click', () => { features.push(''); renderFeatures(); updateReadmePreview(); });
+    if (copyMarkdownBtn) copyMarkdownBtn.addEventListener('click', copyMarkdownToClipboard);
+    if (downloadReadmeBtn) downloadReadmeBtn.addEventListener('click', downloadReadmeFile);
     document.querySelectorAll('.template-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentTemplate = btn.dataset.template; updateReadmePreview(); }); });
     const readmeInputs = ['projectName', 'projectTagline', 'projectDesc', 'installSteps', 'usageSteps', 'authorName', 'socialGithub', 'socialInstagram'];
-    readmeInputs.forEach(id => { document.getElementById(id)?.addEventListener('input', updateReadmePreview); });
-    document.getElementById('enableLicense')?.addEventListener('change', updateReadmePreview);
+    readmeInputs.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', updateReadmePreview); });
+    const enableLicense = document.getElementById('enableLicense');
+    if (enableLicense) enableLicense.addEventListener('change', updateReadmePreview);
     
     // DASHBOARD & STATS
-    function updateStats() { const totalRepos = allRepositories.length, publicRepos = allRepositories.filter(r => !r.private).length, privateRepos = allRepositories.filter(r => r.private).length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0); document.getElementById('totalRepos').textContent = totalRepos; document.getElementById('publicRepos').textContent = publicRepos; document.getElementById('privateRepos').textContent = privateRepos; document.getElementById('totalStars').textContent = totalStars; if (commitChart) commitChart.destroy(); const ctx = document.getElementById('commitChart')?.getContext('2d'); if (ctx) { commitChart = new Chart(ctx, { type: 'line', data: { labels: allRepositories.slice(0,7).map(r=>r.name.substring(0,12)), datasets: [{ label: 'Stars', data: allRepositories.slice(0,7).map(r=>r.stargazers_count), borderColor: '#2f81f7', backgroundColor: 'rgba(47,129,247,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: 'var(--text-secondary)' } } } } }); } }
+    function updateStats() { const totalRepos = allRepositories.length, publicRepos = allRepositories.filter(r => !r.private).length, privateRepos = allRepositories.filter(r => r.private).length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0); const totalReposEl = document.getElementById('totalRepos'); const publicReposEl = document.getElementById('publicRepos'); const privateReposEl = document.getElementById('privateRepos'); const totalStarsEl = document.getElementById('totalStars'); if (totalReposEl) totalReposEl.textContent = totalRepos; if (publicReposEl) publicReposEl.textContent = publicRepos; if (privateReposEl) privateReposEl.textContent = privateRepos; if (totalStarsEl) totalStarsEl.textContent = totalStars; if (commitChart) commitChart.destroy(); const ctx = document.getElementById('commitChart')?.getContext('2d'); if (ctx) { commitChart = new Chart(ctx, { type: 'line', data: { labels: allRepositories.slice(0,7).map(r=>r.name.substring(0,12)), datasets: [{ label: 'Stars', data: allRepositories.slice(0,7).map(r=>r.stargazers_count), borderColor: '#2f81f7', backgroundColor: 'rgba(47,129,247,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: 'var(--text-secondary)' } } } } }); } }
     function updateDashboard() { const activityDiv = document.getElementById('activityList'); if (activityDiv && activityLog.length) { activityDiv.innerHTML = activityLog.slice(0,5).map(log => `<div class="activity-item"><div class="activity-icon"><i class="fas fa-${log.type === 'success' ? 'check-circle' : log.type === 'error' ? 'times-circle' : 'info-circle'}"></i></div><div class="activity-text">${escapeHtml(log.message.substring(0,80))}</div><div class="activity-time">${new Date(log.time).toLocaleTimeString()}</div></div>`).join(''); } }
-    function updateHomeStats() { const totalRepos = allRepositories.length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0), totalForks = allRepositories.reduce((s,r)=>s+r.forks_count,0), totalWatchers = allRepositories.reduce((s,r)=>s+(r.watchers_count||0),0); document.getElementById('homeTotalRepos').textContent = totalRepos; document.getElementById('homeTotalStars').textContent = totalStars; document.getElementById('homeTotalForks').textContent = totalForks; document.getElementById('homeWatchers').textContent = totalWatchers; }
-    function updateProfilePage() { const totalRepos = allRepositories.length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0), totalForks = allRepositories.reduce((s,r)=>s+r.forks_count,0); document.getElementById('profileReposCount').textContent = totalRepos; document.getElementById('profileStarsCount').textContent = totalStars; document.getElementById('profileForksCount').textContent = totalForks; if (gitUsername) document.getElementById('profileName').textContent = gitUsername; }
+    function updateHomeStats() { const totalRepos = allRepositories.length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0), totalForks = allRepositories.reduce((s,r)=>s+r.forks_count,0), totalWatchers = allRepositories.reduce((s,r)=>s+(r.watchers_count||0),0); const homeTotalRepos = document.getElementById('homeTotalRepos'); const homeTotalStars = document.getElementById('homeTotalStars'); const homeTotalForks = document.getElementById('homeTotalForks'); const homeWatchers = document.getElementById('homeWatchers'); if (homeTotalRepos) homeTotalRepos.textContent = totalRepos; if (homeTotalStars) homeTotalStars.textContent = totalStars; if (homeTotalForks) homeTotalForks.textContent = totalForks; if (homeWatchers) homeWatchers.textContent = totalWatchers; }
+    function updateProfilePage() { const totalRepos = allRepositories.length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0), totalForks = allRepositories.reduce((s,r)=>s+r.forks_count,0); const profileRepos = document.getElementById('profileReposCount'); const profileStars = document.getElementById('profileStarsCount'); const profileForks = document.getElementById('profileForksCount'); const profileName = document.getElementById('profileName'); if (profileRepos) profileRepos.textContent = totalRepos; if (profileStars) profileStars.textContent = totalStars; if (profileForks) profileForks.textContent = totalForks; if (profileName && gitUsername) profileName.textContent = gitUsername; }
     
     // Profile Social Media Copy Functions
     function copyGitHub() { copyToClipboard('https://github.com/cpm_jhon'); }
     function copyInstagram() { copyToClipboard('https://instagram.com/jhon_production'); }
-    document.getElementById('copyGithubBtn')?.addEventListener('click', copyGitHub);
-    document.getElementById('copyInstagramBtn')?.addEventListener('click', copyInstagram);
+    const copyGithubBtn = document.getElementById('copyGithubBtn');
+    const copyInstagramBtn = document.getElementById('copyInstagramBtn');
+    if (copyGithubBtn) copyGithubBtn.addEventListener('click', copyGitHub);
+    if (copyInstagramBtn) copyInstagramBtn.addEventListener('click', copyInstagram);
     
     // THEME TOGGLE
     function initThemeToggle() { const themeBtn = document.getElementById('themeToggleBtn'), themeIcon = document.getElementById('themeIcon'), themeText = document.getElementById('themeText'), savedTheme = localStorage.getItem('theme'); if (savedTheme === 'light') { document.body.classList.add('light-theme'); if (themeIcon) themeIcon.className = 'fas fa-sun'; if (themeText) themeText.textContent = 'Light Mode'; } if (themeBtn) { themeBtn.addEventListener('click', () => { document.body.classList.toggle('light-theme'); const isLight = document.body.classList.contains('light-theme'); localStorage.setItem('theme', isLight ? 'light' : 'dark'); if (themeIcon) themeIcon.className = isLight ? 'fas fa-sun' : 'fas fa-moon'; if (themeText) themeText.textContent = isLight ? 'Light Mode' : 'Dark Mode'; }); } }
     
-    document.getElementById('closeTerminalBtn').addEventListener('click', closeTerminal);
-    document.getElementById('showTerminalBtn').addEventListener('click', showTerminal);
+    const closeTerminalBtn = document.getElementById('closeTerminalBtn');
+    const showTerminalBtnEl = document.getElementById('showTerminalBtn');
+    if (closeTerminalBtn) closeTerminalBtn.addEventListener('click', closeTerminal);
+    if (showTerminalBtnEl) showTerminalBtnEl.addEventListener('click', showTerminal);
     
     // INITIALIZATION
     loadPinnedRepos();
