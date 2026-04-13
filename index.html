@@ -160,7 +160,7 @@
           <div class="tabs">
             <button class="tab active" data-mode="mode1"><i class="fas fa-file"></i> Upload Files</button>
             <button class="tab" data-mode="mode2"><i class="fas fa-file-archive"></i> Upload ZIP</button>
-            <button class="tab" data-mode="mode3"><i class="fas fa-file-alt"></i> README Generator</button>
+            <button class="tab" data-mode="mode3"><i class="fas fa-file-alt"></i> README & License Generator</button>
           </div>
           
           <!-- Mode 1: Upload Files -->
@@ -173,14 +173,14 @@
             <div class="card"><div class="card-body"><div class="dropzone" id="dropZone2"><i class="fas fa-file-archive"></i><p>Drag & drop ZIP file di sini atau klik untuk memilih</p><input type="file" id="fileInputModern2" accept=".zip" style="display:none"></div><div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName2" class="form-input" placeholder="repository-name"></div><div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName2" value="main" class="form-input"></div><div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg2" value="Upload ZIP via RepoFlow" class="form-input"></div><div id="zipPreviewContainer" style="display:none"><div class="file-list mt-20" id="zipFileList"></div></div><button id="startUploadBtn2" class="btn btn-primary btn-full mt-20" style="display:none"><i class="fas fa-rocket"></i> Extract & Upload</button></div></div>
           </div>
           
-          <!-- Mode 3: README Generator -->
+          <!-- Mode 3: README Generator + License -->
           <div id="mode3Container" class="mode-container" style="display:none">
             <div class="card">
-              <div class="card-header"><h2><i class="fas fa-file-alt"></i> README Generator Pro</h2><p>Buat README.md profesional dengan mudah</p></div>
+              <div class="card-header"><h2><i class="fas fa-file-alt"></i> README & License Generator Pro</h2><p>Buat README.md dan LICENSE file profesional</p></div>
               <div class="card-body">
                 <div class="readme-generator-section">
                   <div class="template-selector">
-                    <label class="form-label">Template Style</label>
+                    <label class="form-label">README Template Style</label>
                     <div class="template-buttons">
                       <button class="btn btn-secondary template-btn active" data-template="cyberpunk"><i class="fas fa-robot"></i> Cyberpunk</button>
                       <button class="btn btn-secondary template-btn" data-template="minimal"><i class="fas fa-circle"></i> Minimal</button>
@@ -214,7 +214,7 @@
                       
                       <!-- License Selector Section -->
                       <div class="form-section"><h4><i class="fas fa-gavel"></i> License Selection</h4>
-                        <label class="checkbox-wrapper"><input type="checkbox" id="enableLicense"> <span>Add License to Repository</span></label>
+                        <label class="checkbox-wrapper"><input type="checkbox" id="enableLicense"> <span>Add LICENSE file to repository</span></label>
                         <div id="licenseSelector" class="license-selector" style="display: none;">
                           <div class="license-option">
                             <input type="radio" name="licenseType" id="licenseMIT" value="mit" checked>
@@ -254,16 +254,17 @@
                         </div>
                         <div class="form-helper mt-8">
                           <i class="fas fa-info-circle"></i> 
-                          <a href="#" id="licenseInfoLink" class="license-link" target="_blank">View license details</a> - Pilih lisensi yang sesuai untuk project Anda
+                          <a href="#" id="licenseInfoLink" class="license-link" target="_blank">View license details</a>
                         </div>
                       </div>
                     </div>
                     <div class="readme-preview">
-                      <div class="preview-header"><i class="fas fa-eye"></i> Live Preview <span class="preview-badge">Markdown</span></div>
+                      <div class="preview-header"><i class="fas fa-eye"></i> Live Preview <span class="preview-badge">README.md</span></div>
                       <div class="preview-content" id="readmePreview"></div>
                       <div class="preview-actions">
-                        <button class="btn btn-secondary" id="copyMarkdownBtn"><i class="fas fa-copy"></i> Copy Markdown</button>
+                        <button class="btn btn-secondary" id="copyMarkdownBtn"><i class="fas fa-copy"></i> Copy README</button>
                         <button class="btn btn-primary" id="downloadReadmeBtn"><i class="fas fa-download"></i> Download README.md</button>
+                        <button class="btn btn-primary" id="downloadLicenseBtn"><i class="fas fa-file-contract"></i> Download LICENSE</button>
                       </div>
                     </div>
                   </div>
