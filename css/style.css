@@ -318,10 +318,6 @@
     }
     .social-link-card i { font-size: 24px; }
     .social-link-card span { font-size: 14px; font-weight: 500; }
-    .social-link-card.github:hover i { color: #fff; }
-    .social-link-card.instagram:hover i { color: #e4405f; }
-    .social-link-card.twitter:hover i { color: #1da1f2; }
-    .social-link-card.telegram:hover i { color: #0088cc; }
     .tool-btn {
       background: var(--bg-tertiary);
       border: 1px solid var(--border-default);
