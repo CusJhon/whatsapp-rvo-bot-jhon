@@ -17,6 +17,7 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
+  
 </head>
 <body>
   <div class="app">
@@ -25,7 +26,6 @@
 
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-      <!-- Top Section: Logo + Collapse Toggle -->
       <div class="sidebar-top">
         <div class="logo">
           <div class="logo-icon">
@@ -38,7 +38,6 @@
         </button>
       </div>
 
-      <!-- Navigation Menu -->
       <nav class="sidebar-nav">
         <a href="#" class="nav-item active" data-page="home" data-tooltip="Home">
           <i class="fas fa-home"></i>
@@ -70,9 +69,7 @@
         </a>
       </nav>
 
-      <!-- Bottom Section -->
       <div class="sidebar-bottom">
-        <!-- Profile -->
         <div class="profile-section" id="sidebarProfileBtn">
           <img class="profile-avatar" id="sidebarAvatar" src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="avatar">
           <div class="profile-info">
@@ -81,13 +78,11 @@
           </div>
         </div>
 
-        <!-- Status Indicator -->
         <div class="status-indicator" id="connectionStatus">
           <div class="status-dot" id="statusDot"></div>
           <span class="status-text" id="statusText">Disconnected</span>
         </div>
 
-        <!-- Theme Toggle -->
         <button class="theme-toggle" id="themeToggleBtn">
           <i class="fas fa-moon" id="themeIcon"></i>
           <span id="themeText">Dark Mode</span>
@@ -114,16 +109,10 @@
         </div>
       </header>
 
-      <!-- Pages Container -->
       <div class="pages-container" id="pagesContainer">
-        
-        <!-- ========== HOME PAGE ========== -->
+        <!-- Home Page -->
         <div class="page" id="homePage">
           <div class="hero-section">
-            <div class="hero-badge">
-              <i class="fas fa-rocket"></i>
-              <span>Professional GitHub Manager</span>
-            </div>
             <h1 class="hero-title">Manage Your GitHub<br>Repositories Like a Pro</h1>
             <p class="hero-subtitle">
               RepoFlow adalah platform manajemen repository GitHub profesional dengan fitur upload canggih, 
@@ -142,7 +131,6 @@
             </div>
           </div>
 
-          <!-- Stats Section (only when logged in) -->
           <div class="stats-grid" id="statsSection" style="display: none;">
             <div class="stat-card">
               <div class="stat-icon"><i class="fas fa-database"></i></div>
@@ -166,394 +154,156 @@
             </div>
           </div>
 
-          <!-- Features Section -->
           <div class="features-grid">
             <div class="feature-card">
               <div class="feature-icon"><i class="fas fa-file-alt"></i></div>
               <h3>README Generator</h3>
-              <p>Buat README.md profesional dengan berbagai template dan live preview.</p>
+              <p>Buat README.md profesional dengan berbagai template.</p>
             </div>
             <div class="feature-card">
               <div class="feature-icon"><i class="fas fa-gavel"></i></div>
               <h3>MIT License</h3>
-              <p>Tambahkan lisensi MIT secara otomatis ke repository Anda.</p>
+              <p>Tambahkan lisensi MIT secara otomatis.</p>
             </div>
             <div class="feature-card">
               <div class="feature-icon"><i class="fas fa-ban"></i></div>
               <h3>.gitignore Templates</h3>
-              <p>Pilih template .gitignore untuk berbagai stack teknologi.</p>
+              <p>Pilih template untuk berbagai stack teknologi.</p>
             </div>
             <div class="feature-card">
               <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
               <h3>Analytics Dashboard</h3>
-              <p>Pantau statistik repository Anda secara real-time.</p>
+              <p>Pantau statistik repository Anda.</p>
             </div>
             <div class="feature-card">
               <div class="feature-icon"><i class="fas fa-upload"></i></div>
               <h3>Dual Upload Modes</h3>
-              <p>Upload multiple files atau ZIP archive dengan mudah.</p>
+              <p>Upload files atau ZIP archive.</p>
             </div>
             <div class="feature-card">
               <div class="feature-icon"><i class="fas fa-mobile-alt"></i></div>
               <h3>Fully Responsive</h3>
-              <p>Akses platform dari berbagai device dengan tampilan optimal.</p>
-            </div>
-          </div>
-
-          <!-- Developer Info -->
-          <div class="developer-info-card">
-            <div class="dev-avatar">
-              <img src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="Developer">
-            </div>
-            <div class="dev-content">
-              <h3>Created by <span class="highlight">cpm_jhon</span></h3>
-              <p>Full-stack developer & cybersecurity enthusiast. Membangun tools untuk memudahkan manajemen repository GitHub.</p>
-              <div class="dev-social">
-                <a href="#" class="social-link"><i class="fab fa-github"></i> GitHub</a>
-                <a href="#" class="social-link"><i class="fab fa-instagram"></i> Instagram</a>
-                <a href="#" class="social-link"><i class="fab fa-twitter"></i> Twitter</a>
-              </div>
+              <p>Akses dari berbagai device.</p>
             </div>
           </div>
         </div>
 
-        <!-- ========== DASHBOARD PAGE ========== -->
+        <!-- Dashboard Page -->
         <div class="page" id="dashboardPage" style="display: none;">
           <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-database"></i></div>
-              <div class="stat-value" id="totalRepos">0</div>
-              <div class="stat-label">Total Repos</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-globe"></i></div>
-              <div class="stat-value" id="publicRepos">0</div>
-              <div class="stat-label">Public</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-lock"></i></div>
-              <div class="stat-value" id="privateRepos">0</div>
-              <div class="stat-label">Private</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon"><i class="fas fa-star"></i></div>
-              <div class="stat-value" id="totalStars">0</div>
-              <div class="stat-label">Total Stars</div>
-            </div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-database"></i></div><div class="stat-value" id="totalRepos">0</div><div class="stat-label">Total Repos</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-globe"></i></div><div class="stat-value" id="publicRepos">0</div><div class="stat-label">Public</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-lock"></i></div><div class="stat-value" id="privateRepos">0</div><div class="stat-label">Private</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-value" id="totalStars">0</div><div class="stat-label">Total Stars</div></div>
           </div>
           
           <div class="dashboard-grid">
-            <div class="dashboard-card">
-              <div class="dashboard-card-header">
-                <i class="fas fa-chart-line"></i>
-                <h3>Stars Activity</h3>
-              </div>
-              <div class="dashboard-card-body">
-                <canvas id="commitChart" style="height: 200px;"></canvas>
-              </div>
+            <div class="card">
+              <div class="card-header"><h2><i class="fas fa-chart-line"></i> Stars Activity</h2></div>
+              <div class="card-body"><canvas id="commitChart" style="height: 200px;"></canvas></div>
             </div>
-            <div class="dashboard-card">
-              <div class="dashboard-card-header">
-                <i class="fas fa-history"></i>
-                <h3>Recent Activity</h3>
-              </div>
-              <div class="dashboard-card-body">
-                <div class="activity-list" id="activityList">
-                  <div class="activity-item">
-                    <div class="activity-icon"><i class="fas fa-info-circle"></i></div>
-                    <div class="activity-text">Belum ada aktivitas</div>
-                  </div>
-                </div>
-              </div>
+            <div class="card">
+              <div class="card-header"><h2><i class="fas fa-history"></i> Recent Activity</h2></div>
+              <div class="card-body"><div class="activity-list" id="activityList"></div></div>
             </div>
           </div>
           
-          <div class="card">
-            <div class="card-header">
-              <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
-            </div>
+          <div class="card mt-24">
+            <div class="card-header"><h2><i class="fas fa-bolt"></i> Quick Actions</h2></div>
             <div class="card-body">
               <div class="quick-actions-grid">
-                <div class="quick-action-card" data-page="create">
-                  <i class="fas fa-plus-circle"></i>
-                  <span>New Repository</span>
-                </div>
-                <div class="quick-action-card" data-page="upload">
-                  <i class="fas fa-upload"></i>
-                  <span>Upload Project</span>
-                </div>
-                <div class="quick-action-card" data-page="delete">
-                  <i class="fas fa-trash-alt"></i>
-                  <span>Delete Repository</span>
-                </div>
-                <div class="quick-action-card" data-page="repos">
-                  <i class="fas fa-list"></i>
-                  <span>View All Repos</span>
-                </div>
+                <div class="quick-action-card" data-page="create"><i class="fas fa-plus-circle"></i><span>New Repository</span></div>
+                <div class="quick-action-card" data-page="upload"><i class="fas fa-upload"></i><span>Upload Project</span></div>
+                <div class="quick-action-card" data-page="delete"><i class="fas fa-trash-alt"></i><span>Delete Repository</span></div>
+                <div class="quick-action-card" data-page="repos"><i class="fas fa-list"></i><span>View All Repos</span></div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ========== CREATE REPOSITORY PAGE ========== -->
+        <!-- Create Repository Page -->
         <div class="page" id="createPage" style="display: none;">
           <div class="card" style="max-width: 640px; margin: 0 auto;">
-            <div class="card-header">
-              <h2><i class="fas fa-plus-circle"></i> Create Repository</h2>
-              <p>Buat repository baru di GitHub</p>
-            </div>
+            <div class="card-header"><h2><i class="fas fa-plus-circle"></i> Create Repository</h2><p>Buat repository baru di GitHub</p></div>
             <div class="card-body">
-              <div class="form-group">
-                <label class="form-label">Repository Name <span class="optional">(required)</span></label>
-                <input type="text" id="newRepoName" class="form-input" placeholder="my-awesome-project">
-                <div class="form-holder" id="repoNamePreview"></div>
-                <div class="form-helper">Gunakan huruf kecil, angka, dan tanda hubung</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea id="repoDesc" class="form-textarea" rows="3" placeholder="Deskripsi singkat repository"></textarea>
-              </div>
-              <div class="form-group">
-                <label class="checkbox-wrapper">
-                  <input type="checkbox" id="repoPrivate"> <span>Private repository</span>
-                </label>
-              </div>
-              <div class="form-group">
-                <label class="checkbox-wrapper">
-                  <input type="checkbox" id="initReadme"> <span>Initialize with README</span>
-                </label>
-              </div>
-              <div class="form-group">
-                <label class="form-label">.gitignore Template</label>
-                <select id="gitignoreTemplate" class="form-select">
-                  <option value="">None</option>
-                  <option value="Node">Node</option>
-                  <option value="Python">Python</option>
-                  <option value="Java">Java</option>
-                </select>
-              </div>
+              <div class="form-group"><label class="form-label">Repository Name</label><input type="text" id="newRepoName" class="form-input" placeholder="my-awesome-project"><div class="form-helper">Gunakan huruf kecil, angka, dan tanda hubung</div></div>
+              <div class="form-group"><label class="form-label">Description</label><textarea id="repoDesc" class="form-textarea" rows="3" placeholder="Deskripsi singkat repository"></textarea></div>
+              <div class="form-group"><label class="checkbox-wrapper"><input type="checkbox" id="repoPrivate"> <span>Private repository</span></label></div>
+              <div class="form-group"><label class="checkbox-wrapper"><input type="checkbox" id="initReadme"> <span>Initialize with README</span></label></div>
+              <div class="form-group"><label class="form-label">.gitignore Template</label><select id="gitignoreTemplate" class="form-select"><option value="">None</option><option value="Node">Node</option><option value="Python">Python</option><option value="Java">Java</option></select></div>
             </div>
-            <div class="card-footer">
-              <button id="confirmCreateRepo" class="btn btn-primary btn-full">
-                <i class="fas fa-code-branch"></i> Create Repository
-              </button>
-            </div>
+            <div class="card-footer"><button id="confirmCreateRepo" class="btn btn-primary btn-full"><i class="fas fa-code-branch"></i> Create Repository</button></div>
           </div>
         </div>
 
-        <!-- ========== DELETE REPOSITORY PAGE ========== -->
+        <!-- Delete Repository Page -->
         <div class="page" id="deletePage" style="display: none;">
           <div class="card card-danger" style="max-width: 560px; margin: 0 auto;">
-            <div class="card-header">
-              <h2><i class="fas fa-trash-alt"></i> Delete Repository</h2>
-              <p class="warning-text">⚠️ Peringatan: Tindakan ini permanen!</p>
-            </div>
+            <div class="card-header"><h2><i class="fas fa-trash-alt"></i> Delete Repository</h2><p>⚠️ Peringatan: Tindakan ini permanen!</p></div>
             <div class="card-body">
-              <div class="warning-box">
-                <i class="fas fa-exclamation-triangle"></i>
-                <p>This action cannot be undone. This will permanently delete the repository and all its contents.</p>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Select Repository</label>
-                <select id="deleteRepoSelect" class="form-select">
-                  <option value="">-- Select repository --</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Type the repository name to confirm</label>
-                <input type="text" id="confirmDeleteName" class="form-input" placeholder="repository-name">
-                <div class="form-helper">Enter the exact repository name to enable deletion</div>
-              </div>
+              <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><p>This action cannot be undone. This will permanently delete the repository.</p></div>
+              <div class="form-group"><label class="form-label">Select Repository</label><select id="deleteRepoSelect" class="form-select"><option value="">-- Select repository --</option></select></div>
+              <div class="form-group"><label class="form-label">Type the repository name to confirm</label><input type="text" id="confirmDeleteName" class="form-input" placeholder="repository-name"></div>
             </div>
-            <div class="card-footer">
-              <button id="confirmDeleteRepoBtn" class="btn btn-danger btn-full" disabled>
-                <i class="fas fa-radiation"></i> Delete Permanently
-              </button>
-            </div>
+            <div class="card-footer"><button id="confirmDeleteRepoBtn" class="btn btn-danger btn-full" disabled><i class="fas fa-radiation"></i> Delete Permanently</button></div>
           </div>
         </div>
 
-        <!-- ========== UPLOAD PROJECT PAGE ========== -->
+        <!-- Upload Page -->
         <div class="page" id="uploadPage" style="display: none;">
           <div class="tabs">
             <button class="tab active" data-mode="mode1"><i class="fas fa-file"></i> Upload Files</button>
             <button class="tab" data-mode="mode2"><i class="fas fa-file-archive"></i> Upload ZIP</button>
-            <button class="tab" data-mode="mode3"><i class="fas fa-file-alt"></i> README Generator</button>
           </div>
           
-          <!-- Mode 1: Upload Files -->
           <div id="mode1Container" class="mode-container">
             <div class="card">
               <div class="card-body">
-                <div class="dropzone" id="dropZone1">
-                  <i class="fas fa-cloud-upload-alt"></i>
-                  <p>Drag & drop file di sini atau klik untuk memilih</p>
-                  <p class="form-helper mt-8">Max 100MB per file</p>
-                  <input type="file" id="fileInputModern1" multiple style="display:none;">
-                </div>
-                <div class="form-group mt-20">
-                  <label class="form-label">Target Repository</label>
-                  <input type="text" id="targetRepoName1" class="form-input" placeholder="repository-name">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Branch</label>
-                  <input type="text" id="branchName1" value="main" class="form-input">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Commit Message</label>
-                  <input type="text" id="commitMsg1" value="Upload via RepoFlow" class="form-input">
-                </div>
+                <div class="dropzone" id="dropZone1"><i class="fas fa-cloud-upload-alt"></i><p>Drag & drop file di sini atau klik untuk memilih</p><input type="file" id="fileInputModern1" multiple style="display:none;"></div>
+                <div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName1" class="form-input" placeholder="repository-name"></div>
+                <div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName1" value="main" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg1" value="Upload via RepoFlow" class="form-input"></div>
                 <div id="fileListModern1" class="file-list mt-20" style="display:none;"></div>
-                <button id="startUploadBtn1" class="btn btn-primary btn-full mt-20" style="display:none;">
-                  <i class="fas fa-rocket"></i> Upload to GitHub
-                </button>
+                <button id="startUploadBtn1" class="btn btn-primary btn-full mt-20" style="display:none;"><i class="fas fa-rocket"></i> Upload to GitHub</button>
               </div>
             </div>
           </div>
           
-          <!-- Mode 2: Upload ZIP -->
           <div id="mode2Container" class="mode-container" style="display:none;">
             <div class="card">
               <div class="card-body">
-                <div class="dropzone" id="dropZone2">
-                  <i class="fas fa-file-archive"></i>
-                  <p>Drag & drop ZIP file di sini atau klik untuk memilih</p>
-                  <input type="file" id="fileInputModern2" accept=".zip" style="display:none;">
-                </div>
-                <div class="form-group mt-20">
-                  <label class="form-label">Target Repository</label>
-                  <input type="text" id="targetRepoName2" class="form-input" placeholder="repository-name">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Branch</label>
-                  <input type="text" id="branchName2" value="main" class="form-input">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Commit Message</label>
-                  <input type="text" id="commitMsg2" value="Upload ZIP via RepoFlow" class="form-input">
-                </div>
-                <div id="zipPreviewContainer" style="display:none;">
-                  <div class="file-list mt-20" id="zipFileList"></div>
-                </div>
-                <button id="startUploadBtn2" class="btn btn-primary btn-full mt-20" style="display:none;">
-                  <i class="fas fa-rocket"></i> Extract & Upload
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Mode 3: README Generator -->
-          <div id="mode3Container" class="mode-container" style="display:none;">
-            <div class="card">
-              <div class="card-body">
-                <div class="form-group">
-                  <label class="form-label">Project Name</label>
-                  <input type="text" id="projectName" class="form-input" placeholder="My Project">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Description</label>
-                  <textarea id="projectDesc" class="form-textarea" rows="3" placeholder="Project description"></textarea>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Installation Steps</label>
-                  <textarea id="installSteps" class="form-textarea" rows="3" placeholder="npm install&#10;npm start"></textarea>
-                </div>
-                <div class="form-group">
-                  <label class="checkbox-wrapper">
-                    <input type="checkbox" id="enableLicense"> <span>Add MIT License</span>
-                  </label>
-                </div>
-                <button id="generateReadmeBtn" class="btn btn-primary btn-full">
-                  <i class="fas fa-file-alt"></i> Generate README.md
-                </button>
+                <div class="dropzone" id="dropZone2"><i class="fas fa-file-archive"></i><p>Drag & drop ZIP file</p><input type="file" id="fileInputModern2" accept=".zip" style="display:none;"></div>
+                <div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName2" class="form-input" placeholder="repository-name"></div>
+                <div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName2" value="main" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg2" value="Upload ZIP via RepoFlow" class="form-input"></div>
+                <div id="zipPreviewContainer" style="display:none;"><div class="file-list mt-20" id="zipFileList"></div></div>
+                <button id="startUploadBtn2" class="btn btn-primary btn-full mt-20" style="display:none;"><i class="fas fa-rocket"></i> Extract & Upload</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- ========== REPOSITORIES PAGE ========== -->
+        <!-- Repositories Page -->
         <div class="page" id="reposPage" style="display: none;">
           <div class="card">
-            <div class="card-header">
-              <h2><i class="fas fa-book"></i> Repositories</h2>
-              <button id="refreshReposBtn" class="btn btn-secondary" style="margin-left: auto;">
-                <i class="fas fa-sync-alt"></i> Refresh
-              </button>
-            </div>
+            <div class="card-header"><h2><i class="fas fa-book"></i> Repositories</h2><button id="refreshReposBtn" class="btn btn-secondary" style="margin-left: auto;"><i class="fas fa-sync-alt"></i> Refresh</button></div>
             <div class="card-body">
-              <div class="form-group">
-                <input type="text" id="repoSearchInput" class="form-input" placeholder="Search repositories...">
-              </div>
-              <div class="repos-stats" style="display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
-                <div class="filter-chip" data-filter="all" style="cursor:pointer; padding:4px 12px; border-radius:20px; background:var(--accent-primary); color:white;">All</div>
-                <div class="filter-chip" data-filter="public" style="cursor:pointer; padding:4px 12px; border-radius:20px; background:var(--bg-tertiary);">Public</div>
-                <div class="filter-chip" data-filter="private" style="cursor:pointer; padding:4px 12px; border-radius:20px; background:var(--bg-tertiary);">Private</div>
-              </div>
+              <div class="form-group"><input type="text" id="repoSearchInput" class="form-input" placeholder="Search repositories..."></div>
               <div id="repoListContainerEnhanced" class="repos-grid"></div>
-              <div class="pagination-wrapper" id="paginationContainer" style="display: none; justify-content: center; gap: 16px; margin-top: 24px;">
-                <button class="btn btn-secondary" id="prevPageBtn" disabled><i class="fas fa-chevron-left"></i> Previous</button>
-                <span class="page-info" id="pageInfo">Page 1</span>
-                <button class="btn btn-secondary" id="nextPageBtn">Next <i class="fas fa-chevron-right"></i></button>
-              </div>
             </div>
           </div>
         </div>
 
-        <!-- ========== PROFILE PAGE ========== -->
+        <!-- Profile Page -->
         <div class="page" id="profilePage" style="display: none;">
           <div class="card">
-            <div class="card-header">
-              <h2><i class="fas fa-user-circle"></i> Developer Profile</h2>
-              <p>Informasi tentang pengembang aplikasi RepoFlow</p>
-            </div>
+            <div class="card-header"><h2><i class="fas fa-user-circle"></i> Developer Profile</h2><p>Informasi tentang pengembang aplikasi RepoFlow</p></div>
             <div class="card-body">
-              <div class="profile-main" style="display: flex; gap: 32px; flex-wrap: wrap; align-items: center; margin-bottom: 32px;">
-                <div class="profile-avatar-large">
-                  <img id="profilePageAvatar" src="https://i.ibb.co.com/chGXxvw1/avt.jpg" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--accent-primary);">
-                </div>
-                <div class="profile-header-info">
-                  <h1 id="profilePageName" style="font-size: 24px; margin-bottom: 8px;">jhon ofc</h1>
-                  <div class="profile-badge-row" style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
-                    <span class="profile-badge" style="background: var(--bg-tertiary); padding: 4px 12px; border-radius: 20px;"><i class="fas fa-code"></i> Full-stack Developer</span>
-                    <span class="profile-badge" style="background: var(--bg-tertiary); padding: 4px 12px; border-radius: 20px;"><i class="fas fa-shield-alt"></i> Cybersecurity Enthusiast</span>
-                  </div>
-                  <p style="color: var(--text-secondary);">JHON PRODUCTION dengan ketertarikan pada bidang teknologi dan pengembangan aplikasi web.</p>
-                </div>
-              </div>
-              
               <div class="stats-grid">
-                <div class="stat-card">
-                  <div class="stat-icon"><i class="fas fa-code-branch"></i></div>
-                  <div class="stat-value" id="profileReposCount">0</div>
-                  <div class="stat-label">Repositories</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-icon"><i class="fas fa-star"></i></div>
-                  <div class="stat-value" id="profileStarsCount">0</div>
-                  <div class="stat-label">Stars</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-icon"><i class="fas fa-code-fork"></i></div>
-                  <div class="stat-value" id="profileForksCount">0</div>
-                  <div class="stat-label">Forks</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-icon"><i class="fas fa-rocket"></i></div>
-                  <div class="stat-value">v3.0.0</div>
-                  <div class="stat-label">Version</div>
-                </div>
-              </div>
-              
-              <div class="profile-skills-section" style="margin-top: 24px;">
-                <h3 style="margin-bottom: 16px;"><i class="fas fa-cogs"></i> Tech Stack</h3>
-                <div class="skills-chips" style="display: flex; flex-wrap: wrap; gap: 12px;">
-                  <span class="skill-chip" style="background: var(--bg-tertiary); padding: 8px 16px; border-radius: 30px;">HTML5</span>
-                  <span class="skill-chip" style="background: var(--bg-tertiary); padding: 8px 16px; border-radius: 30px;">CSS3</span>
-                  <span class="skill-chip" style="background: var(--bg-tertiary); padding: 8px 16px; border-radius: 30px;">JavaScript</span>
-                  <span class="skill-chip" style="background: var(--bg-tertiary); padding: 8px 16px; border-radius: 30px;">React.js</span>
-                  <span class="skill-chip" style="background: var(--bg-tertiary); padding: 8px 16px; border-radius: 30px;">Node.js</span>
-                  <span class="skill-chip" style="background: var(--bg-tertiary); padding: 8px 16px; border-radius: 30px;">Git & GitHub</span>
-                </div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-code-branch"></i></div><div class="stat-value" id="profileReposCount">0</div><div class="stat-label">Repositories</div></div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-value" id="profileStarsCount">0</div><div class="stat-label">Stars</div></div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-code-fork"></i></div><div class="stat-value" id="profileForksCount">0</div><div class="stat-label">Forks</div></div>
+                <div class="stat-card"><div class="stat-icon"><i class="fas fa-rocket"></i></div><div class="stat-value">v3.0.0</div><div class="stat-label">Version</div></div>
               </div>
             </div>
           </div>
@@ -562,40 +312,21 @@
 
       <!-- Terminal -->
       <div class="terminal-container" id="terminalContainer" style="display: none;">
-        <div class="terminal-header">
-          <span><i class="fas fa-terminal"></i> Live Terminal</span>
-          <button id="closeTerminalBtn" style="background: none; border: none; color: var(--text-secondary); cursor: pointer;">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
+        <div class="terminal-header"><span><i class="fas fa-terminal"></i> Live Terminal</span><button id="closeTerminalBtn" style="background:none; border:none; color:var(--text-secondary); cursor:pointer;"><i class="fas fa-times"></i></button></div>
         <div class="terminal-body" id="terminalBody"></div>
       </div>
-      <button class="show-terminal-btn" id="showTerminalBtn" style="display: none;">
-        <i class="fas fa-terminal"></i> Show Terminal
-      </button>
+      <button class="show-terminal-btn" id="showTerminalBtn" style="display: none;"><i class="fas fa-terminal"></i> Show Terminal</button>
     </main>
   </div>
 
   <!-- Login Modal -->
   <div class="modal" id="loginModal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fab fa-github"></i> GitHub Authentication</h3>
-        <button class="modal-close" id="closeLoginModal">&times;</button>
-      </div>
+      <div class="modal-header"><h3><i class="fab fa-github"></i> GitHub Authentication</h3><button class="modal-close" id="closeLoginModal">&times;</button></div>
       <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Username</label>
-          <input type="text" id="githubUsername" class="form-input">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Personal Access Token</label>
-          <input type="password" id="githubToken" class="form-input">
-          <div class="form-helper">Requires repo, delete_repo permissions</div>
-        </div>
-        <button id="authBtn" class="btn btn-primary btn-full">
-          <i class="fas fa-plug"></i> Connect to GitHub
-        </button>
+        <div class="form-group"><label class="form-label">Username</label><input type="text" id="githubUsername" class="form-input"></div>
+        <div class="form-group"><label class="form-label">Personal Access Token</label><input type="password" id="githubToken" class="form-input"><div class="form-helper">Requires repo, delete_repo permissions</div></div>
+        <button id="authBtn" class="btn btn-primary btn-full"><i class="fas fa-plug"></i> Connect to GitHub</button>
         <div id="authStatus" class="mt-16"></div>
       </div>
     </div>
@@ -604,49 +335,31 @@
   <!-- Delete Confirmation Modal -->
   <div class="modal" id="deleteModal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-exclamation-triangle"></i> Delete Repository</h3>
-        <button class="modal-close" id="closeDeleteModalBtn">&times;</button>
-      </div>
+      <div class="modal-header"><h3><i class="fas fa-exclamation-triangle"></i> Delete Repository</h3><button class="modal-close" id="closeDeleteModalBtn">&times;</button></div>
       <div class="modal-body">
-        <div class="warning-box">
-          <i class="fas fa-radiation"></i>
-          <p>Warning: This action cannot be undone!</p>
-        </div>
+        <div class="warning-box"><i class="fas fa-radiation"></i><p>Warning: This action cannot be undone!</p></div>
         <p>Type <strong id="deleteRepoNameDisplay"></strong> to confirm:</p>
         <input type="text" id="deleteConfirmInput" class="form-input mt-8">
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
-        <button class="btn btn-danger" id="confirmDeleteModalBtn">Delete</button>
-      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button><button class="btn btn-danger" id="confirmDeleteModalBtn">Delete</button></div>
     </div>
   </div>
 
   <!-- Clone Modal -->
   <div class="modal" id="cloneModal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h3><i class="fas fa-code-branch"></i> Clone Repository</h3>
-        <button class="modal-close" id="closeCloneModalBtn">&times;</button>
-      </div>
+      <div class="modal-header"><h3><i class="fas fa-code-branch"></i> Clone Repository</h3><button class="modal-close" id="closeCloneModalBtn">&times;</button></div>
       <div class="modal-body">
         <p>Clone with HTTPS:</p>
-        <div class="clone-url">
-          <code id="cloneUrlText"></code>
-          <button class="btn btn-secondary" id="copyCloneUrlBtn">Copy</button>
-        </div>
-        <p style="margin-top: 16px;">Run this command:</p>
-        <div class="clone-url">
-          <code>git clone <span id="cloneCommandText"></span></code>
-        </div>
+        <div class="clone-url" style="background:var(--bg-tertiary);padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;"><code id="cloneUrlText"></code><button class="btn btn-secondary" id="copyCloneUrlBtn">Copy</button></div>
+        <p style="margin-top:16px;">Run this command:</p>
+        <div class="clone-url" style="background:var(--bg-tertiary);padding:12px;border-radius:8px;"><code>git clone <span id="cloneCommandText"></span></code></div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="closeCloneModalFooterBtn">Close</button>
-      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" id="closeCloneModalFooterBtn">Close</button></div>
     </div>
   </div>
 
-<script src="js/script.js"></script>
+  <script src="js/script.js"></script>
+    
 </body>
 </html>
