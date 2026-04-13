@@ -120,6 +120,17 @@
       showToast('Copied to clipboard!', 'success');
     }
     
+    // =============== UPDATE UI BASED ON AUTH STATE ===============
+    function updateUIBasedOnAuth() {
+      if (isAuthenticated) {
+        document.body.classList.add('logged-in');
+        if (statsSection) statsSection.style.display = 'grid';
+      } else {
+        document.body.classList.remove('logged-in');
+        if (statsSection) statsSection.style.display = 'none';
+      }
+    }
+    
     // =============== SIDEBAR FUNCTIONS ===============
     let isCollapsed = false;
     let isMobile = window.innerWidth <= 768;
@@ -255,9 +266,11 @@
         if (sidebarRole) sidebarRole.textContent = 'Connected to GitHub';
         if (showLoginBtn) showLoginBtn.style.display = 'none';
         if (logoutBtn) logoutBtn.style.display = 'flex';
-        if (statsSection) statsSection.style.display = 'grid';
         if (statusDot) statusDot.classList.add('connected');
         if (statusText) statusText.textContent = 'Connected';
+        
+        // Update sidebar menu visibility
+        updateUIBasedOnAuth();
         
         // Update avatar
         if (data.avatar_url) {
@@ -287,9 +300,11 @@
       if (sidebarRole) sidebarRole.textContent = 'Not logged in';
       if (showLoginBtn) showLoginBtn.style.display = 'flex';
       if (logoutBtn) logoutBtn.style.display = 'none';
-      if (statsSection) statsSection.style.display = 'none';
       if (statusDot) statusDot.classList.remove('connected');
       if (statusText) statusText.textContent = 'Disconnected';
+      
+      // Update sidebar menu visibility
+      updateUIBasedOnAuth();
       
       const sidebarAvatar = document.getElementById('sidebarAvatar');
       if (sidebarAvatar) sidebarAvatar.src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
@@ -468,7 +483,10 @@
         addSystemLog(`[SUCCESS] Loaded ${allRepositories.length} repositories`, 'success');
       } catch (err) {
         addSystemLog(`[ERROR] ${err.message}`, 'error');
-        showEmptyStateRepos(err.message);
+        const container = document.getElementById('repoListContainerEnhanced');
+        if (container) {
+          container.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load: ${escapeHtml(err.message)}</p><button class="btn btn-primary mt-16" onclick="loadRepositories()">Retry</button></div>`;
+        }
       }
     }
     
@@ -549,13 +567,6 @@
         try {
           pinnedRepos = JSON.parse(saved);
         } catch(e) {}
-      }
-    }
-    
-    function showEmptyStateRepos(msg) {
-      const container = document.getElementById('repoListContainerEnhanced');
-      if (container) {
-        container.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load: ${escapeHtml(msg)}</p><button class="btn btn-primary mt-16" onclick="loadRepositories()">Retry</button></div>`;
       }
     }
     
@@ -962,6 +973,7 @@
     loadSidebarState();
     handleResize();
     initThemeToggle();
+    updateUIBasedOnAuth();
     navigateTo('home');
     
     // Add welcome message to terminal
@@ -978,4 +990,3 @@
     window.showDeleteModal = showDeleteModal;
     window.showCloneModal = showCloneModal;
     window.loadRepositories = loadRepositories;
-  
