@@ -1,7 +1,7 @@
 
     // ========================================
     // REPOFLOW - COMPLETE JAVASCRIPT
-    // All Original Functionality Preserved
+    // With LICENSE file generation and upload
     // ========================================
     
     // STATE MANAGEMENT
@@ -27,7 +27,7 @@
       'Java': '#b07219', 'Go': '#00ADD8', 'Rust': '#dea584', 'default': '#8b949e'
     };
     
-    // License Templates - Complete and Professional
+    // License Templates
     const licenseTemplates = {
       'mit': `MIT License
 
@@ -50,17 +50,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.`,
-      'gpl-3.0': `                    GNU GENERAL PUBLIC LICENSE
-                       Version 3, 29 June 2007
-
- Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
- Everyone is permitted to copy and distribute verbatim copies
- of this license document, but changing it is not allowed.
-
-                            Preamble
-
-  The GNU General Public License is a free, copyleft license for
-software and other kinds of works.
+      'gpl-3.0': `GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
 
 Copyright (C) {year} {author}
 
@@ -137,20 +128,7 @@ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.`,
-      'cc0-1.0': `Creative Commons Legal Code
-
-CC0 1.0 Universal
-
-CREATIVE COMMONS CORPORATION IS NOT A LAW FIRM AND DOES NOT PROVIDE
-LEGAL SERVICES. DISTRIBUTION OF THIS DOCUMENT DOES NOT CREATE AN
-ATTORNEY-CLIENT RELATIONSHIP. CREATIVE COMMONS PROVIDES THIS
-INFORMATION ON AN "AS-IS" BASIS. CREATIVE COMMONS MAKES NO WARRANTIES
-REGARDING THE USE OF THIS DOCUMENT OR THE INFORMATION OR WORKS
-PROVIDED HEREUNDER, AND DISCLAIMS LIABILITY FOR DAMAGES RESULTING FROM
-THE USE OF THIS DOCUMENT OR THE INFORMATION OR WORKS PROVIDED
-HEREUNDER.
-
-Statement of Purpose
+      'cc0-1.0': `Creative Commons CC0 1.0 Universal
 
 The person who associated a work with this deed has dedicated the work to
 the public domain by waiving all of his or her rights to the work worldwide
@@ -158,7 +136,7 @@ under copyright law, including all related and neighboring rights, to the
 extent allowed by law.
 
 You can copy, modify, distribute and perform the work, even for commercial
-purposes, all without asking permission. See Other Information below.
+purposes, all without asking permission.
 
 https://creativecommons.org/publicdomain/zero/1.0/`,
       'unlicense': `This is free and unencumbered software released into the public domain.
@@ -218,6 +196,18 @@ For more information, please refer to <https://unlicense.org>`
       };
       const link = document.getElementById('licenseInfoLink');
       if (link) link.href = linkMap[licenseType] || '#';
+    }
+    
+    function downloadLicenseFile() {
+      const content = generateLicenseContent();
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'LICENSE';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('LICENSE file downloaded!', 'success');
     }
     
     // SIDEBAR FUNCTIONS
@@ -461,16 +451,164 @@ For more information, please refer to <https://unlicense.org>`
     if (closeCloneModalFooterBtn) closeCloneModalFooterBtn.addEventListener('click', () => closeModal('cloneModal'));
     if (copyCloneUrlBtn) copyCloneUrlBtn.addEventListener('click', copyCloneUrl);
     
-    // UPLOAD SYSTEM
+    // UPLOAD SYSTEM WITH LICENSE FILE
     function handleFilesSelected(files) { modernFiles = Array.from(files); renderFileList(); const uploadBtn = document.getElementById('startUploadBtn1'); if (uploadBtn) uploadBtn.style.display = modernFiles.length > 0 ? 'block' : 'none'; }
     function renderFileList() { const container = document.getElementById('fileListModern1'); if (!container) return; if (modernFiles.length === 0) { container.style.display = 'none'; return; } container.style.display = 'block'; container.innerHTML = modernFiles.map((file, idx) => `<div class="file-item"><div><i class="fas fa-file"></i> ${escapeHtml(file.name)} <span style="font-size:11px;color:var(--text-muted);">(${formatFileSize(file.size)})</span></div><button class="remove-file" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button></div>`).join(''); document.querySelectorAll('.remove-file').forEach(btn => { btn.addEventListener('click', () => { modernFiles.splice(parseInt(btn.dataset.idx), 1); renderFileList(); const uploadBtn = document.getElementById('startUploadBtn1'); if (uploadBtn) uploadBtn.style.display = modernFiles.length > 0 ? 'block' : 'none'; }); }); }
-    async function startModernUpload() { const repo = document.getElementById('targetRepoName1')?.value.trim(); const branch = document.getElementById('branchName1')?.value.trim() || 'main'; const msg = document.getElementById('commitMsg1')?.value.trim() || 'Upload via RepoFlow'; if (!repo) { showToast('Repository name required', 'error'); return; } if (!modernFiles.length) { showToast('No files selected', 'error'); return; } showTerminal(); addSystemLog(`[UPLOAD] Starting to ${gitUsername}/${repo}`, 'info'); let success = 0, error = 0; for (const file of modernFiles) { addSystemLog(`[UPLOAD] Uploading ${file.name}...`, 'info'); try { let sha = null; try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e) {} const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); }); await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha }); success++; addSystemLog(`[SUCCESS] Uploaded ${file.name}`, 'success'); } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${file.name}: ${err.message}`, 'error'); } } if (error === 0) { addSystemLog(`[SUCCESS] Upload complete! ${success} files uploaded`, 'success'); showToast(`Successfully uploaded ${success} files!`, 'success'); modernFiles = []; renderFileList(); const uploadBtn = document.getElementById('startUploadBtn1'); if (uploadBtn) uploadBtn.style.display = 'none'; } else { addSystemLog(`[WARNING] Upload completed with ${error} errors`, 'warning'); showToast(`Uploaded: ${success} success, ${error} failed`, 'warning'); } }
+    
+    async function startModernUpload() {
+      const repo = document.getElementById('targetRepoName1')?.value.trim();
+      const branch = document.getElementById('branchName1')?.value.trim() || 'main';
+      const msg = document.getElementById('commitMsg1')?.value.trim() || 'Upload via RepoFlow';
+      if (!repo) { showToast('Repository name required', 'error'); return; }
+      if (!modernFiles.length) { showToast('No files selected', 'error'); return; }
+      showTerminal();
+      addSystemLog(`[UPLOAD] Starting to ${gitUsername}/${repo}`, 'info');
+      let success = 0, error = 0;
+      for (const file of modernFiles) {
+        addSystemLog(`[UPLOAD] Uploading ${file.name}...`, 'info');
+        try {
+          let sha = null;
+          try {
+            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}?ref=${branch}`, 'GET');
+            sha = existing.sha;
+          } catch(e) {}
+          const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); });
+          await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
+          success++;
+          addSystemLog(`[SUCCESS] Uploaded ${file.name}`, 'success');
+        } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${file.name}: ${err.message}`, 'error'); }
+      }
+      if (error === 0) {
+        addSystemLog(`[SUCCESS] Upload complete! ${success} files uploaded`, 'success');
+        showToast(`Successfully uploaded ${success} files!`, 'success');
+        modernFiles = [];
+        renderFileList();
+        document.getElementById('startUploadBtn1').style.display = 'none';
+      } else {
+        addSystemLog(`[WARNING] Upload completed with ${error} errors`, 'warning');
+        showToast(`Uploaded: ${success} success, ${error} failed`, 'warning');
+      }
+    }
+    
     async function handleZipSelected(files) { if (!files.length || !files[0].name.endsWith('.zip')) { showToast('Only ZIP files supported', 'error'); return; } const zipFile = files[0]; const previewContainer = document.getElementById('zipPreviewContainer'); const uploadBtn = document.getElementById('startUploadBtn2'); if (previewContainer) previewContainer.style.display = 'block'; if (uploadBtn) uploadBtn.style.display = 'block'; try { const zip = await JSZip.loadAsync(zipFile); extractedFiles = []; for (const [path, entry] of Object.entries(zip.files)) { if (!entry.dir) { const content = await entry.async('blob'); const file = new File([content], path.split('/').pop(), { type: content.type }); Object.defineProperty(file, 'webkitRelativePath', { value: path }); extractedFiles.push(file); } } const zipFileList = document.getElementById('zipFileList'); if (zipFileList) { zipFileList.innerHTML = extractedFiles.map(f => `<div class="file-item"><i class="fas fa-file"></i> ${escapeHtml(f.webkitRelativePath || f.name)}</div>`).join(''); } addSystemLog(`[ZIP] Extracted ${extractedFiles.length} files`, 'success'); } catch (e) { showToast('Error extracting ZIP file', 'error'); addSystemLog(`[ERROR] ZIP extraction failed: ${e.message}`, 'error'); } }
-    async function startModernZipUpload() { const repo = document.getElementById('targetRepoName2')?.value.trim(); const branch = document.getElementById('branchName2')?.value.trim() || 'main'; const msg = document.getElementById('commitMsg2')?.value.trim() || 'Upload ZIP via RepoFlow'; if (!repo) { showToast('Repository name required', 'error'); return; } if (!extractedFiles.length) { showToast('No ZIP file selected', 'error'); return; } showTerminal(); addSystemLog(`[ZIP UPLOAD] Extracting ${extractedFiles.length} files to ${repo}`, 'info'); let success = 0, error = 0; for (const file of extractedFiles) { const path = file.webkitRelativePath || file.name; addSystemLog(`[UPLOAD] Uploading ${path}...`, 'info'); try { let sha = null; try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e) {} const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); }); await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha }); success++; addSystemLog(`[SUCCESS] Uploaded ${path}`, 'success'); } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${path}: ${err.message}`, 'error'); } } addSystemLog(`[ZIP UPLOAD] Complete: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning'); showToast(`ZIP upload: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning'); extractedFiles = []; const previewContainer = document.getElementById('zipPreviewContainer'); if (previewContainer) previewContainer.style.display = 'none'; const uploadBtn = document.getElementById('startUploadBtn2'); if (uploadBtn) uploadBtn.style.display = 'none'; }
+    
+    async function startModernZipUpload() {
+      const repo = document.getElementById('targetRepoName2')?.value.trim();
+      const branch = document.getElementById('branchName2')?.value.trim() || 'main';
+      const msg = document.getElementById('commitMsg2')?.value.trim() || 'Upload ZIP via RepoFlow';
+      if (!repo) { showToast('Repository name required', 'error'); return; }
+      if (!extractedFiles.length) { showToast('No ZIP file selected', 'error'); return; }
+      showTerminal();
+      addSystemLog(`[ZIP UPLOAD] Extracting ${extractedFiles.length} files to ${repo}`, 'info');
+      let success = 0, error = 0;
+      for (const file of extractedFiles) {
+        const path = file.webkitRelativePath || file.name;
+        addSystemLog(`[UPLOAD] Uploading ${path}...`, 'info');
+        try {
+          let sha = null;
+          try {
+            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`, 'GET');
+            sha = existing.sha;
+          } catch(e) {}
+          const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); });
+          await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
+          success++;
+          addSystemLog(`[SUCCESS] Uploaded ${path}`, 'success');
+        } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${path}: ${err.message}`, 'error'); }
+      }
+      addSystemLog(`[ZIP UPLOAD] Complete: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning');
+      showToast(`ZIP upload: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning');
+      extractedFiles = [];
+      document.getElementById('zipPreviewContainer').style.display = 'none';
+      document.getElementById('startUploadBtn2').style.display = 'none';
+    }
+    
+    // Function to upload README and LICENSE to a repository
+    async function uploadReadmeAndLicenseToRepo(repo, branch, commitMsg) {
+      const files = [];
+      const readmeContent = generateReadmeContent();
+      files.push({ name: 'README.md', content: readmeContent });
+      
+      const hasLicense = document.getElementById('enableLicense')?.checked || false;
+      if (hasLicense) {
+        const licenseContent = generateLicenseContent();
+        files.push({ name: 'LICENSE', content: licenseContent });
+      }
+      
+      let success = 0, error = 0;
+      for (const file of files) {
+        try {
+          let sha = null;
+          try {
+            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}?ref=${branch}`, 'GET');
+            sha = existing.sha;
+          } catch(e) {}
+          const b64 = btoa(unescape(encodeURIComponent(file.content)));
+          await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}`, 'PUT', {
+            message: commitMsg || `Add ${file.name}`,
+            content: b64,
+            branch: branch,
+            sha: sha
+          });
+          success++;
+          addSystemLog(`[SUCCESS] Uploaded ${file.name}`, 'success');
+        } catch (err) {
+          error++;
+          addSystemLog(`[ERROR] Failed to upload ${file.name}: ${err.message}`, 'error');
+        }
+      }
+      return { success, error };
+    }
+    
+    // Combine upload with README and LICENSE
+    async function startCombinedUpload() {
+      const repo = document.getElementById('targetRepoName1')?.value.trim();
+      const branch = document.getElementById('branchName1')?.value.trim() || 'main';
+      const msg = document.getElementById('commitMsg1')?.value.trim() || 'Initial commit via RepoFlow';
+      if (!repo) { showToast('Repository name required', 'error'); return; }
+      
+      showTerminal();
+      addSystemLog(`[UPLOAD] Starting combined upload to ${gitUsername}/${repo}`, 'info');
+      
+      // Upload files first
+      let fileSuccess = 0, fileError = 0;
+      for (const file of modernFiles) {
+        addSystemLog(`[UPLOAD] Uploading ${file.name}...`, 'info');
+        try {
+          let sha = null;
+          try {
+            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}?ref=${branch}`, 'GET');
+            sha = existing.sha;
+          } catch(e) {}
+          const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); });
+          await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
+          fileSuccess++;
+          addSystemLog(`[SUCCESS] Uploaded ${file.name}`, 'success');
+        } catch (err) { fileError++; addSystemLog(`[ERROR] Failed to upload ${file.name}: ${err.message}`, 'error'); }
+      }
+      
+      // Upload README and LICENSE
+      const result = await uploadReadmeAndLicenseToRepo(repo, branch, msg);
+      
+      const totalSuccess = fileSuccess + result.success;
+      const totalError = fileError + result.error;
+      
+      if (totalError === 0) {
+        addSystemLog(`[SUCCESS] Upload complete! ${totalSuccess} files uploaded`, 'success');
+        showToast(`Successfully uploaded ${totalSuccess} files!`, 'success');
+        modernFiles = [];
+        renderFileList();
+        document.getElementById('startUploadBtn1').style.display = 'none';
+      } else {
+        addSystemLog(`[WARNING] Upload completed with ${totalError} errors`, 'warning');
+        showToast(`Uploaded: ${totalSuccess} success, ${totalError} failed`, 'warning');
+      }
+    }
     
     const startUploadBtn1 = document.getElementById('startUploadBtn1');
+    if (startUploadBtn1) startUploadBtn1.addEventListener('click', startCombinedUpload);
+    
     const startUploadBtn2 = document.getElementById('startUploadBtn2');
-    if (startUploadBtn1) startUploadBtn1.addEventListener('click', startModernUpload);
     if (startUploadBtn2) startUploadBtn2.addEventListener('click', startModernZipUpload);
     
     const dropZone1 = document.getElementById('dropZone1');
@@ -513,13 +651,8 @@ For more information, please refer to <https://unlicense.org>`
       const hasLicense = document.getElementById('enableLicense')?.checked || false;
       const licenseType = getSelectedLicense();
       const licenseNameMap = {
-        'mit': 'MIT',
-        'gpl-3.0': 'GPL-3.0',
-        'apache-2.0': 'Apache-2.0',
-        'bsd-3-clause': 'BSD-3-Clause',
-        'isc': 'ISC',
-        'cc0-1.0': 'CC0-1.0',
-        'unlicense': 'Unlicense'
+        'mit': 'MIT', 'gpl-3.0': 'GPL-3.0', 'apache-2.0': 'Apache-2.0',
+        'bsd-3-clause': 'BSD-3-Clause', 'isc': 'ISC', 'cc0-1.0': 'CC0-1.0', 'unlicense': 'Unlicense'
       };
       const licenseName = licenseNameMap[licenseType] || 'MIT';
       const year = new Date().getFullYear();
@@ -540,7 +673,7 @@ For more information, please refer to <https://unlicense.org>`
         if (socialInstagram) markdown += `[![Instagram](https://img.shields.io/badge/Instagram-${socialInstagram}-purple?style=flat-square&logo=instagram)](https://instagram.com/${socialInstagram}) `;
         markdown += `\n\n---\n\n`;
         markdown += `## 🤝 Contributing\n\nContributions, issues, and feature requests are welcome!\n\n---\n\n`;
-        if (hasLicense) markdown += `## 📜 License\n\nCopyright © ${year} ${author}.\nThis project is licensed under the **${licenseName}** license.\n\n[![License](https://img.shields.io/badge/License-${licenseName}-cyan.svg)](https://opensource.org/licenses/${licenseType === 'mit' ? 'MIT' : licenseType === 'gpl-3.0' ? 'GPL-3.0' : licenseType === 'apache-2.0' ? 'Apache-2.0' : licenseType === 'bsd-3-clause' ? 'BSD-3-Clause' : licenseType === 'isc' ? 'ISC' : licenseType === 'cc0-1.0' ? 'CC0-1.0' : 'Unlicense'})\n\n---\n\n`;
+        if (hasLicense) markdown += `## 📜 License\n\nCopyright © ${year} ${author}.\nThis project is licensed under the **${licenseName}** license.\n\n---\n\n`;
         markdown += `<div align="center">\n\n### ⚡ Built with RepoFlow Pro ⚡\n\n</div>`;
       } else if (currentTemplate === 'minimal') {
         markdown = `# ${name}\n\n${tagline}\n\n${desc}\n\n## Features\n\n`;
@@ -570,9 +703,11 @@ For more information, please refer to <https://unlicense.org>`
     const addFeatureBtn = document.getElementById('addFeatureBtn');
     const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
     const downloadReadmeBtn = document.getElementById('downloadReadmeBtn');
+    const downloadLicenseBtn = document.getElementById('downloadLicenseBtn');
     if (addFeatureBtn) addFeatureBtn.addEventListener('click', () => { features.push(''); renderFeatures(); updateReadmePreview(); });
     if (copyMarkdownBtn) copyMarkdownBtn.addEventListener('click', copyMarkdownToClipboard);
     if (downloadReadmeBtn) downloadReadmeBtn.addEventListener('click', downloadReadmeFile);
+    if (downloadLicenseBtn) downloadLicenseBtn.addEventListener('click', downloadLicenseFile);
     
     document.querySelectorAll('.template-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentTemplate = btn.dataset.template; updateReadmePreview(); }); });
     
@@ -634,7 +769,6 @@ For more information, please refer to <https://unlicense.org>`
     renderTechTags();
     updateReadmePreview();
     
-    // Set initial license selector visibility
     if (licenseSelector && enableLicenseCheckbox) {
       licenseSelector.style.display = enableLicenseCheckbox.checked ? 'block' : 'none';
     }
@@ -647,4 +781,4 @@ For more information, please refer to <https://unlicense.org>`
     window.showDeleteModal = showDeleteModal;
     window.showCloneModal = showCloneModal;
     window.loadRepositories = loadRepositories;
- 
+  
