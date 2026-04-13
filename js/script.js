@@ -1,1084 +1,1187 @@
-// ========================================
-// REPOFLOW - COMPLETE GITHUB MANAGER
-// With Cyberpunk README Generator PRO
-// ========================================
 
-// =============== STATE MANAGEMENT ===============
-let gitUsername = "";
-let gitToken = "";
-let isAuthenticated = false;
-let modernFiles = [];
-let extractedFiles = [];
-let activityLog = [];
-let allRepositories = [];
-let filteredRepositories = [];
-let currentFilter = 'all';
-let currentSort = 'updated';
-let currentPage = 1;
-let itemsPerPage = 12;
-let pinnedRepos = [];
-let currentDeleteTarget = null;
-let currentCloneTarget = null;
-let isLoadingReposEnhanced = false;
-let searchDebounceTimer = null;
-let currentView = 'list';
-let searchQuery = '';
-let currentMode = 'mode1';
-let features = [""];
-let techStack = [];
-let previewImages = [];
-let commitChart = null;
-let typingTimeout = null;
-let isTypingActive = false;
-let currentTemplate = 'cyberpunk';
-
-// Gitignore templates
-const gitignoreTemplates = {
-  node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
-  react: `node_modules/\nbuild/\n.env\n.DS_Store\n*.log\ncoverage/`,
-  python: `__pycache__/\n*.py[cod]\n.env\nvenv/\n*.pyc\n.pytest_cache/`,
-  java: `*.class\ntarget/\n*.log\n.settings/\n.project\n.classpath`
-};
-
-const languageColors = {
-  'JavaScript': '#f1e05a', 'TypeScript': '#3178c6', 'Python': '#3572A5',
-  'Java': '#b07219', 'Go': '#00ADD8', 'Rust': '#dea584', 'default': '#8b949e'
-};
-
-// =============== INITIALIZATION ===============
-document.addEventListener('DOMContentLoaded', () => {
-  loadPinnedRepos();
-  
-  // Navigation
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      navigateTo(item.dataset.page);
-      if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
-    });
-  });
-  
-  // Menu Toggle
-  document.getElementById('menuToggle')?.addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('open');
-  });
-  
-  // Close sidebar on outside click
-  document.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768) {
+    // ========================================
+    // REPOFLOW - COMPLETE GITHUB MANAGER
+    // With Modern Sidebar & All Functionality
+    // ========================================
+    
+    // =============== STATE MANAGEMENT ===============
+    let gitUsername = "";
+    let gitToken = "";
+    let isAuthenticated = false;
+    let modernFiles = [];
+    let extractedFiles = [];
+    let activityLog = [];
+    let allRepositories = [];
+    let filteredRepositories = [];
+    let currentFilter = 'all';
+    let currentSort = 'updated';
+    let currentPage = 1;
+    let itemsPerPage = 10;
+    let pinnedRepos = [];
+    let currentDeleteTarget = null;
+    let currentCloneTarget = null;
+    let isLoadingReposEnhanced = false;
+    let searchDebounceTimer = null;
+    let searchQuery = '';
+    let currentMode = 'mode1';
+    let commitChart = null;
+    
+    // Gitignore templates
+    const gitignoreTemplates = {
+      Node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
+      Python: `__pycache__/\n*.py[cod]\n.env\nvenv/\n*.pyc\n.pytest_cache/`,
+      Java: `*.class\ntarget/\n*.log\n.settings/\n.project\n.classpath`
+    };
+    
+    const languageColors = {
+      'JavaScript': '#f1e05a', 'TypeScript': '#3178c6', 'Python': '#3572A5',
+      'Java': '#b07219', 'Go': '#00ADD8', 'Rust': '#dea584', 'default': '#8b949e'
+    };
+    
+    // =============== SIDEBAR MODERN FUNCTIONS ===============
+    let isCollapsed = false;
+    let isMobile = window.innerWidth <= 768;
+    
+    function loadSidebarState() {
+      const savedState = localStorage.getItem('sidebarCollapsed');
       const sidebar = document.getElementById('sidebar');
-      const toggle = document.getElementById('menuToggle');
-      if (!sidebar.contains(e.target) && !toggle.contains(e.target)) {
-        sidebar.classList.remove('open');
+      if (savedState !== null && !isMobile && sidebar) {
+        isCollapsed = savedState === 'true';
+        if (isCollapsed) {
+          sidebar.classList.add('collapsed');
+        } else {
+          sidebar.classList.remove('collapsed');
+        }
       }
     }
-  });
-  
-  // Quick actions
-  document.querySelectorAll('.quick-btn').forEach(btn => {
-    btn.addEventListener('click', () => navigateTo(btn.dataset.page));
-  });
-  
-  // Mode Tabs
-  document.querySelectorAll('.mode-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const mode = tab.dataset.mode;
-      document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('mode1Container').style.display = mode === 'mode1' ? 'block' : 'none';
-      document.getElementById('mode2Container').style.display = mode === 'mode2' ? 'block' : 'none';
-      currentMode = mode;
-    });
-  });
-  
-  // Login
-  document.getElementById('showLoginBtn')?.addEventListener('click', () => showLoginModal());
-  document.getElementById('authBtn')?.addEventListener('click', authenticateAndVerify);
-  document.getElementById('closeLoginModal')?.addEventListener('click', () => closeModal('loginModal'));
-  document.getElementById('logoutBtn')?.addEventListener('click', logout);
-  
-  // Create repo
-  document.getElementById('confirmCreateRepo')?.addEventListener('click', executeCreateRepo);
-  document.getElementById('confirmDeleteRepoBtn')?.addEventListener('click', executeDeleteFromPage);
-  
-  // Upload handlers
-  initEnhancedUpload();
-  setupMode1UploadHandlers();
-  setupMode2UploadHandlers();
-  initEnhancedRepositories();
-  
-  // Refresh repos
-  document.getElementById('refreshReposBtn')?.addEventListener('click', async () => {
-    if (!isAuthenticated) return addSystemLog('[WARNING] Please login first', 'warning');
-    const btn = document.getElementById('refreshReposBtn');
-    btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
-    await loadRepositoriesEnhanced(true);
-    btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-  });
-  
-  // Terminal controls
-  initTerminalControls();
-  
-  // Theme toggle
-  initThemeToggle();
-  
-  // Close modals
-  document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
-  });
-  document.getElementById('closeDeleteModalBtn')?.addEventListener('click', () => closeModal('deleteModal'));
-  document.getElementById('cancelDeleteBtn')?.addEventListener('click', () => closeModal('deleteModal'));
-  document.getElementById('closeCloneModalBtn')?.addEventListener('click', () => closeModal('cloneModal'));
-  document.getElementById('closeCloneModalFooterBtn')?.addEventListener('click', () => closeModal('cloneModal'));
-  document.getElementById('copyCloneUrlBtn')?.addEventListener('click', copyCloneUrl);
-  document.getElementById('confirmDeleteModalBtn')?.addEventListener('click', async () => {
-    const input = document.getElementById('deleteConfirmInput')?.value.trim();
-    if (input === currentDeleteTarget) {
-      await executeDeleteRepo(currentDeleteTarget);
-      closeModal('deleteModal');
-      await loadRepositoriesEnhanced(true);
-    } else showToast('Repository name does not match!', 'error');
-  });
-  
-  // Cyberpunk README Generator
-  initCyberpunkReadmeGenerator();
-  
-  // Profile Page
-  initProfilePage();
-  
-  // Sidebar profile button
-  document.getElementById('sidebarProfileBtn')?.addEventListener('click', () => {
-    navigateTo('profile');
-    if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
-  });
-  
-  // Copy Instagram from profile
-  document.getElementById('copyInstagramProfileBtn')?.addEventListener('click', copyInstagram);
-  document.getElementById('instagramLink')?.addEventListener('click', (e) => { e.preventDefault(); copyInstagram(); });
-  
-  // Copy and download README buttons
-  document.getElementById('copyMarkdownBtn')?.addEventListener('click', copyMarkdownToClipboard);
-  document.getElementById('downloadReadmeBtn')?.addEventListener('click', downloadReadmeFile);
-  
-  // Template buttons
-  document.querySelectorAll('.template-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentTemplate = btn.dataset.template;
-      updateReadmePreview();
-    });
-  });
-  
-  // Terminal welcome
-  setTimeout(() => {
-    if (document.getElementById('terminalBody')?.children.length === 0 && !isAuthenticated) {
-      startTerminalWelcomeTyping();
-    }
-  }, 500);
-});
-
-// =============== TERMINAL CONTROLS ===============
-function initTerminalControls() {
-  const terminalContainer = document.getElementById('terminalContainer');
-  const minimizeBtn = document.getElementById('terminalMinimizeBtn');
-  const maximizeBtn = document.getElementById('terminalMaximizeBtn');
-  const closeBtn = document.getElementById('closeTerminalBtn');
-  const showBtn = document.getElementById('showTerminalBtn');
-  
-  if (minimizeBtn) {
-    minimizeBtn.addEventListener('click', () => {
-      terminalContainer.classList.add('minimized');
-      minimizeBtn.style.display = 'none';
-      maximizeBtn.style.display = 'flex';
-      showBtn.style.display = 'flex';
-    });
-  }
-  
-  if (maximizeBtn) {
-    maximizeBtn.addEventListener('click', () => {
-      terminalContainer.classList.remove('minimized');
-      maximizeBtn.style.display = 'none';
-      minimizeBtn.style.display = 'flex';
-      showBtn.style.display = 'none';
-    });
-  }
-  
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      terminalContainer.style.display = 'none';
-      showBtn.style.display = 'flex';
-    });
-  }
-  
-  if (showBtn) {
-    showBtn.addEventListener('click', () => {
-      terminalContainer.style.display = 'block';
-      showBtn.style.display = 'none';
-      if (terminalContainer.classList.contains('minimized')) {
-        maximizeBtn.click();
+    
+    function saveSidebarState() {
+      if (!isMobile) {
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
       }
-    });
-  }
-}
-
-// =============== THEME TOGGLE ===============
-function initThemeToggle() {
-  const themeBtn = document.getElementById('themeToggleBtn');
-  if (themeBtn) {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      document.body.classList.add('light-theme');
-      themeBtn.innerHTML = '<i class="fas fa-sun"></i> <span>Light Mode</span>';
     }
     
-    themeBtn.addEventListener('click', () => {
-      document.body.classList.toggle('light-theme');
-      const isLight = document.body.classList.contains('light-theme');
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
-      themeBtn.innerHTML = isLight ? '<i class="fas fa-sun"></i> <span>Light Mode</span>' : '<i class="fas fa-moon"></i> <span>Dark Mode</span>';
-    });
-  }
-}
-
-// =============== PROFILE PAGE ===============
-function initProfilePage() {
-  updateProfilePage();
-}
-
-function updateProfilePage() {
-  const profileName = document.getElementById('profilePageName');
-  const profileAvatar = document.getElementById('profilePageAvatar');
-  const profileReposCount = document.getElementById('profileReposCount');
-  const profileStarsCount = document.getElementById('profileStarsCount');
-  const profileForksCount = document.getElementById('profileForksCount');
-  
-  if (isAuthenticated && gitUsername) {
-    if (profileName) profileName.textContent = gitUsername;
-    if (profileReposCount) profileReposCount.textContent = allRepositories.length;
-    if (profileStarsCount) profileStarsCount.textContent = allRepositories.reduce((s, r) => s + r.stargazers_count, 0);
-    if (profileForksCount) profileForksCount.textContent = allRepositories.reduce((s, r) => s + r.forks_count, 0);
-    
-    fetch(`https://api.github.com/users/${gitUsername}`, {
-      headers: { 'Authorization': `Bearer ${gitToken}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.avatar_url && profileAvatar) profileAvatar.src = data.avatar_url;
-    }).catch(() => {});
-  }
-}
-
-function copyInstagram() {
-  const instagram = document.getElementById('socialInstagram')?.value || '@jhon_production';
-  navigator.clipboard.writeText(instagram);
-  showToast(`Instagram copied: ${instagram}`, 'success');
-}
-
-function updateSidebarProfile() {
-  const sidebarName = document.getElementById('sidebarName');
-  const sidebarAvatar = document.getElementById('sidebarAvatar');
-  if (isAuthenticated && gitUsername) {
-    if (sidebarName) sidebarName.textContent = gitUsername;
-    fetch(`https://api.github.com/users/${gitUsername}`, {
-      headers: { 'Authorization': `Bearer ${gitToken}` }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.avatar_url && sidebarAvatar) sidebarAvatar.src = data.avatar_url;
-    }).catch(() => {});
-  } else {
-    if (sidebarName) sidebarName.textContent = 'jhon ofc';
-    if (sidebarAvatar) sidebarAvatar.src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
-  }
-}
-
-function updateConnectionStatus(connected) {
-  const statusDiv = document.getElementById('connectionStatus');
-  if (statusDiv) {
-    if (connected) {
-      statusDiv.classList.add('connected');
-      statusDiv.querySelector('span').textContent = 'Connected';
-    } else {
-      statusDiv.classList.remove('connected');
-      statusDiv.querySelector('span').textContent = 'Disconnected';
-    }
-  }
-}
-
-function updateHeroStats() {
-  const heroTotalRepos = document.getElementById('heroTotalRepos');
-  const quickTotalRepos = document.getElementById('quickTotalRepos');
-  const quickTotalStars = document.getElementById('quickTotalStars');
-  const quickTotalForks = document.getElementById('quickTotalForks');
-  
-  if (heroTotalRepos) heroTotalRepos.textContent = allRepositories.length;
-  if (quickTotalRepos) quickTotalRepos.textContent = allRepositories.length;
-  if (quickTotalStars) quickTotalStars.textContent = allRepositories.reduce((s, r) => s + r.stargazers_count, 0);
-  if (quickTotalForks) quickTotalForks.textContent = allRepositories.reduce((s, r) => s + r.forks_count, 0);
-}
-
-// =============== CYBERPUNK README GENERATOR ===============
-function initCyberpunkReadmeGenerator() {
-  const enableCheckbox = document.getElementById('enableReadmeGenerator');
-  const section = document.getElementById('readmeGeneratorSection');
-  if (enableCheckbox) {
-    enableCheckbox.addEventListener('change', () => {
-      section.style.display = enableCheckbox.checked ? 'block' : 'none';
-      updateFileTreePreview();
-      updateReadmePreview();
-    });
-  }
-  
-  // Features
-  document.getElementById('addFeatureBtn')?.addEventListener('click', () => { features.push(''); renderFeatures(); updateReadmePreview(); });
-  
-  // Preview Images
-  document.getElementById('addPreviewImageBtn')?.addEventListener('click', () => { previewImages.push(''); renderPreviewImages(); updateReadmePreview(); });
-  
-  // Input listeners
-  const inputs = ['projectName', 'projectTagline', 'projectGif', 'projectDesc', 'installSteps', 'usageSteps', 'authorName', 'authorBio', 'socialGithub', 'socialInstagram', 'socialTwitter', 'seoKeywords'];
-  inputs.forEach(id => {
-    document.getElementById(id)?.addEventListener('input', updateReadmePreview);
-  });
-  
-  // License and Gitignore
-  document.getElementById('enableLicense')?.addEventListener('change', () => {
-    const preview = document.getElementById('licensePreview');
-    if (document.getElementById('enableLicense').checked) {
-      const author = document.getElementById('authorName').value.trim() || gitUsername || "Anonymous";
-      const year = new Date().getFullYear();
-      preview.innerHTML = `<strong>MIT License:</strong><pre style="margin-top:8px">MIT License\n\nCopyright (c) ${year} ${author}\n\nPermission is hereby granted...</pre>`;
-      preview.style.display = 'block';
-    } else preview.style.display = 'none';
-    updateFileTreePreview();
-  });
-  
-  document.getElementById('enableGitignore')?.addEventListener('change', () => {
-    document.getElementById('gitignoreSection').style.display = document.getElementById('enableGitignore').checked ? 'block' : 'none';
-    updateFileTreePreview();
-  });
-  document.getElementById('gitignoreTemplateSelect')?.addEventListener('change', (e) => {
-    const val = e.target.value;
-    if (val && gitignoreTemplates[val]) {
-      document.getElementById('gitignoreContent').value = gitignoreTemplates[val];
-      updateFileTreePreview();
-    }
-  });
-  document.getElementById('gitignoreContent')?.addEventListener('input', updateFileTreePreview);
-  
-  renderFeatures();
-  renderTechTags();
-  renderPreviewImages();
-}
-
-function renderFeatures() {
-  const container = document.getElementById('featuresList');
-  if (!container) return;
-  container.innerHTML = features.map((f, i) => `
-    <div class="list-item">
-      <input type="text" class="modern-input" value="${escapeHtml(f)}" data-feature-idx="${i}" placeholder="Feature">
-      <button class="btn-secondary" style="padding:6px 12px" data-remove-feature="${i}"><i class="fas fa-trash"></i></button>
-    </div>
-  `).join('');
-  document.querySelectorAll('[data-feature-idx]').forEach(inp => {
-    inp.addEventListener('change', (e) => { features[parseInt(inp.dataset.featureIdx)] = inp.value; updateReadmePreview(); });
-  });
-  document.querySelectorAll('[data-remove-feature]').forEach(btn => {
-    btn.addEventListener('click', () => { features.splice(parseInt(btn.dataset.removeFeature), 1); if(features.length===0) features=['']; renderFeatures(); updateReadmePreview(); });
-  });
-}
-
-function renderPreviewImages() {
-  const container = document.getElementById('previewImagesList');
-  if (!container) return;
-  container.innerHTML = previewImages.map((img, i) => `
-    <div class="list-item">
-      <input type="text" class="modern-input cyberpunk-input" value="${escapeHtml(img)}" data-preview-idx="${i}" placeholder="Image/GIF URL">
-      <button class="btn-secondary" style="padding:6px 12px" data-remove-preview="${i}"><i class="fas fa-trash"></i></button>
-    </div>
-  `).join('');
-  document.querySelectorAll('[data-preview-idx]').forEach(inp => {
-    inp.addEventListener('change', (e) => { previewImages[parseInt(inp.dataset.previewIdx)] = inp.value; updateReadmePreview(); });
-  });
-  document.querySelectorAll('[data-remove-preview]').forEach(btn => {
-    btn.addEventListener('click', () => { previewImages.splice(parseInt(btn.dataset.removePreview), 1); renderPreviewImages(); updateReadmePreview(); });
-  });
-}
-
-function renderTechTags() {
-  const container = document.getElementById('techTags');
-  if (!container) return;
-  container.innerHTML = techStack.map(t => `<span class="tag">${escapeHtml(t)} <span class="tag-remove" data-tech="${escapeHtml(t)}">&times;</span></span>`).join('') + `<input type="text" class="tag-input" id="techInput" placeholder="Add tech...">`;
-  document.querySelectorAll('.tag-remove').forEach(btn => {
-    btn.addEventListener('click', () => { techStack = techStack.filter(t => t !== btn.dataset.tech); renderTechTags(); updateReadmePreview(); });
-  });
-  const techInput = document.getElementById('techInput');
-  if (techInput) {
-    techInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && techInput.value.trim()) {
-        techStack.push(techInput.value.trim());
-        techInput.value = '';
-        renderTechTags();
-        updateReadmePreview();
+    function toggleCollapse() {
+      const sidebar = document.getElementById('sidebar');
+      if (isMobile || !sidebar) return;
+      isCollapsed = !isCollapsed;
+      if (isCollapsed) {
+        sidebar.classList.add('collapsed');
+      } else {
+        sidebar.classList.remove('collapsed');
       }
-    });
-  }
-}
-
-function generateCyberpunkReadme() {
-  const name = document.getElementById('projectName')?.value.trim() || "CyberProject";
-  const tagline = document.getElementById('projectTagline')?.value.trim() || "⚡ Next-gen GitHub Manager ⚡";
-  const projectGif = document.getElementById('projectGif')?.value.trim();
-  const desc = document.getElementById('projectDesc')?.value.trim();
-  const featuresList = features.filter(f => f.trim());
-  const tech = techStack;
-  const install = document.getElementById('installSteps')?.value.trim();
-  const usage = document.getElementById('usageSteps')?.value.trim();
-  const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
-  const authorBio = document.getElementById('authorBio')?.value.trim() || "Full-stack developer & cybersecurity enthusiast";
-  const socialGithub = document.getElementById('socialGithub')?.value.trim();
-  const socialInstagram = document.getElementById('socialInstagram')?.value.trim();
-  const socialTwitter = document.getElementById('socialTwitter')?.value.trim();
-  const seoKeywords = document.getElementById('seoKeywords')?.value.trim() || "github, manager, repository, upload, terminal";
-  const year = new Date().getFullYear();
-  
-  let markdown = '';
-  
-  if (currentTemplate === 'cyberpunk') {
-    // Cyberpunk Template
-    markdown = `<!-- SEO Keywords: ${seoKeywords} -->\n\n`;
-    markdown += `<div align="center">\n\n`;
-    markdown += `# ⚡ ${name} ⚡\n\n`;
-    markdown += `### ${tagline}\n\n`;
-    if (projectGif) markdown += `<img src="${projectGif}" width="600" alt="Project Demo"/>\n\n`;
-    markdown += `![GitHub stars](https://img.shields.io/github/stars/${socialGithub || 'username'}/${name}?style=for-the-badge&color=cyan)\n`;
-    markdown += `![GitHub forks](https://img.shields.io/github/forks/${socialGithub || 'username'}/${name}?style=for-the-badge&color=purple)\n`;
-    markdown += `![License](https://img.shields.io/badge/License-MIT-cyan?style=for-the-badge)\n`;
-    markdown += `![Version](https://img.shields.io/badge/version-1.0.0-purple?style=for-the-badge)\n\n`;
-    markdown += `---\n\n`;
-    if (desc) markdown += `## 🔮 Description\n\n${desc}\n\n---\n\n`;
-    
-    // Features
-    if (featuresList.length) {
-      markdown += `## ✨ Features\n\n`;
-      featuresList.forEach(f => markdown += `- \`⚡\` ${f}\n`);
-      markdown += `\n---\n\n`;
+      saveSidebarState();
     }
     
-    // UI Preview
-    if (previewImages.length > 0) {
-      markdown += `## 🎮 UI Preview\n\n<div align="center">\n\n`;
-      previewImages.forEach(img => {
-        if (img.trim()) markdown += `<img src="${img.trim()}" width="45%" style="margin: 10px; border-radius: 12px; box-shadow: 0 0 20px cyan;" />\n`;
+    function openMobileDrawer() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar) sidebar.classList.add('mobile-open');
+      if (overlay) overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeMobileDrawer() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar) sidebar.classList.remove('mobile-open');
+      if (overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+    
+    function toggleMobileDrawer() {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar && sidebar.classList.contains('mobile-open')) {
+        closeMobileDrawer();
+      } else {
+        openMobileDrawer();
+      }
+    }
+    
+    function handleResize() {
+      const wasMobile = isMobile;
+      isMobile = window.innerWidth <= 768;
+      const sidebar = document.getElementById('sidebar');
+      
+      if (isMobile && !wasMobile && sidebar) {
+        sidebar.classList.remove('collapsed');
+        closeMobileDrawer();
+        isCollapsed = false;
+      } else if (!isMobile && wasMobile && sidebar) {
+        sidebar.classList.remove('mobile-open');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (overlay) overlay.classList.remove('active');
+        document.body.style.overflow = '';
+        loadSidebarState();
+      }
+    }
+    
+    // =============== INITIALIZATION ===============
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPinnedRepos();
+      initSidebar();
+      initNavigation();
+      initUploadHandlers();
+      initRepositories();
+      initTerminalControls();
+      initThemeToggle();
+      initModals();
+      initQuickActions();
+      
+      // Set default page
+      navigateTo('home');
+      
+      // Add welcome message
+      setTimeout(() => {
+        if (document.getElementById('terminalBody')?.children.length === 0 && !isAuthenticated) {
+          addSystemLog('[SYSTEM] Welcome to RepoFlow Pro!', 'success');
+          addSystemLog('[SYSTEM] Please login to manage your GitHub repositories', 'info');
+        }
+      }, 500);
+    });
+    
+    function initSidebar() {
+      const collapseToggleBtn = document.getElementById('collapseToggleBtn');
+      const menuToggle = document.getElementById('menuToggle');
+      const sidebarOverlay = document.getElementById('sidebarOverlay');
+      
+      if (collapseToggleBtn) collapseToggleBtn.addEventListener('click', toggleCollapse);
+      if (menuToggle) menuToggle.addEventListener('click', toggleMobileDrawer);
+      if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileDrawer);
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMobileDrawer();
       });
-      markdown += `\n</div>\n\n---\n\n`;
+      
+      window.addEventListener('resize', handleResize);
+      loadSidebarState();
+      handleResize();
     }
     
-    // Tech Stack
-    if (tech.length) {
-      markdown += `## 🛠️ Tech Stack\n\n`;
-      tech.forEach(t => markdown += `<code style="color:cyan">⚡ ${t}</code> `);
-      markdown += `\n\n---\n\n`;
+    function initNavigation() {
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.preventDefault();
+          const page = item.dataset.page;
+          if (page) navigateTo(page);
+          closeMobileDrawer();
+        });
+      });
+      
+      document.getElementById('sidebarProfileBtn')?.addEventListener('click', () => {
+        navigateTo('profile');
+        closeMobileDrawer();
+      });
     }
     
-    // Installation
-    if (install) {
-      markdown += `## 📦 Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n---\n\n`;
+    function initQuickActions() {
+      document.querySelectorAll('.quick-action-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const page = card.dataset.page;
+          if (page) navigateTo(page);
+        });
+      });
     }
     
-    // Usage
-    if (usage) {
-      markdown += `## 🚀 Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n---\n\n`;
+    function initModals() {
+      document.getElementById('showLoginBtn')?.addEventListener('click', () => showModal('loginModal'));
+      document.getElementById('closeLoginModal')?.addEventListener('click', () => closeModal('loginModal'));
+      document.getElementById('authBtn')?.addEventListener('click', authenticateAndVerify);
+      document.getElementById('logoutBtn')?.addEventListener('click', logout);
+      
+      document.getElementById('closeDeleteModalBtn')?.addEventListener('click', () => closeModal('deleteModal'));
+      document.getElementById('cancelDeleteBtn')?.addEventListener('click', () => closeModal('deleteModal'));
+      document.getElementById('confirmDeleteModalBtn')?.addEventListener('click', confirmDeleteFromModal);
+      
+      document.getElementById('closeCloneModalBtn')?.addEventListener('click', () => closeModal('cloneModal'));
+      document.getElementById('closeCloneModalFooterBtn')?.addEventListener('click', () => closeModal('cloneModal'));
+      document.getElementById('copyCloneUrlBtn')?.addEventListener('click', copyCloneUrl);
+      
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+      });
     }
     
-    // Developer
-    markdown += `## 👨‍💻 Developer\n\n`;
-    markdown += `<div align="center">\n\n`;
-    markdown += `**${author}**\n\n`;
-    markdown += `*${authorBio}*\n\n`;
-    markdown += `<p>\n`;
-    if (socialGithub) markdown += `  <a href="https://github.com/${socialGithub}"><img src="https://img.shields.io/badge/GitHub-${socialGithub}-cyan?style=for-the-badge&logo=github"/></a>\n`;
-    if (socialInstagram) markdown += `  <a href="https://instagram.com/${socialInstagram}"><img src="https://img.shields.io/badge/Instagram-${socialInstagram}-purple?style=for-the-badge&logo=instagram"/></a>\n`;
-    if (socialTwitter) markdown += `  <a href="https://twitter.com/${socialTwitter}"><img src="https://img.shields.io/badge/Twitter-${socialTwitter}-cyan?style=for-the-badge&logo=twitter"/></a>\n`;
-    markdown += `</p>\n\n</div>\n\n---\n\n`;
-    
-    // License
-    markdown += `## 📜 License\n\n`;
-    markdown += `MIT License © ${year} ${author}\n\n`;
-    markdown += `---\n\n`;
-    markdown += `<div align="center">\n\n`;
-    markdown += `### ⚡ Built with RepoFlow Pro ⚡\n\n`;
-    markdown += `*Premium GitHub Manager*\n\n`;
-    markdown += `</div>`;
-    
-  } else if (currentTemplate === 'minimal') {
-    // Minimal Template
-    markdown = `# ${name}\n\n`;
-    if (desc) markdown += `${desc}\n\n`;
-    if (featuresList.length) {
-      markdown += `## Features\n\n`;
-      featuresList.forEach(f => markdown += `- ${f}\n`);
-      markdown += `\n`;
+    // =============== NAVIGATION ===============
+    function navigateTo(page) {
+      document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+      const targetPage = document.getElementById(`${page}Page`);
+      if (targetPage) targetPage.style.display = 'block';
+      
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const activeNav = [...document.querySelectorAll('.nav-item')].find(n => n.dataset.page === page);
+      if (activeNav) activeNav.classList.add('active');
+      
+      if (page === 'repos' && isAuthenticated) loadRepositoriesEnhanced();
+      if (page === 'dashboard' && isAuthenticated) updateDashboard();
+      if (page === 'profile') updateProfilePage();
     }
-    if (install) markdown += `## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n`;
-    if (usage) markdown += `## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n`;
-    markdown += `## License\n\nMIT © ${year} ${author}\n`;
     
-  } else {
-    // Clean Pro Template
-    markdown = `# ${name}\n\n`;
-    markdown += `> ${tagline}\n\n`;
-    if (desc) markdown += `## Description\n\n${desc}\n\n`;
-    if (featuresList.length) {
-      markdown += `## Features\n\n`;
-      featuresList.forEach(f => markdown += `- **${f}**\n`);
-      markdown += `\n`;
+    // =============== TERMINAL CONTROLS ===============
+    function initTerminalControls() {
+      const terminalContainer = document.getElementById('terminalContainer');
+      const showBtn = document.getElementById('showTerminalBtn');
+      const closeBtn = document.getElementById('closeTerminalBtn');
+      
+      if (showBtn) showBtn.addEventListener('click', () => {
+        terminalContainer.style.display = 'block';
+        showBtn.style.display = 'none';
+      });
+      
+      if (closeBtn) closeBtn.addEventListener('click', () => {
+        terminalContainer.style.display = 'none';
+        showBtn.style.display = 'flex';
+      });
     }
-    if (tech.length) {
-      markdown += `## Tech Stack\n\n`;
-      tech.forEach(t => markdown += `- ${t}\n`);
-      markdown += `\n`;
-    }
-    if (install) markdown += `## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n`;
-    if (usage) markdown += `## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n`;
-    markdown += `## License\n\nMIT © ${year} ${author}\n`;
-  }
-  
-  return markdown;
-}
-
-function updateReadmePreview() {
-  const md = generateCyberpunkReadme();
-  const previewDiv = document.getElementById('readmePreview');
-  if (previewDiv && typeof marked !== 'undefined') {
-    marked.setOptions({ breaks: true, gfm: true });
-    previewDiv.innerHTML = marked.parse(md);
-  }
-  updateFileTreePreview();
-}
-
-function generateLicenseContent() {
-  const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
-  const year = new Date().getFullYear();
-  return `MIT License\n\nCopyright (c) ${year} ${author}\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`;
-}
-
-function copyMarkdownToClipboard() {
-  const md = generateCyberpunkReadme();
-  navigator.clipboard.writeText(md);
-  showToast('README markdown copied to clipboard!', 'success');
-}
-
-function downloadReadmeFile() {
-  const md = generateCyberpunkReadme();
-  const blob = new Blob([md], { type: 'text/markdown' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'README.md';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('README.md downloaded!', 'success');
-}
-
-function updateFileTreePreview() {
-  const container = document.getElementById('fileTreePreview');
-  if (!container) return;
-  let html = '<div class="tree-item tree-folder" onclick="toggleFolder(this)"><i class="fas fa-folder"></i> 📁 project-root</div><div class="folder-children">';
-  if (document.getElementById('enableReadmeGenerator')?.checked) html += `<div class="tree-item tree-file"><i class="fas fa-file-alt"></i> README.md</div>`;
-  if (document.getElementById('enableLicense')?.checked) html += `<div class="tree-item tree-file"><i class="fas fa-file-contract"></i> LICENSE</div>`;
-  if (document.getElementById('enableGitignore')?.checked && document.getElementById('gitignoreContent')?.value.trim()) html += `<div class="tree-item tree-file"><i class="fas fa-ban"></i> .gitignore</div>`;
-  modernFiles.forEach(f => html += `<div class="tree-item tree-file"><i class="fas fa-file"></i> ${escapeHtml(f.file.name)}</div>`);
-  html += `</div>`;
-  container.innerHTML = html;
-}
-
-window.toggleFolder = function(el) {
-  const children = el.nextElementSibling;
-  if (children) children.classList.toggle('open');
-};
-
-// =============== AUTHENTICATION ===============
-function showLoginModal() { document.getElementById('loginModal').classList.add('active'); }
-function closeModal(modalId) { document.getElementById(modalId)?.classList.remove('active'); }
-
-async function authenticateAndVerify() {
-  const user = document.getElementById('githubUsername')?.value.trim();
-  const token = document.getElementById('githubToken')?.value.trim();
-  if (!user || !token) return showAuthStatus('Username and token required!', 'error');
-  
-  showTerminal();
-  addSystemLog('[AUTH] Connecting to GitHub API...', 'info');
-  
-  try {
-    const response = await fetch('https://api.github.com/user', {
-      headers: { 'Authorization': `Basic ${btoa(user + ':' + token)}` }
-    });
-    if (!response.ok) throw new Error('Invalid credentials');
-    const data = await response.json();
-    if (data.login.toLowerCase() !== user.toLowerCase()) throw new Error('Username mismatch');
     
-    gitUsername = user;
-    gitToken = token;
-    isAuthenticated = true;
+    function showTerminal() {
+      const terminal = document.getElementById('terminalContainer');
+      const showBtn = document.getElementById('showTerminalBtn');
+      if (terminal) terminal.style.display = 'block';
+      if (showBtn) showBtn.style.display = 'none';
+    }
     
-    addSystemLog(`[SUCCESS] Authenticated as ${gitUsername}`, 'success');
-    closeModal('loginModal');
-    document.getElementById('pagesContainer').style.display = 'block';
-    document.getElementById('userName').textContent = gitUsername;
-    document.getElementById('showLoginBtn').style.display = 'none';
-    document.getElementById('logoutBtn').style.display = 'flex';
-    updateConnectionStatus(true);
-    updateSidebarProfile();
+    function addSystemLog(message, type = 'info') {
+      const body = document.getElementById('terminalBody');
+      if (!body) return;
+      
+      const div = document.createElement('div');
+      div.className = `log-${type}`;
+      div.style.cssText = `margin-bottom: 4px; color: ${type === 'success' ? '#2ea043' : type === 'error' ? '#f85149' : type === 'warning' ? '#d29922' : '#79c0ff'}`;
+      div.innerHTML = `[${new Date().toLocaleTimeString()}] > ${escapeHtml(message)}`;
+      body.appendChild(div);
+      body.scrollTop = body.scrollHeight;
+      
+      activityLog.unshift({ message, type, time: new Date() });
+      if (activityLog.length > 50) activityLog.pop();
+      updateDashboard();
+    }
     
-    await loadRepositoriesEnhanced();
-    navigateTo('home');
-    addSystemLog('[READY] System online.', 'success');
-    showToast(`Welcome ${gitUsername}!`, 'success');
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle'}"></i> ${escapeHtml(message)}`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
     
-    if (document.getElementById('authorName') && !document.getElementById('authorName').value) {
-      document.getElementById('authorName').value = gitUsername;
-      updateReadmePreview();
+    // =============== AUTHENTICATION ===============
+    function showModal(modalId) {
+      document.getElementById(modalId)?.classList.add('active');
     }
-    if (document.getElementById('socialGithub') && !document.getElementById('socialGithub').value) {
-      document.getElementById('socialGithub').value = gitUsername;
+    
+    function closeModal(modalId) {
+      document.getElementById(modalId)?.classList.remove('active');
     }
-  } catch (err) {
-    addSystemLog(`[ERROR] Authentication failed: ${err.message}`, 'error');
-    showAuthStatus(err.message, 'error');
-  }
-}
-
-function showAuthStatus(message, type) {
-  const div = document.getElementById('authStatus');
-  if (div) { div.innerHTML = `<div style="color:${type==='error'?'#ef4444':'#10b981'}">${escapeHtml(message)}</div>`; setTimeout(() => div.innerHTML = '', 3000); }
-}
-
-function logout() {
-  addSystemLog('[SYSTEM] Disconnecting...', 'warning');
-  gitUsername = ""; gitToken = ""; isAuthenticated = false;
-  modernFiles = []; allRepositories = [];
-  document.getElementById('pagesContainer').style.display = 'none';
-  document.getElementById('terminalContainer').style.display = 'none';
-  document.getElementById('showTerminalBtn').style.display = 'flex';
-  document.getElementById('userName').textContent = 'Guest';
-  document.getElementById('showLoginBtn').style.display = 'flex';
-  document.getElementById('logoutBtn').style.display = 'none';
-  updateConnectionStatus(false);
-  updateSidebarProfile();
-  showLoginModal();
-  showToast('Logged out', 'info');
-}
-
-// =============== TERMINAL ===============
-function showTerminal() { 
-  const terminal = document.getElementById('terminalContainer');
-  terminal.style.display = 'block';
-  document.getElementById('showTerminalBtn').style.display = 'none';
-  if (terminal.classList.contains('minimized')) {
-    document.getElementById('terminalMaximizeBtn').click();
-  }
-}
-function addTerminalLog(message, type = 'info') {
-  const body = document.getElementById('terminalBody');
-  if (!body) return;
-  stopTypingEffect();
-  const div = document.createElement('div');
-  div.className = `log-line log-${type}`;
-  div.innerHTML = message;
-  body.appendChild(div);
-  body.scrollTop = body.scrollHeight;
-  activityLog.unshift({ message, type, time: new Date() });
-  if (activityLog.length > 20) activityLog.pop();
-  updateDashboard();
-}
-function addSystemLog(message, type) { addTerminalLog(`[${new Date().toLocaleTimeString()}] > ${message}`, type); }
-function updateProgress(percent, text) {
-  const fill = document.getElementById('progressFill');
-  const percentSpan = document.getElementById('progressPercent');
-  const textSpan = document.getElementById('progressText');
-  if (fill) fill.style.width = percent + '%';
-  if (percentSpan) percentSpan.textContent = percent + '%';
-  if (textSpan) textSpan.textContent = text;
-}
-function showProgress() { document.getElementById('progressWrapper').style.display = 'block'; }
-function hideProgress() { document.getElementById('progressWrapper').style.display = 'none'; updateProgress(0, 'Idle'); }
-function showToast(message, type) {
-  const toast = document.createElement('div');
-  toast.className = `toast-notification ${type}`;
-  toast.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':type==='error'?'fa-times-circle':'fa-info-circle'}"></i><span>${escapeHtml(message)}</span>`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-function stopTypingEffect() { if (typingTimeout) clearTimeout(typingTimeout); isTypingActive = false; }
-function startTerminalWelcomeTyping() { /* kept for compatibility */ }
-
-// =============== GITHUB API ===============
-async function githubRequest(endpoint, method = 'GET', body = null) {
-  const url = endpoint.startsWith('https') ? endpoint : `https://api.github.com${endpoint}`;
-  const res = await fetch(url, {
-    method, headers: { 'Authorization': `Basic ${btoa(gitUsername + ':' + gitToken)}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-    body: body ? JSON.stringify(body) : undefined
-  });
-  if (!res.ok && res.status !== 204) throw new Error((await res.json().catch(()=>({message:res.statusText}))).message);
-  return res.status === 204 ? { success: true } : await res.json();
-}
-
-// =============== CREATE / DELETE REPO ===============
-async function executeCreateRepo() {
-  const name = document.getElementById('newRepoName')?.value.trim();
-  const desc = document.getElementById('repoDesc')?.value || '';
-  const isPrivate = document.getElementById('repoPrivate')?.checked || false;
-  const initReadme = document.getElementById('initReadme')?.checked || false;
-  if (!name) return addSystemLog('[ERROR] Repository name required!', 'error');
-  if (!/^[a-zA-Z0-9_.-]+$/.test(name)) return addSystemLog('[ERROR] Invalid repository name', 'error');
-  
-  showTerminal();
-  addSystemLog('[GITHUB] Creating repository...', 'info');
-  showProgress(); updateProgress(30, 'Creating...');
-  try {
-    await githubRequest('/user/repos', 'POST', { name, description: desc, private: isPrivate, auto_init: initReadme });
-    addSystemLog(`[SUCCESS] Repository "${name}" created!`, 'success');
-    document.getElementById('newRepoName').value = '';
-    document.getElementById('repoDesc').value = '';
-    await loadRepositoriesEnhanced(true);
-    updateProgress(100, 'Complete!');
-    setTimeout(hideProgress, 1500);
-    showToast(`Repository "${name}" created!`, 'success');
-  } catch (err) { addSystemLog(`[ERROR] ${err.message}`, 'error'); hideProgress(); }
-}
-
-async function executeDeleteFromPage() {
-  const select = document.getElementById('deleteRepoSelect');
-  const repoName = select?.value;
-  const confirmName = document.getElementById('confirmDeleteName')?.value.trim();
-  if (!repoName || repoName === '-- Select repository --') return addSystemLog('[ERROR] Select a repository', 'error');
-  if (repoName !== confirmName) return addSystemLog('[ERROR] Name confirmation mismatch', 'error');
-  await executeDeleteRepo(repoName);
-  document.getElementById('confirmDeleteName').value = '';
-  select.value = '-- Select repository --';
-}
-
-async function executeDeleteRepo(repoName) {
-  showTerminal();
-  addSystemLog(`[DANGER] Deleting ${repoName}...`, 'warning');
-  showProgress(); updateProgress(50, 'Deleting...');
-  try {
-    await githubRequest(`/repos/${gitUsername}/${repoName}`, 'DELETE');
-    addSystemLog(`[SUCCESS] Deleted ${repoName}`, 'success');
-    updateProgress(100, 'Complete!');
-    setTimeout(hideProgress, 1000);
-    await loadRepositoriesEnhanced(true);
-    showToast(`Deleted ${repoName}`, 'success');
-  } catch (err) { addSystemLog(`[ERROR] ${err.message}`, 'error'); hideProgress(); }
-}
-
-// =============== REPOSITORIES MANAGEMENT ===============
-function initEnhancedRepositories() {
-  loadPinnedRepos();
-  document.getElementById('repoSearchInput')?.addEventListener('input', (e) => {
-    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-    searchDebounceTimer = setTimeout(() => { currentPage = 1; applyFiltersAndSort(); }, 300);
-  });
-  document.querySelectorAll('.filter-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
-      currentPage = 1;
-      applyFiltersAndSort();
-    });
-  });
-  document.getElementById('sortSelect')?.addEventListener('change', (e) => { currentSort = e.target.value; applyFiltersAndSort(); });
-  document.getElementById('prevPageBtn')?.addEventListener('click', () => changePage(-1));
-  document.getElementById('nextPageBtn')?.addEventListener('click', () => changePage(1));
-}
-
-async function loadRepositoriesEnhanced(force = false) {
-  if (!isAuthenticated || isLoadingReposEnhanced) return;
-  isLoadingReposEnhanced = true;
-  showSkeletonLoader();
-  const cacheKey = `repos_${gitUsername}`;
-  const cached = localStorage.getItem(cacheKey);
-  const cacheTime = localStorage.getItem(`${cacheKey}_time`);
-  if (!force && cacheTime && (Date.now() - parseInt(cacheTime) < 300000) && cached) {
-    allRepositories = JSON.parse(cached);
-    processRepositories();
-    isLoadingReposEnhanced = false;
-    updateDashboard();
-    updateHeroStats();
-    updateProfilePage();
-    return;
-  }
-  addSystemLog('[SYSTEM] Fetching repositories...', 'info');
-  try {
-    let allRepos = [];
-    let page = 1;
-    while (page <= 10) {
-      const repos = await githubRequest(`/user/repos?per_page=100&page=${page}&sort=updated`);
-      if (repos && repos.length) { allRepos = allRepos.concat(repos); page++; if (repos.length < 100) break; }
-      else break;
-    }
-    allRepositories = allRepos;
-    localStorage.setItem(cacheKey, JSON.stringify(allRepos));
-    localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
-    processRepositories();
-    updateDashboard();
-    updateHeroStats();
-    updateProfilePage();
-  } catch (err) { addSystemLog(`[ERROR] ${err.message}`, 'error'); showErrorStateRepos(err.message); }
-  isLoadingReposEnhanced = false;
-}
-
-function processRepositories() {
-  applyFiltersAndSort();
-  updateStatsRepos();
-  const deleteSelect = document.getElementById('deleteRepoSelect');
-  if (deleteSelect) deleteSelect.innerHTML = '<option value="">-- Select repository --</option>' + allRepositories.map(r => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join('');
-}
-
-function applyFiltersAndSort() {
-  let filtered = [...allRepositories];
-  const search = document.getElementById('repoSearchInput')?.value.toLowerCase() || '';
-  if (search) filtered = filtered.filter(r => r.name.toLowerCase().includes(search) || (r.description && r.description.toLowerCase().includes(search)));
-  if (currentFilter === 'public') filtered = filtered.filter(r => !r.private);
-  if (currentFilter === 'private') filtered = filtered.filter(r => r.private);
-  filtered.sort((a,b) => { if(currentSort==='name') return a.name.localeCompare(b.name); if(currentSort==='stars') return b.stargazers_count - a.stargazers_count; if(currentSort==='size') return b.size - a.size; return new Date(b.updated_at) - new Date(a.updated_at); });
-  const pinned = filtered.filter(r => pinnedRepos.includes(r.name));
-  const unpinned = filtered.filter(r => !pinnedRepos.includes(r.name));
-  filteredRepositories = [...pinned, ...unpinned];
-  updatePaginationRepos();
-  renderRepositories();
-}
-
-function renderRepositories() {
-  const container = document.getElementById('repoListContainerEnhanced');
-  if (!container) return;
-  const start = (currentPage-1)*itemsPerPage;
-  const paged = filteredRepositories.slice(start, start+itemsPerPage);
-  if (!paged.length && !filteredRepositories.length) return showEmptyStateRepos();
-  container.innerHTML = paged.map(repo => `
-    <div class="repo-card-enhanced"><div class="pin-badge" data-repo="${escapeHtml(repo.name)}"><i class="fas ${pinnedRepos.includes(repo.name)?'fa-star':'fa-star-o'}"></i></div>
-    <div class="repo-header-enhanced"><div class="repo-name-enhanced"><i class="fab fa-github"></i><a href="${repo.html_url}" target="_blank">${escapeHtml(repo.name)}</a></div><div class="visibility-badge ${repo.private?'private':'public'}">${repo.private?'Private':'Public'}</div></div>
-    <div class="repo-desc-enhanced">${escapeHtml(repo.description || 'No description')}</div>
-    <div class="repo-meta-enhanced"><span><span class="language-color" style="background:${languageColors[repo.language]||languageColors.default}"></span> ${repo.language||'N/A'}</span><span><i class="fas fa-star"></i> ${repo.stargazers_count}</span><span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span><span>🕒 ${new Date(repo.updated_at).toLocaleDateString()}</span></div>
-    <div class="repo-actions-enhanced"><button class="repo-action-btn" data-action="copy" data-url="${repo.clone_url}">Copy URL</button><button class="repo-action-btn" data-action="clone" data-repo="${escapeHtml(repo.name)}" data-url="${repo.clone_url}">Clone</button><button class="repo-action-btn danger" data-action="delete" data-repo="${escapeHtml(repo.name)}">Delete</button></div></div>
-  `).join('');
-  document.querySelectorAll('.pin-badge').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); togglePinRepo(el.dataset.repo); }));
-  document.querySelectorAll('.repo-action-btn').forEach(btn => btn.addEventListener('click', (e) => { const a=btn.dataset.action, repo=btn.dataset.repo, url=btn.dataset.url; if(a==='copy') copyToClipboard(url); if(a==='clone') showCloneModal(repo); if(a==='delete') showDeleteModal(repo); }));
-}
-
-function updateStatsRepos() {
-  document.getElementById('repoStatsHeader').style.display = 'flex';
-  document.getElementById('totalReposCount').textContent = allRepositories.length;
-  document.getElementById('totalStarsCount').textContent = allRepositories.reduce((s,r)=>s+r.stargazers_count,0);
-  document.getElementById('totalForksCount').textContent = allRepositories.reduce((s,r)=>s+r.forks_count,0);
-  document.getElementById('totalSizeCount').textContent = (allRepositories.reduce((s,r)=>s+(r.size||0),0)/1024).toFixed(1);
-}
-
-function updatePaginationRepos() {
-  const total = Math.ceil(filteredRepositories.length / itemsPerPage);
-  const container = document.getElementById('paginationContainer');
-  if (total <= 1) { container.style.display = 'none'; return; }
-  container.style.display = 'flex';
-  document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${total}`;
-  document.getElementById('prevPageBtn').disabled = currentPage === 1;
-  document.getElementById('nextPageBtn').disabled = currentPage === total;
-}
-function changePage(delta) { const total = Math.ceil(filteredRepositories.length / itemsPerPage); const np = currentPage + delta; if(np>=1 && np<=total) { currentPage = np; renderRepositories(); updatePaginationRepos(); } }
-function togglePinRepo(name) { if(pinnedRepos.includes(name)) pinnedRepos = pinnedRepos.filter(p=>p!==name); else pinnedRepos.push(name); localStorage.setItem('pinnedRepos', JSON.stringify(pinnedRepos)); applyFiltersAndSort(); }
-function loadPinnedRepos() { const saved = localStorage.getItem('pinnedRepos'); if(saved) try { pinnedRepos = JSON.parse(saved); } catch(e){} }
-function showDeleteModal(name) { currentDeleteTarget = name; document.getElementById('deleteRepoNameDisplay').textContent = name; document.getElementById('deleteConfirmInput').value = ''; document.getElementById('deleteModal').classList.add('active'); }
-function showCloneModal(name) { const repo = allRepositories.find(r=>r.name===name); if(repo){ currentCloneTarget = repo; document.getElementById('cloneUrlText').textContent = repo.clone_url; document.getElementById('cloneCommandText').textContent = repo.clone_url; document.getElementById('cloneModal').classList.add('active'); } }
-function copyCloneUrl() { if(currentCloneTarget) copyToClipboard(currentCloneTarget.clone_url); }
-function copyToClipboard(text) { navigator.clipboard.writeText(text).then(()=>showToast('Copied!','success')).catch(()=>showToast('Failed','error')); }
-function showSkeletonLoader() { document.getElementById('repoListContainerEnhanced').innerHTML = '<div class="skeleton-grid">'+Array(6).fill(0).map(()=>'<div class="skeleton-card"><div class="skeleton-title"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>').join('')+'</div>'; }
-function showEmptyStateRepos() { document.getElementById('repoListContainerEnhanced').innerHTML = '<div class="empty-state-enhanced"><i class="fas fa-inbox"></i><h3>No repositories found</h3><button class="btn-primary" onclick="navigateTo(\'create\')">Create Repository</button></div>'; }
-function showErrorStateRepos(msg) { document.getElementById('repoListContainerEnhanced').innerHTML = `<div class="error-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load: ${escapeHtml(msg)}</p><button class="btn-primary" onclick="loadRepositoriesEnhanced(true)">Retry</button></div>`; }
-
-// =============== UPLOAD SYSTEM ===============
-function initEnhancedUpload() {
-  const dropZone1 = document.getElementById('dropZone1'), fileInput1 = document.getElementById('fileInputModern1');
-  const dropZone2 = document.getElementById('dropZone2'), fileInput2 = document.getElementById('fileInputModern2');
-  document.querySelectorAll('.view-btn').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentView = btn.dataset.view; renderFileList(); }));
-  document.getElementById('searchFiles')?.addEventListener('input', (e) => { searchQuery = e.target.value.toLowerCase(); renderFileList(); });
-  if(dropZone1 && fileInput1) setupDropZone(dropZone1, fileInput1, handleFilesSelected);
-  if(dropZone2 && fileInput2) setupDropZone(dropZone2, fileInput2, handleZipSelected);
-}
-
-function setupDropZone(zone, input, onSelect) {
-  zone.addEventListener('click', () => input.click());
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); onSelect(Array.from(e.dataTransfer.files)); });
-  input.addEventListener('change', e => { onSelect(Array.from(e.target.files)); input.value = ''; });
-}
-
-function handleFilesSelected(files) {
-  const existing = new Set(modernFiles.map(f=>f.file.name));
-  for(const file of files) {
-    if(!existing.has(file.name)) modernFiles.push({ file, preview: null, status:'pending', progress:0, textPreview:null });
-  }
-  generatePreviews();
-  updateUI();
-  updateFileTreePreview();
-}
-
-async function generatePreviews() {
-  for(let item of modernFiles) {
-    if(item.preview !== null) continue;
-    const file = item.file;
-    const ext = '.'+file.name.split('.').pop()?.toLowerCase();
-    if(['.jpg','.jpeg','.png','.gif','.webp'].includes(ext)) {
-      item.preview = await new Promise(r=>{const fr=new FileReader(); fr.onload=()=>r(fr.result); fr.readAsDataURL(file);});
-    } else if(['.js','.html','.css','.json','.txt','.md'].includes(ext)) {
-      item.textPreview = await new Promise(r=>{const fr=new FileReader(); fr.onload=()=>r(fr.result.substring(0,200)); fr.readAsText(file);});
-    }
-  }
-  renderFileList();
-}
-
-function renderFileList() {
-  const container = document.getElementById('fileListModern1');
-  const header = document.getElementById('fileListHeader');
-  const search = document.getElementById('fileSearch');
-  const commitPreview = document.getElementById('commitPreview');
-  const uploadBtn = document.getElementById('startUploadBtn1');
-  if(!container) return;
-  if(modernFiles.length===0) {
-    container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Belum ada file yang dipilih</p></div>';
-    if(header) header.style.display = 'none';
-    if(search) search.style.display = 'none';
-    if(commitPreview) commitPreview.style.display = 'none';
-    if(uploadBtn) uploadBtn.style.display = 'none';
-    return;
-  }
-  if(header) header.style.display = 'flex';
-  if(search) search.style.display = 'block';
-  if(commitPreview) commitPreview.style.display = 'block';
-  if(uploadBtn) uploadBtn.style.display = 'block';
-  document.getElementById('fileCount').textContent = modernFiles.length;
-  const totalBytes = modernFiles.reduce((s,f)=>s+f.file.size,0);
-  document.getElementById('totalSize').textContent = formatFileSize(totalBytes);
-  document.getElementById('commitFileList').innerHTML = modernFiles.map(f=>`<div><i class="fas fa-file"></i> ${escapeHtml(f.file.name)} (${formatFileSize(f.file.size)})</div>`).join('');
-  container.className = `file-list-container ${currentView}-view`;
-  container.innerHTML = modernFiles.map((item,idx)=>`<div class="file-item ${currentView}-view"><div class="file-preview">${item.preview?`<img src="${item.preview}">`:`<i class="fas fa-file"></i>`}</div><div class="file-info"><div class="file-name">${escapeHtml(item.file.name)}</div><div class="file-size">${formatFileSize(item.file.size)}</div>${item.textPreview?`<div class="text-preview">${escapeHtml(item.textPreview)}...</div>`:''}</div><div class="file-actions"><button class="remove-file" data-idx="${idx}"><i class="fas fa-trash-alt"></i></button></div></div>`).join('');
-  document.querySelectorAll('.remove-file').forEach(btn => btn.addEventListener('click',()=>{ modernFiles.splice(parseInt(btn.dataset.idx),1); renderFileList(); updateFileTreePreview(); }));
-}
-
-function formatFileSize(bytes) { if(bytes===0) return '0 Bytes'; const k=1024, sizes=['Bytes','KB','MB']; const i=Math.floor(Math.log(bytes)/Math.log(k)); return parseFloat((bytes/Math.pow(k,i)).toFixed(2))+' '+sizes[i]; }
-
-async function handleZipSelected(files) {
-  if(!files.length || !files[0].name.endsWith('.zip')) return showToast('Only ZIP files supported','error');
-  const zipFile = files[0];
-  document.getElementById('zipPreviewContainer').style.display = 'block';
-  document.getElementById('startUploadBtn2').style.display = 'block';
-  try {
-    const zip = await JSZip.loadAsync(zipFile);
-    document.getElementById('zipFileCount').textContent = Object.keys(zip.files).filter(p=>!zip.files[p].dir).length;
-    document.getElementById('zipTreeView').innerHTML = '<div class="tree-item">Extracted successfully</div>';
-    window.extractedZipFiles = [];
-    for(const [path, entry] of Object.entries(zip.files)) {
-      if(!entry.dir) {
-        const content = await entry.async('blob');
-        const file = new File([content], path.split('/').pop(), {type:content.type});
-        Object.defineProperty(file,'webkitRelativePath',{value:path});
-        window.extractedZipFiles.push(file);
+    
+    async function authenticateAndVerify() {
+      const user = document.getElementById('githubUsername')?.value.trim();
+      const token = document.getElementById('githubToken')?.value.trim();
+      if (!user || !token) {
+        showToast('Username and token required!', 'error');
+        return;
+      }
+      
+      showTerminal();
+      addSystemLog('[AUTH] Connecting to GitHub API...', 'info');
+      
+      try {
+        const response = await fetch('https://api.github.com/user', {
+          headers: { 'Authorization': `Basic ${btoa(user + ':' + token)}` }
+        });
+        if (!response.ok) throw new Error('Invalid credentials');
+        const data = await response.json();
+        if (data.login.toLowerCase() !== user.toLowerCase()) throw new Error('Username mismatch');
+        
+        gitUsername = user;
+        gitToken = token;
+        isAuthenticated = true;
+        
+        addSystemLog(`[SUCCESS] Authenticated as ${gitUsername}`, 'success');
+        closeModal('loginModal');
+        
+        // Update UI
+        document.getElementById('userName').textContent = gitUsername;
+        document.getElementById('sidebarName').textContent = gitUsername;
+        document.getElementById('sidebarRole').textContent = 'Connected to GitHub';
+        document.getElementById('showLoginBtn').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'flex';
+        document.getElementById('statsSection').style.display = 'grid';
+        
+        // Update connection status
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        if (statusDot) statusDot.classList.add('connected');
+        if (statusText) statusText.textContent = 'Connected';
+        
+        // Update avatar
+        if (data.avatar_url) {
+          document.getElementById('sidebarAvatar').src = data.avatar_url;
+          document.getElementById('profilePageAvatar').src = data.avatar_url;
+        }
+        
+        await loadRepositoriesEnhanced();
+        navigateTo('home');
+        updateHomeStats();
+        showToast(`Welcome ${gitUsername}!`, 'success');
+      } catch (err) {
+        addSystemLog(`[ERROR] Authentication failed: ${err.message}`, 'error');
+        showToast(err.message, 'error');
       }
     }
-  } catch(e) { showToast('Error extracting ZIP','error'); }
-}
-
-async function startModernUpload() {
-  const repo = document.getElementById('targetRepoName1')?.value.trim();
-  const branch = document.getElementById('branchName1')?.value.trim() || "main";
-  const msg = document.getElementById('commitMsg1')?.value.trim() || "Upload via RepoFlow";
-  if(!repo) return addSystemLog('[ERROR] Repository required','error');
-  if(!modernFiles.length && !document.getElementById('enableReadmeGenerator')?.checked && !document.getElementById('enableLicense')?.checked && !document.getElementById('enableGitignore')?.checked) return addSystemLog('[ERROR] No files or generated content','error');
+    
+    function logout() {
+      addSystemLog('[SYSTEM] Disconnecting...', 'warning');
+      gitUsername = "";
+      gitToken = "";
+      isAuthenticated = false;
+      allRepositories = [];
+      
+      document.getElementById('userName').textContent = 'Guest';
+      document.getElementById('sidebarName').textContent = 'Guest';
+      document.getElementById('sidebarRole').textContent = 'Not logged in';
+      document.getElementById('showLoginBtn').style.display = 'flex';
+      document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('statsSection').style.display = 'none';
+      
+      const statusDot = document.getElementById('statusDot');
+      const statusText = document.getElementById('statusText');
+      if (statusDot) statusDot.classList.remove('connected');
+      if (statusText) statusText.textContent = 'Disconnected';
+      
+      document.getElementById('sidebarAvatar').src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
+      document.getElementById('profilePageAvatar').src = 'https://i.ibb.co.com/chGXxvw1/avt.jpg';
+      
+      navigateTo('home');
+      showToast('Logged out', 'info');
+    }
+    
+    // =============== GITHUB API ===============
+    async function githubRequest(endpoint, method = 'GET', body = null) {
+      const url = endpoint.startsWith('https') ? endpoint : `https://api.github.com${endpoint}`;
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Basic ${btoa(gitUsername + ':' + gitToken)}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: body ? JSON.stringify(body) : undefined
+      });
+      if (!res.ok && res.status !== 204) {
+        const error = await res.json().catch(() => ({ message: res.statusText }));
+        throw new Error(error.message);
+      }
+      return res.status === 204 ? { success: true } : await res.json();
+    }
+    
+    // =============== CREATE REPOSITORY ===============
+    document.getElementById('confirmCreateRepo')?.addEventListener('click', async () => {
+      const name = document.getElementById('newRepoName')?.value.trim();
+      const desc = document.getElementById('repoDesc')?.value || '';
+      const isPrivate = document.getElementById('repoPrivate')?.checked || false;
+      const initReadme = document.getElementById('initReadme')?.checked || false;
+      const gitignore = document.getElementById('gitignoreTemplate')?.value;
+      
+      if (!name) {
+        showToast('Repository name required!', 'error');
+        return;
+      }
+      if (!/^[a-zA-Z0-9_.-]+$/.test(name)) {
+        showToast('Invalid repository name! Use letters, numbers, dots, hyphens, and underscores only.', 'error');
+        return;
+      }
+      
+      showTerminal();
+      addSystemLog(`[GITHUB] Creating repository "${name}"...`, 'info');
+      
+      try {
+        const repoData = await githubRequest('/user/repos', 'POST', {
+          name, description: desc, private: isPrivate, auto_init: initReadme
+        });
+        
+        // Add .gitignore if selected
+        if (gitignore && gitignoreTemplates[gitignore]) {
+          try {
+            const content = btoa(unescape(encodeURIComponent(gitignoreTemplates[gitignore])));
+            await githubRequest(`/repos/${gitUsername}/${name}/contents/.gitignore`, 'PUT', {
+              message: 'Add .gitignore',
+              content: content,
+              branch: 'main'
+            });
+            addSystemLog(`[SUCCESS] Added .gitignore for ${gitignore}`, 'success');
+          } catch (err) {
+            addSystemLog(`[WARNING] Could not add .gitignore: ${err.message}`, 'warning');
+          }
+        }
+        
+        addSystemLog(`[SUCCESS] Repository "${name}" created!`, 'success');
+        document.getElementById('newRepoName').value = '';
+        document.getElementById('repoDesc').value = '';
+        await loadRepositoriesEnhanced();
+        showToast(`Repository "${name}" created!`, 'success');
+      } catch (err) {
+        addSystemLog(`[ERROR] ${err.message}`, 'error');
+        showToast(err.message, 'error');
+      }
+    });
+    
+    // =============== DELETE REPOSITORY ===============
+    async function loadDeleteSelect() {
+      const select = document.getElementById('deleteRepoSelect');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Select repository --</option>';
+      allRepositories.forEach(repo => {
+        select.innerHTML += `<option value="${escapeHtml(repo.name)}">${escapeHtml(repo.name)}</option>`;
+      });
+    }
+    
+    document.getElementById('confirmDeleteName')?.addEventListener('input', (e) => {
+      const btn = document.getElementById('confirmDeleteRepoBtn');
+      const select = document.getElementById('deleteRepoSelect');
+      if (btn && select) {
+        btn.disabled = !(select.value && select.value === e.target.value);
+      }
+    });
+    
+    document.getElementById('confirmDeleteRepoBtn')?.addEventListener('click', async () => {
+      const select = document.getElementById('deleteRepoSelect');
+      const confirm = document.getElementById('confirmDeleteName');
+      if (select.value && select.value === confirm.value) {
+        await executeDeleteRepo(select.value);
+        document.getElementById('confirmDeleteName').value = '';
+        select.value = '-- Select repository --';
+      } else {
+        showToast('Repository name does not match!', 'error');
+      }
+    });
+    
+    function showDeleteModal(repoName) {
+      currentDeleteTarget = repoName;
+      document.getElementById('deleteRepoNameDisplay').textContent = repoName;
+      document.getElementById('deleteConfirmInput').value = '';
+      showModal('deleteModal');
+    }
+    
+    async function confirmDeleteFromModal() {
+      const input = document.getElementById('deleteConfirmInput')?.value.trim();
+      if (input === currentDeleteTarget) {
+        await executeDeleteRepo(currentDeleteTarget);
+        closeModal('deleteModal');
+        await loadRepositoriesEnhanced();
+      } else {
+        showToast('Repository name does not match!', 'error');
+      }
+    }
+    
+    async function executeDeleteRepo(repoName) {
+      showTerminal();
+      addSystemLog(`[DANGER] Deleting ${repoName}...`, 'warning');
+      try {
+        await githubRequest(`/repos/${gitUsername}/${repoName}`, 'DELETE');
+        addSystemLog(`[SUCCESS] Deleted ${repoName}`, 'success');
+        await loadRepositoriesEnhanced();
+        showToast(`Deleted ${repoName}`, 'success');
+      } catch (err) {
+        addSystemLog(`[ERROR] ${err.message}`, 'error');
+        showToast(err.message, 'error');
+      }
+    }
+    
+    // =============== REPOSITORIES MANAGEMENT ===============
+    function initRepositories() {
+      loadPinnedRepos();
+      
+      document.getElementById('repoSearchInput')?.addEventListener('input', (e) => {
+        if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+          currentPage = 1;
+          applyFiltersAndSort();
+        }, 300);
+      });
+      
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-chip').forEach(b => {
+            b.style.background = 'var(--bg-tertiary)';
+            b.style.color = 'var(--text-secondary)';
+          });
+          btn.style.background = 'var(--accent-primary)';
+          btn.style.color = 'white';
+          currentFilter = btn.dataset.filter;
+          currentPage = 1;
+          applyFiltersAndSort();
+        });
+      });
+      
+      document.getElementById('refreshReposBtn')?.addEventListener('click', async () => {
+        if (!isAuthenticated) {
+          showToast('Please login first', 'warning');
+          return;
+        }
+        const btn = document.getElementById('refreshReposBtn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
+        await loadRepositoriesEnhanced(true);
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+      });
+      
+      document.getElementById('prevPageBtn')?.addEventListener('click', () => changePage(-1));
+      document.getElementById('nextPageBtn')?.addEventListener('click', () => changePage(1));
+    }
+    
+    async function loadRepositoriesEnhanced(force = false) {
+      if (!isAuthenticated || isLoadingReposEnhanced) return;
+      isLoadingReposEnhanced = true;
+      showSkeletonLoader();
+      
+      const cacheKey = `repos_${gitUsername}`;
+      const cached = localStorage.getItem(cacheKey);
+      const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+      
+      if (!force && cacheTime && (Date.now() - parseInt(cacheTime) < 300000) && cached) {
+        allRepositories = JSON.parse(cached);
+        processRepositories();
+        isLoadingReposEnhanced = false;
+        updateDashboard();
+        updateHomeStats();
+        updateProfilePage();
+        return;
+      }
+      
+      addSystemLog('[SYSTEM] Fetching repositories...', 'info');
+      try {
+        let allRepos = [];
+        let page = 1;
+        while (page <= 10) {
+          const repos = await githubRequest(`/user/repos?per_page=100&page=${page}&sort=updated`);
+          if (repos && repos.length) {
+            allRepos = allRepos.concat(repos);
+            page++;
+            if (repos.length < 100) break;
+          } else break;
+        }
+        allRepositories = allRepos;
+        localStorage.setItem(cacheKey, JSON.stringify(allRepos));
+        localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+        processRepositories();
+        updateDashboard();
+        updateHomeStats();
+        updateProfilePage();
+        addSystemLog(`[SUCCESS] Loaded ${allRepositories.length} repositories`, 'success');
+      } catch (err) {
+        addSystemLog(`[ERROR] ${err.message}`, 'error');
+        showErrorStateRepos(err.message);
+      }
+      isLoadingReposEnhanced = false;
+    }
+    
+    function processRepositories() {
+      applyFiltersAndSort();
+      updateStatsRepos();
+      loadDeleteSelect();
+    }
+    
+    function applyFiltersAndSort() {
+      let filtered = [...allRepositories];
+      const search = document.getElementById('repoSearchInput')?.value.toLowerCase() || '';
+      if (search) {
+        filtered = filtered.filter(r => r.name.toLowerCase().includes(search) || 
+          (r.description && r.description.toLowerCase().includes(search)));
+      }
+      if (currentFilter === 'public') filtered = filtered.filter(r => !r.private);
+      if (currentFilter === 'private') filtered = filtered.filter(r => r.private);
+      
+      filtered.sort((a, b) => {
+        if (currentSort === 'name') return a.name.localeCompare(b.name);
+        if (currentSort === 'stars') return b.stargazers_count - a.stargazers_count;
+        return new Date(b.updated_at) - new Date(a.updated_at);
+      });
+      
+      const pinned = filtered.filter(r => pinnedRepos.includes(r.name));
+      const unpinned = filtered.filter(r => !pinnedRepos.includes(r.name));
+      filteredRepositories = [...pinned, ...unpinned];
+      updatePagination();
+      renderRepositories();
+    }
+    
+    function renderRepositories() {
+      const container = document.getElementById('repoListContainerEnhanced');
+      if (!container) return;
+      
+      const start = (currentPage - 1) * itemsPerPage;
+      const paged = filteredRepositories.slice(start, start + itemsPerPage);
+      
+      if (!paged.length && !filteredRepositories.length) {
+        showEmptyStateRepos();
+        return;
+      }
+      
+      container.innerHTML = paged.map(repo => `
+        <div class="card">
+          <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div class="pin-badge" data-repo="${escapeHtml(repo.name)}" style="cursor: pointer; color: ${pinnedRepos.includes(repo.name) ? 'var(--accent-warning)' : 'var(--text-muted)'}">
+                <i class="fas ${pinnedRepos.includes(repo.name) ? 'fa-star' : 'fa-star-o'}"></i>
+              </div>
+              <span style="font-size: 11px; padding: 2px 8px; border-radius: 20px; background: ${repo.private ? 'rgba(248,81,73,0.1)' : 'rgba(46,160,67,0.1)'}; color: ${repo.private ? '#f85149' : '#2ea043'}">
+                ${repo.private ? 'Private' : 'Public'}
+              </span>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <strong style="font-size: 16px;"><i class="fab fa-github"></i> ${escapeHtml(repo.name)}</strong>
+            </div>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+              ${escapeHtml(repo.description || 'No description')}
+            </p>
+            <div style="display: flex; gap: 16px; font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+              <span><span class="language-color" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${languageColors[repo.language] || languageColors.default}; margin-right: 4px;"></span> ${repo.language || 'N/A'}</span>
+              <span><i class="fas fa-star"></i> ${repo.stargazers_count}</span>
+              <span><i class="fas fa-code-branch"></i> ${repo.forks_count}</span>
+              <span>🕒 ${new Date(repo.updated_at).toLocaleDateString()}</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="copyToClipboard('${repo.clone_url}')">
+                <i class="fas fa-copy"></i> Copy URL
+              </button>
+              <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="showCloneModal('${escapeHtml(repo.name)}')">
+                <i class="fas fa-code-branch"></i> Clone
+              </button>
+              <button class="btn btn-danger" style="padding: 6px 12px; font-size: 12px;" onclick="showDeleteModal('${escapeHtml(repo.name)}')">
+                <i class="fas fa-trash-alt"></i> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      document.querySelectorAll('.pin-badge').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          togglePinRepo(el.dataset.repo);
+        });
+      });
+    }
+    
+    function updateStatsRepos() {
+      const totalStars = allRepositories.reduce((s, r) => s + r.stargazers_count, 0);
+      const totalForks = allRepositories.reduce((s, r) => s + r.forks_count, 0);
+      const totalSize = allRepositories.reduce((s, r) => s + (r.size || 0), 0);
+      
+      document.getElementById('totalReposCount')?.textContent = allRepositories.length;
+      document.getElementById('totalStarsCount')?.textContent = totalStars;
+      document.getElementById('totalForksCount')?.textContent = totalForks;
+      document.getElementById('totalSizeCount')?.textContent = (totalSize / 1024).toFixed(1);
+    }
+    
+    function updatePagination() {
+      const total = Math.ceil(filteredRepositories.length / itemsPerPage);
+      const container = document.getElementById('paginationContainer');
+      if (total <= 1) {
+        if (container) container.style.display = 'none';
+        return;
+      }
+      if (container) {
+        container.style.display = 'flex';
+        document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${total}`;
+        document.getElementById('prevPageBtn').disabled = currentPage === 1;
+        document.getElementById('nextPageBtn').disabled = currentPage === total;
+      }
+    }
+    
+    function changePage(delta) {
+      const total = Math.ceil(filteredRepositories.length / itemsPerPage);
+      const np = currentPage + delta;
+      if (np >= 1 && np <= total) {
+        currentPage = np;
+        renderRepositories();
+        updatePagination();
+      }
+    }
+    
+    function togglePinRepo(name) {
+      if (pinnedRepos.includes(name)) {
+        pinnedRepos = pinnedRepos.filter(p => p !== name);
+      } else {
+        pinnedRepos.push(name);
+      }
+      localStorage.setItem('pinnedRepos', JSON.stringify(pinnedRepos));
+      applyFiltersAndSort();
+    }
+    
+    function loadPinnedRepos() {
+      const saved = localStorage.getItem('pinnedRepos');
+      if (saved) {
+        try {
+          pinnedRepos = JSON.parse(saved);
+        } catch(e) {}
+      }
+    }
+    
+    function showSkeletonLoader() {
+      const container = document.getElementById('repoListContainerEnhanced');
+      if (container) {
+        container.innerHTML = '<div class="skeleton-grid">' + Array(3).fill(0).map(() => 
+          '<div class="skeleton-card"><div class="skeleton-title"></div><div class="skeleton-line"></div><div class="skeleton-line short"></div></div>'
+        ).join('') + '</div>';
+      }
+    }
+    
+    function showEmptyStateRepos() {
+      const container = document.getElementById('repoListContainerEnhanced');
+      if (container) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><h3>No repositories found</h3><button class="btn btn-primary mt-16" onclick="navigateTo(\'create\')">Create Repository</button></div>';
+      }
+    }
+    
+    function showErrorStateRepos(msg) {
+      const container = document.getElementById('repoListContainerEnhanced');
+      if (container) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load: ${escapeHtml(msg)}</p><button class="btn btn-primary mt-16" onclick="loadRepositoriesEnhanced(true)">Retry</button></div>`;
+      }
+    }
+    
+    // =============== CLONE FUNCTIONALITY ===============
+    function showCloneModal(repoName) {
+      const repo = allRepositories.find(r => r.name === repoName);
+      if (repo) {
+        currentCloneTarget = repo;
+        document.getElementById('cloneUrlText').textContent = repo.clone_url;
+        document.getElementById('cloneCommandText').textContent = repo.clone_url;
+        showModal('cloneModal');
+      }
+    }
+    
+    function copyCloneUrl() {
+      if (currentCloneTarget) {
+        copyToClipboard(currentCloneTarget.clone_url);
+      }
+    }
+    
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text);
+      showToast('Copied to clipboard!', 'success');
+    }
+    
+    // =============== UPLOAD SYSTEM ===============
+    function initUploadHandlers() {
+      // Mode tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const mode = tab.dataset.mode;
+          document.querySelectorAll('.mode-container').forEach(c => c.style.display = 'none');
+          document.getElementById(`${mode}Container`).style.display = 'block';
+          currentMode = mode;
+        });
+      });
+      
+      // Dropzone for files
+      const dropZone1 = document.getElementById('dropZone1');
+      const fileInput1 = document.getElementById('fileInputModern1');
+      if (dropZone1 && fileInput1) {
+        dropZone1.addEventListener('click', () => fileInput1.click());
+        dropZone1.addEventListener('dragover', e => { e.preventDefault(); dropZone1.classList.add('drag-over'); });
+        dropZone1.addEventListener('dragleave', () => dropZone1.classList.remove('drag-over'));
+        dropZone1.addEventListener('drop', e => {
+          e.preventDefault();
+          dropZone1.classList.remove('drag-over');
+          handleFilesSelected(Array.from(e.dataTransfer.files));
+        });
+        fileInput1.addEventListener('change', e => {
+          handleFilesSelected(Array.from(e.target.files));
+          fileInput1.value = '';
+        });
+      }
+      
+      // Dropzone for ZIP
+      const dropZone2 = document.getElementById('dropZone2');
+      const fileInput2 = document.getElementById('fileInputModern2');
+      if (dropZone2 && fileInput2) {
+        dropZone2.addEventListener('click', () => fileInput2.click());
+        dropZone2.addEventListener('dragover', e => { e.preventDefault(); dropZone2.classList.add('drag-over'); });
+        dropZone2.addEventListener('dragleave', () => dropZone2.classList.remove('drag-over'));
+        dropZone2.addEventListener('drop', e => {
+          e.preventDefault();
+          dropZone2.classList.remove('drag-over');
+          handleZipSelected(Array.from(e.dataTransfer.files));
+        });
+        fileInput2.addEventListener('change', e => {
+          handleZipSelected(Array.from(e.target.files));
+          fileInput2.value = '';
+        });
+      }
+      
+      // Upload buttons
+      document.getElementById('startUploadBtn1')?.addEventListener('click', startModernUpload);
+      document.getElementById('startUploadBtn2')?.addEventListener('click', startModernZipUpload);
+      document.getElementById('generateReadmeBtn')?.addEventListener('click', generateReadme);
+    }
+    
+    function handleFilesSelected(files) {
+      const existing = new Set(modernFiles.map(f => f.name));
+      for (const file of files) {
+        if (!existing.has(file.name)) {
+          modernFiles.push(file);
+        }
+      }
+      renderFileList();
+      updateFileTreePreview();
+    }
+    
+    function renderFileList() {
+      const container = document.getElementById('fileListModern1');
+      const uploadBtn = document.getElementById('startUploadBtn1');
+      if (!container) return;
+      
+      if (modernFiles.length === 0) {
+        container.style.display = 'none';
+        if (uploadBtn) uploadBtn.style.display = 'none';
+        return;
+      }
+      
+      container.style.display = 'block';
+      if (uploadBtn) uploadBtn.style.display = 'block';
+      
+      container.innerHTML = modernFiles.map((file, idx) => `
+        <div class="file-item">
+          <div class="file-info">
+            <i class="fas fa-file"></i>
+            <div>
+              <div class="file-name">${escapeHtml(file.name)}</div>
+              <div class="file-size">${formatFileSize(file.size)}</div>
+            </div>
+          </div>
+          <button class="remove-file" data-idx="${idx}">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+      `).join('');
+      
+      document.querySelectorAll('.remove-file').forEach(btn => {
+        btn.addEventListener('click', () => {
+          modernFiles.splice(parseInt(btn.dataset.idx), 1);
+          renderFileList();
+          updateFileTreePreview();
+        });
+      });
+    }
+    
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    function updateFileTreePreview() {
+      // For future implementation
+    }
+    
+    async function handleZipSelected(files) {
+      if (!files.length || !files[0].name.endsWith('.zip')) {
+        showToast('Only ZIP files supported', 'error');
+        return;
+      }
+      
+      const zipFile = files[0];
+      const previewContainer = document.getElementById('zipPreviewContainer');
+      const uploadBtn = document.getElementById('startUploadBtn2');
+      
+      if (previewContainer) previewContainer.style.display = 'block';
+      if (uploadBtn) uploadBtn.style.display = 'block';
+      
+      try {
+        const zip = await JSZip.loadAsync(zipFile);
+        extractedFiles = [];
+        
+        for (const [path, entry] of Object.entries(zip.files)) {
+          if (!entry.dir) {
+            const content = await entry.async('blob');
+            const file = new File([content], path.split('/').pop(), { type: content.type });
+            Object.defineProperty(file, 'webkitRelativePath', { value: path });
+            extractedFiles.push(file);
+          }
+        }
+        
+        const zipFileList = document.getElementById('zipFileList');
+        if (zipFileList) {
+          zipFileList.innerHTML = `<div class="file-list">${extractedFiles.map(f => 
+            `<div class="file-item"><i class="fas fa-file"></i> ${escapeHtml(f.webkitRelativePath || f.name)}</div>`
+          ).join('')}</div>`;
+        }
+        
+        addSystemLog(`[ZIP] Extracted ${extractedFiles.length} files`, 'success');
+      } catch (e) {
+        showToast('Error extracting ZIP file', 'error');
+        addSystemLog(`[ERROR] ZIP extraction failed: ${e.message}`, 'error');
+      }
+    }
+    
+    async function startModernUpload() {
+      const repo = document.getElementById('targetRepoName1')?.value.trim();
+      const branch = document.getElementById('branchName1')?.value.trim() || 'main';
+      const msg = document.getElementById('commitMsg1')?.value.trim() || 'Upload via RepoFlow';
+      
+      if (!repo) {
+        showToast('Repository name required', 'error');
+        return;
+      }
+      if (!modernFiles.length) {
+        showToast('No files selected', 'error');
+        return;
+      }
+      
+      showTerminal();
+      addSystemLog(`[UPLOAD] Starting to ${gitUsername}/${repo}`, 'info');
+      
+      let success = 0;
+      let error = 0;
+      
+      for (const file of modernFiles) {
+        addSystemLog(`[UPLOAD] Uploading ${file.name}...`, 'info');
+        try {
+          let sha = null;
+          try {
+            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}?ref=${branch}`, 'GET');
+            sha = existing.sha;
+          } catch(e) {}
+          
+          const b64 = await new Promise(resolve => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(fr.result.split(',')[1]);
+            fr.readAsDataURL(file);
+          });
+          
+          await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(file.name)}`, 'PUT', {
+            message: msg,
+            content: b64,
+            branch: branch,
+            sha: sha
+          });
+          
+          success++;
+          addSystemLog(`[SUCCESS] Uploaded ${file.name}`, 'success');
+        } catch (err) {
+          error++;
+          addSystemLog(`[ERROR] Failed to upload ${file.name}: ${err.message}`, 'error');
+        }
+      }
+      
+      if (error === 0) {
+        addSystemLog(`[SUCCESS] Upload complete! ${success} files uploaded`, 'success');
+        showToast(`Successfully uploaded ${success} files!`, 'success');
+        modernFiles = [];
+        renderFileList();
+      } else {
+        addSystemLog(`[WARNING] Upload completed with ${error} errors`, 'warning');
+        showToast(`Uploaded: ${success} success, ${error} failed`, 'warning');
+      }
+    }
+    
+    async function startModernZipUpload() {
+      const repo = document.getElementById('targetRepoName2')?.value.trim();
+      const branch = document.getElementById('branchName2')?.value.trim() || 'main';
+      const msg = document.getElementById('commitMsg2')?.value.trim() || 'Upload ZIP via RepoFlow';
+      
+      if (!repo) {
+        showToast('Repository name required', 'error');
+        return;
+      }
+      if (!extractedFiles.length) {
+        showToast('No ZIP file selected', 'error');
+        return;
+      }
+      
+      showTerminal();
+      addSystemLog(`[ZIP UPLOAD] Extracting ${extractedFiles.length} files to ${repo}`, 'info');
+      
+      let success = 0;
+      let error = 0;
+      
+      for (const file of extractedFiles) {
+        const path = file.webkitRelativePath || file.name;
+        addSystemLog(`[UPLOAD] Uploading ${path}...`, 'info');
+        
+        try {
+          let sha = null;
+          try {
+            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`, 'GET');
+            sha = existing.sha;
+          } catch(e) {}
+          
+          const b64 = await new Promise(resolve => {
+            const fr = new FileReader();
+            fr.onload = () => resolve(fr.result.split(',')[1]);
+            fr.readAsDataURL(file);
+          });
+          
+          await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}`, 'PUT', {
+            message: msg,
+            content: b64,
+            branch: branch,
+            sha: sha
+          });
+          
+          success++;
+          addSystemLog(`[SUCCESS] Uploaded ${path}`, 'success');
+        } catch (err) {
+          error++;
+          addSystemLog(`[ERROR] Failed to upload ${path}: ${err.message}`, 'error');
+        }
+      }
+      
+      addSystemLog(`[ZIP UPLOAD] Complete: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning');
+      showToast(`ZIP upload: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning');
+      extractedFiles = [];
+      document.getElementById('zipPreviewContainer').style.display = 'none';
+      document.getElementById('startUploadBtn2').style.display = 'none';
+    }
+    
+    function generateReadme() {
+      const name = document.getElementById('projectName')?.value.trim() || 'My Project';
+      const desc = document.getElementById('projectDesc')?.value.trim() || '';
+      const install = document.getElementById('installSteps')?.value.trim() || '';
+      const hasLicense = document.getElementById('enableLicense')?.checked || false;
+      const year = new Date().getFullYear();
+      const author = gitUsername || 'Anonymous';
+      
+      let readme = `# ${name}\n\n`;
+      if (desc) readme += `${desc}\n\n`;
+      readme += `## Installation\n\n\`\`\`bash\n${install || 'npm install'}\n\`\`\`\n\n`;
+      readme += `## Usage\n\n\`\`\`bash\nnpm start\n\`\`\`\n\n`;
+      if (hasLicense) readme += `## License\n\nMIT © ${year} ${author}\n`;
+      
+      const blob = new Blob([readme], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'README.md';
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      showToast('README.md generated and downloaded!', 'success');
+      addSystemLog(`[README] Generated README.md for "${name}"`, 'success');
+    }
+    
+    // =============== DASHBOARD ===============
+    function updateDashboard() {
+      const totalRepos = allRepositories.length;
+      const publicRepos = allRepositories.filter(r => !r.private).length;
+      const privateRepos = allRepositories.filter(r => r.private).length;
+      const totalStars = allRepositories.reduce((s, r) => s + r.stargazers_count, 0);
+      const totalForks = allRepositories.reduce((s, r) => s + r.forks_count, 0);
+      
+      document.getElementById('totalRepos').textContent = totalRepos;
+      document.getElementById('publicRepos').textContent = publicRepos;
+      document.getElementById('privateRepos').textContent = privateRepos;
+      document.getElementById('totalStars').textContent = totalStars;
+      document.getElementById('totalForks').textContent = totalForks;
+      
+      const activityDiv = document.getElementById('activityList');
+      if (activityDiv && activityLog.length) {
+        activityDiv.innerHTML = activityLog.slice(0, 5).map(log => `
+          <div class="activity-item">
+            <div class="activity-icon"><i class="fas fa-${log.type === 'success' ? 'check-circle' : log.type === 'error' ? 'times-circle' : 'info-circle'}"></i></div>
+            <div class="activity-text">${escapeHtml(log.message.substring(0, 80))}</div>
+            <div class="activity-time">${new Date(log.time).toLocaleTimeString()}</div>
+          </div>
+        `).join('');
+      }
+      
+      if (document.getElementById('commitChart')) {
+        const ctx = document.getElementById('commitChart').getContext('2d');
+        if (commitChart) commitChart.destroy();
+        commitChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: allRepositories.slice(0, 7).map(r => r.name.substring(0, 12)),
+            datasets: [{
+              label: 'Stars',
+              data: allRepositories.slice(0, 7).map(r => r.stargazers_count),
+              borderColor: '#2f81f7',
+              backgroundColor: 'rgba(47, 129, 247, 0.1)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { labels: { color: 'var(--text-secondary)' } }
+            }
+          }
+        });
+      }
+    }
+    
+    function updateHomeStats() {
+      const totalRepos = allRepositories.length;
+      const totalStars = allRepositories.reduce((s, r) => s + r.stargazers_count, 0);
+      const totalForks = allRepositories.reduce((s, r) => s + r.forks_count, 0);
+      const totalWatchers = allRepositories.reduce((s, r) => s + (r.watchers_count || 0), 0);
+      
+      document.getElementById('homeTotalRepos').textContent = totalRepos;
+      document.getElementById('homeTotalStars').textContent = totalStars;
+      document.getElementById('homeTotalForks').textContent = totalForks;
+      document.getElementById('homeWatchers').textContent = totalWatchers;
+    }
+    
+    function updateProfilePage() {
+      const totalRepos = allRepositories.length;
+      const totalStars = allRepositories.reduce((s, r) => s + r.stargazers_count, 0);
+      const totalForks = allRepositories.reduce((s, r) => s + r.forks_count, 0);
+      
+      document.getElementById('profileReposCount').textContent = totalRepos;
+      document.getElementById('profileStarsCount').textContent = totalStars;
+      document.getElementById('profileForksCount').textContent = totalForks;
+      
+      if (gitUsername) {
+        document.getElementById('profilePageName').textContent = gitUsername;
+      }
+    }
+    
+    // =============== THEME TOGGLE ===============
+    function initThemeToggle() {
+      const themeBtn = document.getElementById('themeToggleBtn');
+      const themeIcon = document.getElementById('themeIcon');
+      const themeText = document.getElementById('themeText');
+      const savedTheme = localStorage.getItem('theme');
+      
+      if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        if (themeIcon) themeIcon.className = 'fas fa-sun';
+        if (themeText) themeText.textContent = 'Light Mode';
+      }
+      
+      if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+          document.body.classList.toggle('light-theme');
+          const isLight = document.body.classList.contains('light-theme');
+          localStorage.setItem('theme', isLight ? 'light' : 'dark');
+          if (themeIcon) themeIcon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+          if (themeText) themeText.textContent = isLight ? 'Light Mode' : 'Dark Mode';
+        });
+      }
+    }
+    
+    // =============== UTILITIES ===============
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
+    
+    // Make functions global for onclick handlers
+    window.navigateTo = navigateTo;
+    window.copyToClipboard = copyToClipboard;
+    window.showDeleteModal = showDeleteModal;
+    window.showCloneModal = showCloneModal;
+    window.togglePinRepo = togglePinRepo;
   
-  showTerminal(); addSystemLog(`[UPLOAD] Starting to ${gitUsername}/${repo}`, 'info'); showProgress();
-  const allUploads = [...modernFiles];
-  if(document.getElementById('enableReadmeGenerator')?.checked) allUploads.push({file:new File([generateCyberpunkReadme()],'README.md',{type:'text/markdown'}), name:'README.md'});
-  if(document.getElementById('enableLicense')?.checked) allUploads.push({file:new File([generateLicenseContent()],'LICENSE',{type:'text/plain'}), name:'LICENSE'});
-  if(document.getElementById('enableGitignore')?.checked && document.getElementById('gitignoreContent')?.value.trim()) allUploads.push({file:new File([document.getElementById('gitignoreContent').value],'.gitignore',{type:'text/plain'}), name:'.gitignore'});
-  
-  let success=0, error=0;
-  for(let i=0;i<allUploads.length;i++) {
-    const item = allUploads[i];
-    const file = item.file;
-    const path = item.name || file.name;
-    updateProgress((i/allUploads.length)*100, `Uploading ${path}`);
-    addSystemLog(`[UPLOAD] ${path}`, 'info');
-    try {
-      let sha = null;
-      try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e){}
-      const b64 = await new Promise(r=>{const fr=new FileReader(); fr.onload=()=>r(fr.result.split(',')[1]); fr.readAsDataURL(file);});
-      await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}`, 'PUT', { message: msg, content: b64, branch, sha });
-      success++;
-      addSystemLog(`[SUCCESS] ${path}`, 'success');
-    } catch(err) { error++; addSystemLog(`[ERROR] ${path}: ${err.message}`, 'error'); }
-  }
-  updateProgress(100, 'Complete!');
-  if(error===0) { addSystemLog(`[SUCCESS] Uploaded ${success} files!`, 'success'); modernFiles = []; renderFileList(); updateFileTreePreview(); showToast(`Successfully uploaded ${success} files!`, 'success'); }
-  else showToast(`Uploaded: ${success} success, ${error} failed`, 'warning');
-  setTimeout(hideProgress, 2000);
-}
-
-async function startModernZipUpload() {
-  const repo = document.getElementById('targetRepoName2')?.value.trim();
-  const branch = document.getElementById('branchName2')?.value.trim() || "main";
-  const msg = document.getElementById('commitMsg2')?.value.trim() || "Upload ZIP via RepoFlow";
-  if(!repo || !window.extractedZipFiles?.length) return addSystemLog('[ERROR] Repository or ZIP required','error');
-  showTerminal(); addSystemLog(`[ZIP UPLOAD] Extracting ${window.extractedZipFiles.length} files to ${repo}`, 'info'); showProgress();
-  let success=0, error=0;
-  for(let i=0;i<window.extractedZipFiles.length;i++) {
-    const file = window.extractedZipFiles[i];
-    const path = file.webkitRelativePath || file.name;
-    updateProgress((i/window.extractedZipFiles.length)*100, path);
-    try {
-      let sha = null;
-      try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e){}
-      const b64 = await new Promise(r=>{const fr=new FileReader(); fr.onload=()=>r(fr.result.split(',')[1]); fr.readAsDataURL(file);});
-      await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}`, 'PUT', { message: msg, content: b64, branch, sha });
-      success++;
-    } catch(err) { error++; addSystemLog(`[ERROR] ${path}: ${err.message}`, 'error'); }
-  }
-  updateProgress(100,'Complete');
-  showToast(`ZIP upload: ${success} success, ${error} failed`, success===error?'warning':'success');
-  setTimeout(hideProgress,2000);
-}
-
-function updateUI() { renderFileList(); updateFileTreePreview(); }
-function setupMode1UploadHandlers() { document.getElementById('startUploadBtn1')?.addEventListener('click', startModernUpload); }
-function setupMode2UploadHandlers() { document.getElementById('startUploadBtn2')?.addEventListener('click', startModernZipUpload); }
-
-// =============== DASHBOARD ===============
-function updateDashboard() {
-  document.getElementById('totalRepos').textContent = allRepositories.length;
-  document.getElementById('publicRepos').textContent = allRepositories.filter(r=>!r.private).length;
-  document.getElementById('privateRepos').textContent = allRepositories.filter(r=>r.private).length;
-  document.getElementById('totalStars').textContent = allRepositories.reduce((s,r)=>s+r.stargazers_count,0);
-  document.getElementById('totalForks').textContent = allRepositories.reduce((s,r)=>s+r.forks_count,0);
-  const activityDiv = document.getElementById('activityList');
-  if(activityDiv) activityDiv.innerHTML = activityLog.slice(0,5).map(log=>`<div class="activity-item">${escapeHtml(log.message.substring(0,80))}</div>`).join('');
-  if(document.getElementById('commitChart')) {
-    const ctx = document.getElementById('commitChart').getContext('2d');
-    if(commitChart) commitChart.destroy();
-    commitChart = new Chart(ctx, { type:'line', data:{ labels:allRepositories.slice(0,7).map(r=>r.name.substring(0,15)), datasets:[{ label:'Stars', data:allRepositories.slice(0,7).map(r=>r.stargazers_count), borderColor:'#00d4ff', fill:true }] }, options:{ responsive:true, maintainAspectRatio:true } });
-  }
-}
-
-// =============== NAVIGATION & HELPERS ===============
-function navigateTo(page) {
-  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
-  document.getElementById(`${page}Page`).style.display='block';
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  [...document.querySelectorAll('.nav-item')].find(n=>n.dataset.page===page)?.classList.add('active');
-  if(page==='repos' && isAuthenticated) loadRepositoriesEnhanced();
-  if(page==='dashboard' && isAuthenticated) updateDashboard();
-  if(page==='profile') updateProfilePage();
-}
-function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-window.navigateTo = navigateTo;
-window.loadRepositoriesEnhanced = loadRepositoriesEnhanced;
