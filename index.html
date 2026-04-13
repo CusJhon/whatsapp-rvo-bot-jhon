@@ -155,7 +155,7 @@
           </div>
         </div>
 
-        <!-- UPLOAD PROJECT PAGE with README GENERATOR -->
+        <!-- UPLOAD PROJECT PAGE -->
         <div class="page" id="uploadPage" style="display: none;">
           <div class="tabs">
             <button class="tab active" data-mode="mode1"><i class="fas fa-file"></i> Upload Files</button>
@@ -163,17 +163,14 @@
             <button class="tab" data-mode="mode3"><i class="fas fa-file-alt"></i> README Generator</button>
           </div>
           
-          <!-- Mode 1: Upload Files -->
           <div id="mode1Container" class="mode-container">
             <div class="card"><div class="card-body"><div class="dropzone" id="dropZone1"><i class="fas fa-cloud-upload-alt"></i><p>Drag & drop file di sini atau klik untuk memilih</p><p class="form-helper mt-8">Max 100MB per file</p><input type="file" id="fileInputModern1" multiple style="display:none"></div><div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName1" class="form-input" placeholder="repository-name"></div><div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName1" value="main" class="form-input"></div><div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg1" value="Upload via RepoFlow" class="form-input"></div><div id="fileListModern1" class="file-list mt-20" style="display:none"></div><button id="startUploadBtn1" class="btn btn-primary btn-full mt-20" style="display:none"><i class="fas fa-rocket"></i> Upload to GitHub</button></div></div>
           </div>
           
-          <!-- Mode 2: Upload ZIP -->
           <div id="mode2Container" class="mode-container" style="display:none">
             <div class="card"><div class="card-body"><div class="dropzone" id="dropZone2"><i class="fas fa-file-archive"></i><p>Drag & drop ZIP file di sini atau klik untuk memilih</p><input type="file" id="fileInputModern2" accept=".zip" style="display:none"></div><div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName2" class="form-input" placeholder="repository-name"></div><div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName2" value="main" class="form-input"></div><div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg2" value="Upload ZIP via RepoFlow" class="form-input"></div><div id="zipPreviewContainer" style="display:none"><div class="file-list mt-20" id="zipFileList"></div></div><button id="startUploadBtn2" class="btn btn-primary btn-full mt-20" style="display:none"><i class="fas fa-rocket"></i> Extract & Upload</button></div></div>
           </div>
           
-          <!-- Mode 3: README Generator -->
           <div id="mode3Container" class="mode-container" style="display:none">
             <div class="card">
               <div class="card-header"><h2><i class="fas fa-file-alt"></i> README Generator Pro</h2><p>Buat README.md profesional dengan mudah</p></div>
@@ -221,7 +218,6 @@
                       <div class="preview-actions">
                         <button class="btn btn-secondary" id="copyMarkdownBtn"><i class="fas fa-copy"></i> Copy Markdown</button>
                         <button class="btn btn-primary" id="downloadReadmeBtn"><i class="fas fa-download"></i> Download README.md</button>
-                        <button class="btn btn-primary" id="uploadReadmeToRepoBtn"><i class="fas fa-cloud-upload-alt"></i> Upload to Repo</button>
                       </div>
                     </div>
                   </div>
@@ -236,9 +232,69 @@
           <div class="card"><div class="card-header"><h2><i class="fas fa-book"></i> Repositories</h2><button id="refreshReposBtn" class="btn btn-secondary" style="margin-left:auto"><i class="fas fa-sync-alt"></i> Refresh</button></div><div class="card-body"><div class="form-group"><input type="text" id="repoSearchInput" class="form-input" placeholder="Search repositories..."></div><div id="repoListContainerEnhanced" class="repos-grid"></div></div></div>
         </div>
 
-        <!-- PROFILE PAGE -->
+        <!-- PROFILE PAGE - UPDATED WITH NEW DESIGN -->
         <div class="page" id="profilePage" style="display: none;">
-          <div class="card"><div class="card-header"><h2><i class="fas fa-user-circle"></i> Developer Profile</h2><p>Informasi tentang pengembang aplikasi RepoFlow</p></div><div class="card-body"><div class="stats-grid"><div class="stat-card"><div class="stat-icon"><i class="fas fa-code-branch"></i></div><div class="stat-value" id="profileReposCount">0</div><div class="stat-label">Repositories</div></div><div class="stat-card"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-value" id="profileStarsCount">0</div><div class="stat-label">Stars</div></div><div class="stat-card"><div class="stat-icon"><i class="fas fa-code-fork"></i></div><div class="stat-value" id="profileForksCount">0</div><div class="stat-label">Forks</div></div><div class="stat-card"><div class="stat-icon"><i class="fas fa-rocket"></i></div><div class="stat-value">v3.0.0</div><div class="stat-label">Version</div></div></div></div></div>
+          <div class="profile-card">
+            <div class="profile-hero">
+              <div class="profile-avatar-wrap">
+                <img class="profile-avatar-big" id="profileAvatar" src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="avatar">
+              </div>
+            </div>
+            <div class="profile-body">
+              <div class="profile-center">
+                <div class="profile-name-big" id="profileName">jhon ofc</div>
+                <div class="profile-desc" id="profileBio">
+                  JHON PRODUCTION dengan ketertarikan pada bidang teknologi. Memulai dari eksplorasi AI, kemudian memperluas fokus ke pengembangan web. Mengutamakan pembuatan antarmuka yang konsisten, rapi, dan mudah digunakan.
+                </div>
+                <div class="chip-row">
+                  <div class="chip">JHON PRODUCTION</div>
+                  <div class="chip">Web Development</div>
+                  <div class="chip">UI / UX</div>
+                  <div class="chip">Frontend</div>
+                </div>
+              </div>
+              <div class="stat-grid-2">
+                <div class="stat-card"><div class="k">FOKUS</div><div class="v">UI / UX</div></div>
+                <div class="stat-card"><div class="k">PROJECT</div><div class="v">jhon_tools</div></div>
+                <div class="stat-card"><div class="k">STACK</div><div class="v">HTML • CSS • JS</div></div>
+                <div class="stat-card"><div class="k">AKTIVITAS</div><div class="v">Upload Tools</div></div>
+              </div>
+              
+              <!-- Social Media Section -->
+              <div class="social-media-section">
+                <div class="social-links-grid">
+                  <a href="https://github.com/cpm_jhon" target="_blank" class="social-link-card github">
+                    <i class="fab fa-github"></i>
+                    <span>GitHub</span>
+                  </a>
+                  <a href="https://instagram.com/jhon_production" target="_blank" class="social-link-card instagram">
+                    <i class="fab fa-instagram"></i>
+                    <span>Instagram</span>
+                  </a>
+                  <a href="https://twitter.com/jhon_production" target="_blank" class="social-link-card twitter">
+                    <i class="fab fa-twitter"></i>
+                    <span>Twitter</span>
+                  </a>
+                  <a href="https://t.me/jhon_production" target="_blank" class="social-link-card telegram">
+                    <i class="fab fa-telegram-plane"></i>
+                    <span>Telegram</span>
+                  </a>
+                </div>
+              </div>
+              
+              <div style="margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                <button class="tool-btn" onclick="navigateTo('dashboard')">
+                  <i class="fa-solid fa-gauge"></i> Back to Dashboard
+                </button>
+                <button class="tool-btn" id="copyGithubBtn">
+                  <i class="fab fa-github"></i> Copy GitHub
+                </button>
+                <button class="tool-btn" id="copyInstagramBtn">
+                  <i class="fab fa-instagram"></i> Copy Instagram
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -259,9 +315,6 @@
 
   <!-- Clone Modal -->
   <div class="modal" id="cloneModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-code-branch"></i> Clone Repository</h3><button class="modal-close" id="closeCloneModalBtn">&times;</button></div><div class="modal-body"><p>Clone with HTTPS:</p><div class="clone-url"><code id="cloneUrlText"></code><button class="btn btn-secondary" id="copyCloneUrlBtn">Copy</button></div><p style="margin-top:16px">Run this command:</p><div class="clone-url"><code>git clone <span id="cloneCommandText"></span></code></div></div><div class="modal-footer"><button class="btn btn-secondary" id="closeCloneModalFooterBtn">Close</button></div></div></div>
-
-  <!-- README Upload Modal -->
-  <div class="modal" id="readmeUploadModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-cloud-upload-alt"></i> Upload README to Repository</h3><button class="modal-close" id="closeReadmeUploadModal">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Target Repository</label><input type="text" id="readmeTargetRepo" class="form-input" placeholder="repository-name"></div><div class="form-group"><label class="form-label">Branch</label><input type="text" id="readmeBranch" value="main" class="form-input"></div><div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="readmeCommitMsg" value="Add README.md via RepoFlow" class="form-input"></div></div><div class="modal-footer"><button class="btn btn-secondary" id="cancelReadmeUploadBtn">Cancel</button><button class="btn btn-primary" id="confirmReadmeUploadBtn">Upload README.md</button></div></div></div>
 
  <script src="js/script.js"></script>
 </body>
