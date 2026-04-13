@@ -9,6 +9,9 @@
     let modernFiles = [], extractedFiles = [], activityLog = [], allRepositories = [];
     let currentFilter = 'all', currentPage = 1, itemsPerPage = 10, pinnedRepos = [];
     let currentDeleteTarget = null, currentCloneTarget = null, commitChart = null;
+    let currentTemplate = 'cyberpunk';
+    let features = [""];
+    let techStack = [];
     
     const gitignoreTemplates = {
       Node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
@@ -233,6 +236,81 @@
     
     document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); const mode = tab.dataset.mode; document.querySelectorAll('.mode-container').forEach(c => c.style.display = 'none'); const container = document.getElementById(`${mode}Container`); if (container) container.style.display = 'block'; }); });
     
+    // README GENERATOR FUNCTIONS
+    function renderFeatures() { const container = document.getElementById('featuresList'); if (!container) return; container.innerHTML = features.map((f, i) => `<div class="list-item"><input type="text" class="form-input" value="${escapeHtml(f)}" data-feature-idx="${i}" placeholder="Feature"><button class="btn btn-secondary" style="padding:6px 12px" data-remove-feature="${i}"><i class="fas fa-trash"></i></button></div>`).join(''); document.querySelectorAll('[data-feature-idx]').forEach(inp => { inp.addEventListener('change', (e) => { features[parseInt(inp.dataset.featureIdx)] = inp.value; updateReadmePreview(); }); }); document.querySelectorAll('[data-remove-feature]').forEach(btn => { btn.addEventListener('click', () => { features.splice(parseInt(btn.dataset.removeFeature), 1); if(features.length===0) features=['']; renderFeatures(); updateReadmePreview(); }); }); }
+    
+    function renderTechTags() { const container = document.getElementById('techTags'); if (!container) return; container.innerHTML = techStack.map(t => `<span class="tag">${escapeHtml(t)} <span class="tag-remove" data-tech="${escapeHtml(t)}">&times;</span></span>`).join('') + `<input type="text" class="tag-input" id="techInput" placeholder="Add tech...">`; document.querySelectorAll('.tag-remove').forEach(btn => { btn.addEventListener('click', () => { techStack = techStack.filter(t => t !== btn.dataset.tech); renderTechTags(); updateReadmePreview(); }); }); const techInput = document.getElementById('techInput'); if (techInput) { techInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && techInput.value.trim()) { techStack.push(techInput.value.trim()); techInput.value = ''; renderTechTags(); updateReadmePreview(); } }); } }
+    
+    function generateReadmeContent() {
+      const name = document.getElementById('projectName')?.value.trim() || "My Awesome Project";
+      const tagline = document.getElementById('projectTagline')?.value.trim() || "⚡ Next-gen Tool ⚡";
+      const desc = document.getElementById('projectDesc')?.value.trim() || "";
+      const featuresList = features.filter(f => f.trim());
+      const tech = techStack;
+      const install = document.getElementById('installSteps')?.value.trim() || "";
+      const usage = document.getElementById('usageSteps')?.value.trim() || "";
+      const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous";
+      const socialGithub = document.getElementById('socialGithub')?.value.trim();
+      const socialInstagram = document.getElementById('socialInstagram')?.value.trim();
+      const hasLicense = document.getElementById('enableLicense')?.checked || false;
+      const year = new Date().getFullYear();
+      
+      let markdown = '';
+      if (currentTemplate === 'cyberpunk') {
+        markdown = `<div align="center">\n\n# ⚡ ${name} ⚡\n\n### ${tagline}\n\n`;
+        if (desc) markdown += `${desc}\n\n`;
+        markdown += `![GitHub stars](https://img.shields.io/github/stars/${socialGithub || 'username'}/${name.replace(/ /g, '-')}?style=for-the-badge&color=cyan)\n`;
+        markdown += `![License](https://img.shields.io/badge/License-MIT-cyan?style=for-the-badge)\n\n---\n\n`;
+        if (featuresList.length) { markdown += `## ✨ Features\n\n`; featuresList.forEach(f => markdown += `- ⚡ ${f}\n`); markdown += `\n---\n\n`; }
+        if (tech.length) { markdown += `## 🛠️ Tech Stack\n\n`; tech.forEach(t => markdown += `<code>⚡ ${t}</code> `); markdown += `\n\n---\n\n`; }
+        if (install) markdown += `## 📦 Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n---\n\n`;
+        if (usage) markdown += `## 🚀 Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n---\n\n`;
+        markdown += `## 👨‍💻 Developer\n\n**${author}**\n\n`;
+        if (socialGithub) markdown += `[![GitHub](https://img.shields.io/badge/GitHub-${socialGithub}-cyan?style=flat-square&logo=github)](https://github.com/${socialGithub}) `;
+        if (socialInstagram) markdown += `[![Instagram](https://img.shields.io/badge/Instagram-${socialInstagram}-purple?style=flat-square&logo=instagram)](https://instagram.com/${socialInstagram}) `;
+        markdown += `\n\n---\n\n`;
+        if (hasLicense) markdown += `## 📜 License\n\nMIT License © ${year} ${author}\n\n---\n\n`;
+        markdown += `<div align="center">\n\n### ⚡ Built with RepoFlow Pro ⚡\n\n</div>`;
+      } else if (currentTemplate === 'minimal') {
+        markdown = `# ${name}\n\n${tagline}\n\n${desc}\n\n## Features\n\n`;
+        featuresList.forEach(f => markdown += `- ${f}\n`);
+        if (install) markdown += `\n## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n`;
+        if (usage) markdown += `\n## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n`;
+        if (hasLicense) markdown += `\n## License\n\nMIT © ${year} ${author}\n`;
+      } else {
+        markdown = `# ${name}\n\n> ${tagline}\n\n${desc}\n\n## Features\n\n`;
+        featuresList.forEach(f => markdown += `- ${f}\n`);
+        if (tech.length) { markdown += `\n## Tech Stack\n\n`; tech.forEach(t => markdown += `- ${t}\n`); }
+        if (install) markdown += `\n## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n`;
+        if (usage) markdown += `\n## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n`;
+        markdown += `\n## Author\n\n**${author}**\n\n`;
+        if (hasLicense) markdown += `## License\n\nMIT © ${year} ${author}\n`;
+      }
+      return markdown;
+    }
+    
+    function updateReadmePreview() { const md = generateReadmeContent(); const previewDiv = document.getElementById('readmePreview'); if (previewDiv && typeof marked !== 'undefined') { marked.setOptions({ breaks: true, gfm: true }); previewDiv.innerHTML = marked.parse(md); } }
+    
+    function copyMarkdownToClipboard() { navigator.clipboard.writeText(generateReadmeContent()); showToast('README markdown copied!', 'success'); }
+    function downloadReadmeFile() { const blob = new Blob([generateReadmeContent()], { type: 'text/markdown' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'README.md'; a.click(); URL.revokeObjectURL(url); showToast('README.md downloaded!', 'success'); }
+    
+    async function uploadReadmeToRepo() { if (!isAuthenticated) { showToast('Please login first', 'error'); return; } const repo = document.getElementById('readmeTargetRepo')?.value.trim(); const branch = document.getElementById('readmeBranch')?.value.trim() || 'main'; const msg = document.getElementById('readmeCommitMsg')?.value.trim() || 'Add README.md via RepoFlow'; if (!repo) { showToast('Repository name required', 'error'); return; } const content = generateReadmeContent(); const b64 = btoa(unescape(encodeURIComponent(content))); showTerminal(); addSystemLog(`[README] Uploading README.md to ${gitUsername}/${repo}`, 'info'); try { let sha = null; try { const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/README.md?ref=${branch}`, 'GET'); sha = existing.sha; } catch(e) {} await githubRequest(`/repos/${gitUsername}/${repo}/contents/README.md`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha }); addSystemLog(`[SUCCESS] README.md uploaded to ${repo}`, 'success'); showToast('README.md uploaded successfully!', 'success'); closeModal('readmeUploadModal'); } catch (err) { addSystemLog(`[ERROR] Failed to upload README: ${err.message}`, 'error'); showToast(err.message, 'error'); } }
+    
+    // README Generator Event Listeners
+    document.getElementById('addFeatureBtn')?.addEventListener('click', () => { features.push(''); renderFeatures(); updateReadmePreview(); });
+    document.getElementById('copyMarkdownBtn')?.addEventListener('click', copyMarkdownToClipboard);
+    document.getElementById('downloadReadmeBtn')?.addEventListener('click', downloadReadmeFile);
+    document.getElementById('uploadReadmeToRepoBtn')?.addEventListener('click', () => showModal('readmeUploadModal'));
+    document.getElementById('closeReadmeUploadModal')?.addEventListener('click', () => closeModal('readmeUploadModal'));
+    document.getElementById('cancelReadmeUploadBtn')?.addEventListener('click', () => closeModal('readmeUploadModal'));
+    document.getElementById('confirmReadmeUploadBtn')?.addEventListener('click', uploadReadmeToRepo);
+    
+    document.querySelectorAll('.template-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentTemplate = btn.dataset.template; updateReadmePreview(); }); });
+    
+    const readmeInputs = ['projectName', 'projectTagline', 'projectDesc', 'installSteps', 'usageSteps', 'authorName', 'socialGithub', 'socialInstagram'];
+    readmeInputs.forEach(id => { document.getElementById(id)?.addEventListener('input', updateReadmePreview); });
+    document.getElementById('enableLicense')?.addEventListener('change', updateReadmePreview);
+    
     // DASHBOARD & STATS
     function updateStats() { const totalRepos = allRepositories.length, publicRepos = allRepositories.filter(r => !r.private).length, privateRepos = allRepositories.filter(r => r.private).length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0); document.getElementById('totalRepos').textContent = totalRepos; document.getElementById('publicRepos').textContent = publicRepos; document.getElementById('privateRepos').textContent = privateRepos; document.getElementById('totalStars').textContent = totalStars; if (commitChart) commitChart.destroy(); const ctx = document.getElementById('commitChart')?.getContext('2d'); if (ctx) { commitChart = new Chart(ctx, { type: 'line', data: { labels: allRepositories.slice(0,7).map(r=>r.name.substring(0,12)), datasets: [{ label: 'Stars', data: allRepositories.slice(0,7).map(r=>r.stargazers_count), borderColor: '#2f81f7', backgroundColor: 'rgba(47,129,247,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: 'var(--text-secondary)' } } } } }); } }
     function updateDashboard() { const activityDiv = document.getElementById('activityList'); if (activityDiv && activityLog.length) { activityDiv.innerHTML = activityLog.slice(0,5).map(log => `<div class="activity-item"><div class="activity-icon"><i class="fas fa-${log.type === 'success' ? 'check-circle' : log.type === 'error' ? 'times-circle' : 'info-circle'}"></i></div><div class="activity-text">${escapeHtml(log.message.substring(0,80))}</div><div class="activity-time">${new Date(log.time).toLocaleTimeString()}</div></div>`).join(''); } }
@@ -252,6 +330,9 @@
     initThemeToggle();
     updateUIBasedOnAuth();
     navigateTo('home');
+    renderFeatures();
+    renderTechTags();
+    updateReadmePreview();
     
     setTimeout(() => { const body = document.getElementById('terminalBody'); if (body && body.children.length === 0 && !isAuthenticated) { addSystemLog('[SYSTEM] Welcome to RepoFlow Pro!', 'success'); addSystemLog('[SYSTEM] Please login to manage your GitHub repositories', 'info'); } }, 500);
     
@@ -260,4 +341,3 @@
     window.showDeleteModal = showDeleteModal;
     window.showCloneModal = showCloneModal;
     window.loadRepositories = loadRepositories;
-  
