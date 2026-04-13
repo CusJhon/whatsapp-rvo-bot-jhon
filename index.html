@@ -155,14 +155,79 @@
           </div>
         </div>
 
-        <!-- UPLOAD PROJECT PAGE -->
+        <!-- UPLOAD PROJECT PAGE with README GENERATOR -->
         <div class="page" id="uploadPage" style="display: none;">
-          <div class="tabs"><button class="tab active" data-mode="mode1"><i class="fas fa-file"></i> Upload Files</button><button class="tab" data-mode="mode2"><i class="fas fa-file-archive"></i> Upload ZIP</button></div>
+          <div class="tabs">
+            <button class="tab active" data-mode="mode1"><i class="fas fa-file"></i> Upload Files</button>
+            <button class="tab" data-mode="mode2"><i class="fas fa-file-archive"></i> Upload ZIP</button>
+            <button class="tab" data-mode="mode3"><i class="fas fa-file-alt"></i> README Generator</button>
+          </div>
+          
+          <!-- Mode 1: Upload Files -->
           <div id="mode1Container" class="mode-container">
             <div class="card"><div class="card-body"><div class="dropzone" id="dropZone1"><i class="fas fa-cloud-upload-alt"></i><p>Drag & drop file di sini atau klik untuk memilih</p><p class="form-helper mt-8">Max 100MB per file</p><input type="file" id="fileInputModern1" multiple style="display:none"></div><div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName1" class="form-input" placeholder="repository-name"></div><div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName1" value="main" class="form-input"></div><div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg1" value="Upload via RepoFlow" class="form-input"></div><div id="fileListModern1" class="file-list mt-20" style="display:none"></div><button id="startUploadBtn1" class="btn btn-primary btn-full mt-20" style="display:none"><i class="fas fa-rocket"></i> Upload to GitHub</button></div></div>
           </div>
+          
+          <!-- Mode 2: Upload ZIP -->
           <div id="mode2Container" class="mode-container" style="display:none">
             <div class="card"><div class="card-body"><div class="dropzone" id="dropZone2"><i class="fas fa-file-archive"></i><p>Drag & drop ZIP file di sini atau klik untuk memilih</p><input type="file" id="fileInputModern2" accept=".zip" style="display:none"></div><div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName2" class="form-input" placeholder="repository-name"></div><div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName2" value="main" class="form-input"></div><div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg2" value="Upload ZIP via RepoFlow" class="form-input"></div><div id="zipPreviewContainer" style="display:none"><div class="file-list mt-20" id="zipFileList"></div></div><button id="startUploadBtn2" class="btn btn-primary btn-full mt-20" style="display:none"><i class="fas fa-rocket"></i> Extract & Upload</button></div></div>
+          </div>
+          
+          <!-- Mode 3: README Generator -->
+          <div id="mode3Container" class="mode-container" style="display:none">
+            <div class="card">
+              <div class="card-header"><h2><i class="fas fa-file-alt"></i> README Generator Pro</h2><p>Buat README.md profesional dengan mudah</p></div>
+              <div class="card-body">
+                <div class="readme-generator-section">
+                  <div class="template-selector">
+                    <label class="form-label">Template Style</label>
+                    <div class="template-buttons">
+                      <button class="btn btn-secondary template-btn active" data-template="cyberpunk"><i class="fas fa-robot"></i> Cyberpunk</button>
+                      <button class="btn btn-secondary template-btn" data-template="minimal"><i class="fas fa-circle"></i> Minimal</button>
+                      <button class="btn btn-secondary template-btn" data-template="clean"><i class="fas fa-brush"></i> Clean Pro</button>
+                    </div>
+                  </div>
+                  
+                  <div class="readme-layout">
+                    <div class="readme-form">
+                      <div class="form-section"><h4><i class="fas fa-star"></i> Basic Information</h4>
+                        <div class="form-group"><label class="form-label">Project Name</label><input type="text" id="projectName" class="form-input" placeholder="My Awesome Project"></div>
+                        <div class="form-group"><label class="form-label">Tagline / Slogan</label><input type="text" id="projectTagline" class="form-input" placeholder="⚡ Next-gen Tool ⚡"></div>
+                        <div class="form-group"><label class="form-label">Description</label><textarea id="projectDesc" class="form-textarea" rows="3" placeholder="Project description"></textarea></div>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-list-check"></i> Features</h4>
+                        <div id="featuresList" class="dynamic-list"></div>
+                        <button type="button" class="add-btn" id="addFeatureBtn"><i class="fas fa-plus"></i> Add Feature</button>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-cubes"></i> Tech Stack</h4>
+                        <div id="techTags" class="tag-input-container"></div>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-code"></i> Installation & Usage</h4>
+                        <div class="form-group"><label class="form-label">Installation Steps</label><textarea id="installSteps" class="form-textarea" rows="3" placeholder="npm install&#10;npm start"></textarea></div>
+                        <div class="form-group"><label class="form-label">Usage / Commands</label><textarea id="usageSteps" class="form-textarea" rows="3" placeholder="npm run dev"></textarea></div>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-user-astronaut"></i> Author Info</h4>
+                        <div class="form-group"><label class="form-label">Author Name</label><input type="text" id="authorName" class="form-input"></div>
+                        <div class="form-group"><label class="form-label">GitHub Username</label><input type="text" id="socialGithub" class="form-input"></div>
+                        <div class="form-group"><label class="form-label">Instagram Username</label><input type="text" id="socialInstagram" class="form-input"></div>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-gavel"></i> License</h4>
+                        <label class="checkbox-wrapper"><input type="checkbox" id="enableLicense"> <span>Add MIT License</span></label>
+                      </div>
+                    </div>
+                    <div class="readme-preview">
+                      <div class="preview-header"><i class="fas fa-eye"></i> Live Preview <span class="preview-badge">Markdown</span></div>
+                      <div class="preview-content" id="readmePreview"></div>
+                      <div class="preview-actions">
+                        <button class="btn btn-secondary" id="copyMarkdownBtn"><i class="fas fa-copy"></i> Copy Markdown</button>
+                        <button class="btn btn-primary" id="downloadReadmeBtn"><i class="fas fa-download"></i> Download README.md</button>
+                        <button class="btn btn-primary" id="uploadReadmeToRepoBtn"><i class="fas fa-cloud-upload-alt"></i> Upload to Repo</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -195,6 +260,9 @@
   <!-- Clone Modal -->
   <div class="modal" id="cloneModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-code-branch"></i> Clone Repository</h3><button class="modal-close" id="closeCloneModalBtn">&times;</button></div><div class="modal-body"><p>Clone with HTTPS:</p><div class="clone-url"><code id="cloneUrlText"></code><button class="btn btn-secondary" id="copyCloneUrlBtn">Copy</button></div><p style="margin-top:16px">Run this command:</p><div class="clone-url"><code>git clone <span id="cloneCommandText"></span></code></div></div><div class="modal-footer"><button class="btn btn-secondary" id="closeCloneModalFooterBtn">Close</button></div></div></div>
 
-<script src="js/script.js"></script>
+  <!-- README Upload Modal -->
+  <div class="modal" id="readmeUploadModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-cloud-upload-alt"></i> Upload README to Repository</h3><button class="modal-close" id="closeReadmeUploadModal">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Target Repository</label><input type="text" id="readmeTargetRepo" class="form-input" placeholder="repository-name"></div><div class="form-group"><label class="form-label">Branch</label><input type="text" id="readmeBranch" value="main" class="form-input"></div><div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="readmeCommitMsg" value="Add README.md via RepoFlow" class="form-input"></div></div><div class="modal-footer"><button class="btn btn-secondary" id="cancelReadmeUploadBtn">Cancel</button><button class="btn btn-primary" id="confirmReadmeUploadBtn">Upload README.md</button></div></div></div>
+
+ <script src="js/script.js"></script>
 </body>
 </html>
