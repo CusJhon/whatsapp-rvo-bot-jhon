@@ -17,6 +17,13 @@
     let existingReadme = null;
     let existingLicense = null;
     
+    // ZIP state
+    let zipProjectAnalysis = null;
+    let zipFeatures = [""];
+    let zipTechStack = [];
+    let zipCurrentTemplate = 'cyberpunk';
+    let zipCurrentLicense = "mit";
+    
     // Gitignore templates
     const gitignoreTemplates = {
       Node: `node_modules/\ndist/\n.env\n.DS_Store\nnpm-debug.log\ncoverage/`,
@@ -151,7 +158,6 @@
       if (panel) panel.style.display = 'block';
       if (badge) badge.innerHTML = `<i class="fas fa-microchip"></i> Detected: ${analysis.type.toUpperCase()} project`;
       
-      // Show existing files info if README or LICENSE already exist
       if (analysis.hasReadme || analysis.hasLicense) {
         if (existingInfo) existingInfo.style.display = 'block';
         if (generatorSection) generatorSection.style.display = 'none';
@@ -175,7 +181,6 @@
         `;
       }
       
-      // Auto-fill form with detected data (only if no existing files)
       if (!analysis.hasReadme) {
         const projectNameInput = document.getElementById('projectName');
         const projectDescInput = document.getElementById('projectDesc');
@@ -337,7 +342,269 @@
       showToast('LICENSE file downloaded!', 'success'); 
     }
     
-    // Upload Functions
+    // =============== ZIP ANALYSIS FUNCTIONS ===============
+    async function analyzeZipProjectStructure(files) {
+      addSystemLog('[ZIP ANALYSIS] Analyzing ZIP project structure...', 'info');
+      let analysis = {
+        type: 'unknown',
+        name: '',
+        description: '',
+        dependencies: [],
+        scripts: {},
+        author: '',
+        techStack: [],
+        hasReadme: false,
+        hasLicense: false,
+        badges: []
+      };
+      
+      const readmeFile = files.find(f => f.name === 'README.md');
+      if (readmeFile) {
+        analysis.hasReadme = true;
+        addSystemLog('[ZIP ANALYSIS] Found existing README.md - will use it', 'success');
+      }
+      
+      const licenseFile = files.find(f => f.name === 'LICENSE' || f.name === 'LICENSE.md' || f.name === 'LICENSE.txt');
+      if (licenseFile) {
+        analysis.hasLicense = true;
+        addSystemLog('[ZIP ANALYSIS] Found existing LICENSE - will use it', 'success');
+      }
+      
+      const packageJsonFile = files.find(f => f.name === 'package.json');
+      if (packageJsonFile) {
+        try {
+          const content = await readFileContent(packageJsonFile);
+          const pkg = JSON.parse(content);
+          analysis.type = 'node';
+          analysis.name = pkg.name || '';
+          analysis.description = pkg.description || '';
+          analysis.dependencies = [...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.devDependencies || {})];
+          analysis.scripts = pkg.scripts || {};
+          analysis.author = pkg.author || '';
+          analysis.techStack = ['Node.js', ...analysis.dependencies.slice(0, 5).map(d => d.split('/').pop())];
+          analysis.badges.push('node');
+          addSystemLog(`[ZIP ANALYSIS] Detected Node.js project: ${analysis.name || 'unnamed'}`, 'success');
+        } catch(e) {}
+      }
+      
+      const requirementsFile = files.find(f => f.name === 'requirements.txt');
+      if (requirementsFile && !analysis.name) {
+        const content = await readFileContent(requirementsFile);
+        analysis.type = 'python';
+        analysis.name = analysis.name || 'python-project';
+        analysis.dependencies = content.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+        analysis.techStack = ['Python', ...analysis.dependencies.slice(0, 5)];
+        analysis.badges.push('python');
+        addSystemLog('[ZIP ANALYSIS] Detected Python project', 'success');
+      }
+      
+      const htmlFile = files.find(f => f.name === 'index.html');
+      if (htmlFile && analysis.type === 'unknown') {
+        analysis.type = 'web';
+        analysis.name = analysis.name || 'web-project';
+        analysis.techStack = ['HTML5', 'CSS3', 'JavaScript'];
+        analysis.badges.push('html5', 'css3', 'javascript');
+        addSystemLog('[ZIP ANALYSIS] Detected Web project', 'success');
+      }
+      
+      return analysis;
+    }
+    
+    function updateZipDetectionPanel(analysis) {
+      const panel = document.getElementById('zipDetectionPanel');
+      const badge = document.getElementById('zipDetectionBadge');
+      const infoDiv = document.getElementById('zipProjectInfo');
+      const existingInfo = document.getElementById('zipExistingFilesInfo');
+      const generatorSection = document.getElementById('zipGeneratorSection');
+      
+      if (panel) panel.style.display = 'block';
+      if (badge) badge.innerHTML = `<i class="fas fa-microchip"></i> Detected: ${analysis.type.toUpperCase()} project from ZIP`;
+      
+      if (analysis.hasReadme || analysis.hasLicense) {
+        if (existingInfo) existingInfo.style.display = 'block';
+        if (generatorSection) generatorSection.style.display = 'none';
+        addSystemLog('[ZIP INFO] Using existing README.md and/or LICENSE files from ZIP', 'info');
+      } else {
+        if (existingInfo) existingInfo.style.display = 'none';
+        if (generatorSection) generatorSection.style.display = 'block';
+      }
+      
+      if (infoDiv) {
+        let typeIcon = analysis.type === 'node' ? 'fab fa-node-js' : analysis.type === 'python' ? 'fab fa-python' : analysis.type === 'php' ? 'fab fa-php' : 'fas fa-code';
+        infoDiv.innerHTML = `
+          <div class="detection-badge" style="margin-bottom:12px"><i class="${typeIcon}"></i> Project Type: ${analysis.type.toUpperCase()}</div>
+          <div class="badge-list">
+            ${analysis.badges.map(b => `<span class="badge"><i class="fas fa-tag"></i> ${b}</span>`).join('')}
+            ${analysis.dependencies.slice(0, 5).map(d => `<span class="badge"><i class="fas fa-cube"></i> ${d}</span>`).join('')}
+          </div>
+          ${analysis.name ? `<div class="mt-16"><strong>Project Name:</strong> ${escapeHtml(analysis.name)}</div>` : ''}
+          ${analysis.description ? `<div><strong>Description:</strong> ${escapeHtml(analysis.description)}</div>` : ''}
+          ${Object.keys(analysis.scripts).length ? `<div><strong>Scripts:</strong> ${Object.keys(analysis.scripts).join(', ')}</div>` : ''}
+        `;
+      }
+      
+      if (!analysis.hasReadme) {
+        const projectNameInput = document.getElementById('zipProjectName');
+        const projectDescInput = document.getElementById('zipProjectDesc');
+        const authorNameInput = document.getElementById('zipAuthorName');
+        
+        if (projectNameInput && analysis.name) projectNameInput.value = analysis.name;
+        if (projectDescInput && analysis.description) projectDescInput.value = analysis.description;
+        if (authorNameInput && analysis.author && !authorNameInput.value) authorNameInput.value = analysis.author;
+        
+        if (analysis.techStack.length > 0) {
+          zipTechStack = [...new Set([...zipTechStack, ...analysis.techStack])];
+          renderZipTechTags();
+        }
+      }
+      
+      zipProjectAnalysis = analysis;
+    }
+    
+    // ZIP README Generator Functions
+    function renderZipFeatures() { 
+      const container = document.getElementById('zipFeaturesList'); 
+      if (!container) return; 
+      if (zipFeatures.length === 0) zipFeatures = [""];
+      container.innerHTML = zipFeatures.map((f, i) => `<div class="list-item"><input type="text" class="form-input" value="${escapeHtml(f)}" data-zip-feature-idx="${i}" placeholder="Feature description"><button class="btn btn-secondary" style="padding:6px 12px" data-zip-remove-feature="${i}"><i class="fas fa-trash"></i></button></div>`).join(''); 
+      document.querySelectorAll('[data-zip-feature-idx]').forEach(inp => { inp.addEventListener('change', (e) => { zipFeatures[parseInt(inp.dataset.zipFeatureIdx)] = inp.value; updateZipReadmePreview(); }); }); 
+      document.querySelectorAll('[data-zip-remove-feature]').forEach(btn => { btn.addEventListener('click', () => { zipFeatures.splice(parseInt(btn.dataset.zipRemoveFeature), 1); if(zipFeatures.length===0) zipFeatures=['']; renderZipFeatures(); updateZipReadmePreview(); }); }); 
+    }
+    
+    function renderZipTechTags() { 
+      const container = document.getElementById('zipTechTags'); 
+      if (!container) return; 
+      container.innerHTML = zipTechStack.map(t => `<span class="tag">${escapeHtml(t)} <span class="tag-remove" data-zip-tech="${escapeHtml(t)}">&times;</span></span>`).join('') + `<input type="text" class="tag-input" id="zipTechInput" placeholder="Add technology...">`; 
+      document.querySelectorAll('[data-zip-tech]').forEach(btn => { btn.addEventListener('click', () => { zipTechStack = zipTechStack.filter(t => t !== btn.dataset.zipTech); renderZipTechTags(); updateZipReadmePreview(); }); }); 
+      const techInput = document.getElementById('zipTechInput'); 
+      if (techInput) { techInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && techInput.value.trim()) { zipTechStack.push(techInput.value.trim()); techInput.value = ''; renderZipTechTags(); updateZipReadmePreview(); } }); } 
+    }
+    
+    function getZipSelectedLicense() { 
+      const radios = document.getElementsByName('zipLicenseType'); 
+      for (let i = 0; i < radios.length; i++) { 
+        if (radios[i].checked) return radios[i].value; 
+      } 
+      return 'mit'; 
+    }
+    
+    function generateZipLicenseContent() { 
+      const licenseType = getZipSelectedLicense(); 
+      const author = document.getElementById('zipAuthorName')?.value.trim() || gitUsername || "Anonymous"; 
+      const year = new Date().getFullYear(); 
+      let content = licenseTemplates[licenseType] || licenseTemplates.mit; 
+      content = content.replace(/{year}/g, year).replace(/{author}/g, author); 
+      return content; 
+    }
+    
+    function updateZipLicenseInfoLink() { 
+      const licenseType = getZipSelectedLicense(); 
+      const linkMap = { 
+        'mit': 'https://opensource.org/licenses/MIT', 
+        'gpl-3.0': 'https://www.gnu.org/licenses/gpl-3.0.html', 
+        'apache-2.0': 'https://www.apache.org/licenses/LICENSE-2.0', 
+        'bsd-3-clause': 'https://opensource.org/licenses/BSD-3-Clause', 
+        'isc': 'https://opensource.org/licenses/ISC', 
+        'cc0-1.0': 'https://creativecommons.org/publicdomain/zero/1.0/', 
+        'unlicense': 'https://unlicense.org/' 
+      }; 
+      const link = document.getElementById('zipLicenseInfoLink'); 
+      if (link) link.href = linkMap[licenseType] || '#'; 
+    }
+    
+    function generateZipReadmeContent() {
+      const name = document.getElementById('zipProjectName')?.value.trim() || (zipProjectAnalysis?.name || "My Awesome Project");
+      const tagline = document.getElementById('zipProjectTagline')?.value.trim() || "⚡ Next-gen Tool ⚡";
+      const desc = document.getElementById('zipProjectDesc')?.value.trim() || (zipProjectAnalysis?.description || "");
+      const featuresList = zipFeatures.filter(f => f && f.trim());
+      const tech = zipTechStack.length ? zipTechStack : (zipProjectAnalysis?.techStack || []);
+      const install = document.getElementById('zipInstallSteps')?.value.trim() || (zipProjectAnalysis?.scripts?.start ? `npm install\nnpm start` : "");
+      const usage = document.getElementById('zipUsageSteps')?.value.trim() || "";
+      const author = document.getElementById('zipAuthorName')?.value.trim() || gitUsername || (zipProjectAnalysis?.author || "Anonymous");
+      const socialGithub = document.getElementById('zipSocialGithub')?.value.trim();
+      const socialInstagram = document.getElementById('zipSocialInstagram')?.value.trim();
+      const hasLicense = document.getElementById('zipEnableLicense')?.checked || false;
+      const licenseType = getZipSelectedLicense();
+      const licenseNameMap = { 'mit': 'MIT', 'gpl-3.0': 'GPL-3.0', 'apache-2.0': 'Apache-2.0', 'bsd-3-clause': 'BSD-3-Clause', 'isc': 'ISC', 'cc0-1.0': 'CC0-1.0', 'unlicense': 'Unlicense' };
+      const licenseName = licenseNameMap[licenseType] || 'MIT';
+      const year = new Date().getFullYear();
+      let markdown = '';
+      
+      if (zipCurrentTemplate === 'cyberpunk') {
+        markdown = `<div align="center">\n\n# ⚡ ${name} ⚡\n\n### ${tagline}\n\n`;
+        if (desc) markdown += `${desc}\n\n`;
+        markdown += `![GitHub stars](https://img.shields.io/github/stars/${socialGithub || 'username'}/${name.replace(/ /g, '-')}?style=for-the-badge&color=cyan)\n`;
+        if (hasLicense) markdown += `![License](https://img.shields.io/badge/License-${licenseName}-cyan?style=for-the-badge)\n`;
+        markdown += `![Version](https://img.shields.io/badge/version-1.0.0-purple?style=for-the-badge)\n\n---\n\n`;
+        if (featuresList.length) { markdown += `## ✨ Features\n\n`; featuresList.forEach(f => markdown += `- ⚡ ${f}\n`); markdown += `\n---\n\n`; }
+        if (tech.length) { markdown += `## 🛠️ Tech Stack\n\n`; tech.forEach(t => markdown += `<code>⚡ ${t}</code> `); markdown += `\n\n---\n\n`; }
+        if (install) markdown += `## 📦 Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n\n---\n\n`;
+        if (usage) markdown += `## 🚀 Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n\n---\n\n`;
+        markdown += `## 👨‍💻 Developer\n\n**${author}**\n\n`;
+        if (socialGithub) markdown += `[![GitHub](https://img.shields.io/badge/GitHub-${socialGithub}-cyan?style=flat-square&logo=github)](https://github.com/${socialGithub}) `;
+        if (socialInstagram) markdown += `[![Instagram](https://img.shields.io/badge/Instagram-${socialInstagram}-purple?style=flat-square&logo=instagram)](https://instagram.com/${socialInstagram}) `;
+        markdown += `\n\n---\n\n`;
+        markdown += `## 🤝 Contributing\n\nContributions, issues, and feature requests are welcome!\n\n---\n\n`;
+        if (hasLicense) markdown += `## 📜 License\n\nCopyright © ${year} ${author}.\nThis project is licensed under the **${licenseName}** license.\n\n---\n\n`;
+        markdown += `<div align="center">\n\n### ⚡ Built with RepoFlow Pro ⚡\n\n</div>`;
+      } else if (zipCurrentTemplate === 'minimal') {
+        markdown = `# ${name}\n\n${tagline}\n\n${desc}\n\n## Features\n\n`;
+        featuresList.forEach(f => markdown += `- ${f}\n`);
+        if (tech.length) markdown += `\n## Tech Stack\n\n${tech.map(t => `- ${t}`).join('\n')}\n`;
+        if (install) markdown += `\n## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n`;
+        if (usage) markdown += `\n## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n`;
+        markdown += `\n## Author\n\n**${author}**\n\n`;
+        if (hasLicense) markdown += `\n## License\n\n${licenseName} © ${year} ${author}\n`;
+      } else {
+        markdown = `# ${name}\n\n> ${tagline}\n\n${desc}\n\n## Features\n\n`;
+        featuresList.forEach(f => markdown += `- ${f}\n`);
+        if (tech.length) markdown += `\n## Tech Stack\n\n${tech.map(t => `- ${t}`).join('\n')}\n`;
+        if (install) markdown += `\n## Installation\n\n\`\`\`bash\n${install}\n\`\`\`\n`;
+        if (usage) markdown += `\n## Usage\n\n\`\`\`bash\n${usage}\n\`\`\`\n`;
+        markdown += `\n## Author\n\n**${author}**\n\n`;
+        if (hasLicense) markdown += `\n## License\n\n${licenseName} © ${year} ${author}\n`;
+      }
+      return markdown;
+    }
+    
+    function updateZipReadmePreview() { 
+      const md = generateZipReadmeContent(); 
+      const previewDiv = document.getElementById('zipReadmePreview'); 
+      if (previewDiv && typeof marked !== 'undefined') { 
+        marked.setOptions({ breaks: true, gfm: true }); 
+        previewDiv.innerHTML = marked.parse(md); 
+      } 
+    }
+    
+    function zipCopyMarkdownToClipboard() { 
+      navigator.clipboard.writeText(generateZipReadmeContent()); 
+      showToast('README markdown copied!', 'success'); 
+    }
+    
+    function zipDownloadReadmeFile() { 
+      const blob = new Blob([generateZipReadmeContent()], { type: 'text/markdown' }); 
+      const url = URL.createObjectURL(blob); 
+      const a = document.createElement('a'); 
+      a.href = url; 
+      a.download = 'README.md'; 
+      a.click(); 
+      URL.revokeObjectURL(url); 
+      showToast('README.md downloaded!', 'success'); 
+    }
+    
+    function zipDownloadLicenseFile() { 
+      const content = generateZipLicenseContent(); 
+      const blob = new Blob([content], { type: 'text/plain' }); 
+      const url = URL.createObjectURL(blob); 
+      const a = document.createElement('a'); 
+      a.href = url; 
+      a.download = 'LICENSE'; 
+      a.click(); 
+      URL.revokeObjectURL(url); 
+      showToast('LICENSE file downloaded!', 'success'); 
+    }
+    
+    // Upload Functions for Files
     function handleFilesSelected(files) {
       uploadedFiles = Array.from(files);
       renderFileList();
@@ -349,7 +616,7 @@
     }
     
     function renderFileList() {
-      const container = document.getElementById('fileListModern');
+      const container = document.getElementById('fileListModern1');
       if (!container) return;
       if (uploadedFiles.length === 0) { container.style.display = 'none'; return; }
       container.style.display = 'block';
@@ -358,9 +625,9 @@
     }
     
     async function startSmartUpload() {
-      const repo = document.getElementById('targetRepoName')?.value.trim();
-      const branch = document.getElementById('branchName')?.value.trim() || 'main';
-      const msg = document.getElementById('commitMsg')?.value.trim() || 'Initial commit via RepoFlow Smart Upload';
+      const repo = document.getElementById('targetRepoName1')?.value.trim();
+      const branch = document.getElementById('branchName1')?.value.trim() || 'main';
+      const msg = document.getElementById('commitMsg1')?.value.trim() || 'Initial commit via RepoFlow Smart Upload';
       if (!repo) { showToast('Repository name required', 'error'); return; }
       if (!uploadedFiles.length) { showToast('No files selected', 'error'); return; }
       
@@ -421,6 +688,7 @@
       }
     }
     
+    // ZIP Upload Functions
     async function handleZipSelected(files) {
       if (!files.length || !files[0].name.endsWith('.zip')) { showToast('Only ZIP files supported', 'error'); return; }
       const zipFile = files[0];
@@ -439,20 +707,9 @@
         }
         addSystemLog(`[ZIP] Extracted ${extractedFiles.length} files`, 'success');
         
-        const analysis = await analyzeProjectStructure(extractedFiles);
-        const zipPanel = document.getElementById('zipDetectionPanel');
-        if (zipPanel) {
-          zipPanel.style.display = 'block';
-          zipPanel.innerHTML = `
-            <div class="detection-badge"><i class="fas fa-microchip"></i> Detected: ${analysis.type.toUpperCase()} project</div>
-            <div class="mt-16">
-              ${analysis.hasReadme ? '<div class="detection-badge" style="background:rgba(0,212,255,0.1); border-color:var(--accent-cyan);"><i class="fas fa-check-circle"></i> README.md found - will use existing file</div>' : ''}
-              ${analysis.hasLicense ? '<div class="detection-badge" style="background:rgba(0,212,255,0.1); border-color:var(--accent-cyan);"><i class="fas fa-check-circle"></i> LICENSE found - will use existing file</div>' : ''}
-              ${analysis.name ? `<div><strong>Project Name:</strong> ${escapeHtml(analysis.name)}</div>` : ''}
-              ${analysis.description ? `<div><strong>Description:</strong> ${escapeHtml(analysis.description)}</div>` : ''}
-            </div>
-          `;
-        }
+        const analysis = await analyzeZipProjectStructure(extractedFiles);
+        updateZipDetectionPanel(analysis);
+        updateZipReadmePreview();
         
         const zipFileList = document.getElementById('zipFileList');
         if (zipFileList) {
@@ -474,8 +731,32 @@
       showTerminal();
       addSystemLog(`[SMART UPLOAD] Starting ZIP upload to ${gitUsername}/${repo}`, 'info');
       
+      let filesToUpload = [...extractedFiles];
+      
+      const hasReadme = filesToUpload.some(f => f.name === 'README.md');
+      const hasLicense = filesToUpload.some(f => f.name === 'LICENSE');
+      const addNewLicense = document.getElementById('zipEnableLicense')?.checked || false;
+      
+      if (!hasReadme) {
+        const readmeContent = generateZipReadmeContent();
+        const readmeFile = new File([readmeContent], 'README.md', { type: 'text/markdown' });
+        filesToUpload.push(readmeFile);
+        addSystemLog(`[SMART UPLOAD] Generated and added README.md from ZIP analysis`, 'info');
+      } else {
+        addSystemLog(`[SMART UPLOAD] Using existing README.md from ZIP file`, 'success');
+      }
+      
+      if (!hasLicense && addNewLicense) {
+        const licenseContent = generateZipLicenseContent();
+        const licenseFile = new File([licenseContent], 'LICENSE', { type: 'text/plain' });
+        filesToUpload.push(licenseFile);
+        addSystemLog(`[SMART UPLOAD] Generated and added LICENSE`, 'info');
+      } else if (hasLicense) {
+        addSystemLog(`[SMART UPLOAD] Using existing LICENSE from ZIP file`, 'success');
+      }
+      
       let success = 0, error = 0;
-      for (const file of extractedFiles) {
+      for (const file of filesToUpload) {
         const path = file.webkitRelativePath || file.name;
         addSystemLog(`[UPLOAD] Uploading ${path}...`, 'info');
         try {
@@ -487,50 +768,14 @@
           const b64 = await new Promise(resolve => { const fr = new FileReader(); fr.onload = () => resolve(fr.result.split(',')[1]); fr.readAsDataURL(file); });
           await githubRequest(`/repos/${gitUsername}/${repo}/contents/${encodeURIComponent(path)}`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
           success++;
+          addSystemLog(`[SUCCESS] Uploaded ${path}`, 'success');
         } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${path}: ${err.message}`, 'error'); }
-      }
-      
-      const hasReadme = extractedFiles.some(f => f.name === 'README.md');
-      const hasLicense = extractedFiles.some(f => f.name === 'LICENSE');
-      const addNewLicense = document.getElementById('enableLicense')?.checked || false;
-      
-      if (!hasReadme) {
-        const readmeContent = generateReadmeContent();
-        try {
-          let sha = null;
-          try {
-            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/README.md?ref=${branch}`, 'GET');
-            sha = existing.sha;
-          } catch(e) {}
-          const b64 = btoa(unescape(encodeURIComponent(readmeContent)));
-          await githubRequest(`/repos/${gitUsername}/${repo}/contents/README.md`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
-          success++;
-          addSystemLog(`[SUCCESS] Generated and uploaded README.md`, 'success');
-        } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload README.md: ${err.message}`, 'error'); }
-      } else {
-        addSystemLog(`[INFO] Using existing README.md from ZIP file`, 'success');
-      }
-      
-      if (!hasLicense && addNewLicense) {
-        const licenseContent = generateLicenseContent();
-        try {
-          let sha = null;
-          try {
-            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/LICENSE?ref=${branch}`, 'GET');
-            sha = existing.sha;
-          } catch(e) {}
-          const b64 = btoa(unescape(encodeURIComponent(licenseContent)));
-          await githubRequest(`/repos/${gitUsername}/${repo}/contents/LICENSE`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
-          success++;
-          addSystemLog(`[SUCCESS] Generated and uploaded LICENSE`, 'success');
-        } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload LICENSE: ${err.message}`, 'error'); }
-      } else if (hasLicense) {
-        addSystemLog(`[INFO] Using existing LICENSE from ZIP file`, 'success');
       }
       
       addSystemLog(`[SMART UPLOAD] Complete: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning');
       showToast(`ZIP upload: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning');
       extractedFiles = [];
+      document.getElementById('zipFileList').style.display = 'none';
       document.getElementById('startSmartZipUploadBtn').style.display = 'none';
     }
     
@@ -618,6 +863,11 @@
         const socialGithubInput = document.getElementById('socialGithub');
         if (authorNameInput) authorNameInput.value = gitUsername;
         if (socialGithubInput) socialGithubInput.value = gitUsername;
+        
+        const zipAuthorName = document.getElementById('zipAuthorName');
+        const zipSocialGithub = document.getElementById('zipSocialGithub');
+        if (zipAuthorName) zipAuthorName.value = gitUsername;
+        if (zipSocialGithub) zipSocialGithub.value = gitUsername;
         
         await loadRepositories();
         navigateTo('home');
@@ -809,6 +1059,21 @@
     const readmeInputs = ['projectName', 'projectTagline', 'projectDesc', 'installSteps', 'usageSteps', 'authorName', 'socialGithub', 'socialInstagram'];
     readmeInputs.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', updateReadmePreview); });
     
+    // ZIP README Generator Event Listeners
+    const zipAddFeatureBtn = document.getElementById('zipAddFeatureBtn');
+    const zipCopyMarkdownBtn = document.getElementById('zipCopyMarkdownBtn');
+    const zipDownloadReadmeBtn = document.getElementById('zipDownloadReadmeBtn');
+    const zipDownloadLicenseBtn = document.getElementById('zipDownloadLicenseBtn');
+    if (zipAddFeatureBtn) zipAddFeatureBtn.addEventListener('click', () => { zipFeatures.push(''); renderZipFeatures(); updateZipReadmePreview(); });
+    if (zipCopyMarkdownBtn) zipCopyMarkdownBtn.addEventListener('click', zipCopyMarkdownToClipboard);
+    if (zipDownloadReadmeBtn) zipDownloadReadmeBtn.addEventListener('click', zipDownloadReadmeFile);
+    if (zipDownloadLicenseBtn) zipDownloadLicenseBtn.addEventListener('click', zipDownloadLicenseFile);
+    
+    document.querySelectorAll('.zip-template-btn').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('.zip-template-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); zipCurrentTemplate = btn.dataset.template; updateZipReadmePreview(); }); });
+    
+    const zipReadmeInputs = ['zipProjectName', 'zipProjectTagline', 'zipProjectDesc', 'zipInstallSteps', 'zipUsageSteps', 'zipAuthorName', 'zipSocialGithub', 'zipSocialInstagram'];
+    zipReadmeInputs.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', updateZipReadmePreview); });
+    
     // License Selector Event Listeners
     const enableLicenseCheckbox = document.getElementById('enableLicense');
     const licenseSelector = document.getElementById('licenseSelector');
@@ -830,6 +1095,28 @@
     
     const licenseInfoLink = document.getElementById('licenseInfoLink');
     if (licenseInfoLink) licenseInfoLink.addEventListener('click', (e) => { e.preventDefault(); window.open(licenseInfoLink.href, '_blank'); });
+    
+    // ZIP License Selector Event Listeners
+    const zipEnableLicenseCheckbox = document.getElementById('zipEnableLicense');
+    const zipLicenseSelector = document.getElementById('zipLicenseSelector');
+    if (zipEnableLicenseCheckbox) {
+      zipEnableLicenseCheckbox.addEventListener('change', (e) => {
+        if (zipLicenseSelector) zipLicenseSelector.style.display = e.target.checked ? 'block' : 'none';
+        updateZipReadmePreview();
+      });
+    }
+    
+    const zipLicenseRadios = document.querySelectorAll('input[name="zipLicenseType"]');
+    zipLicenseRadios.forEach(radio => {
+      radio.addEventListener('change', () => { 
+        zipCurrentLicense = getZipSelectedLicense(); 
+        updateZipLicenseInfoLink(); 
+        updateZipReadmePreview(); 
+      });
+    });
+    
+    const zipLicenseInfoLink = document.getElementById('zipLicenseInfoLink');
+    if (zipLicenseInfoLink) zipLicenseInfoLink.addEventListener('click', (e) => { e.preventDefault(); window.open(zipLicenseInfoLink.href, '_blank'); });
     
     // DASHBOARD & STATS
     function updateStats() { const totalRepos = allRepositories.length, publicRepos = allRepositories.filter(r => !r.private).length, privateRepos = allRepositories.filter(r => r.private).length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0); const totalReposEl = document.getElementById('totalRepos'); const publicReposEl = document.getElementById('publicRepos'); const privateReposEl = document.getElementById('privateRepos'); const totalStarsEl = document.getElementById('totalStars'); if (totalReposEl) totalReposEl.textContent = totalRepos; if (publicReposEl) publicReposEl.textContent = publicRepos; if (privateReposEl) privateReposEl.textContent = privateRepos; if (totalStarsEl) totalStarsEl.textContent = totalStars; if (commitChart) commitChart.destroy(); const ctx = document.getElementById('commitChart')?.getContext('2d'); if (ctx) { commitChart = new Chart(ctx, { type: 'line', data: { labels: allRepositories.slice(0,7).map(r=>r.name.substring(0,12)), datasets: [{ label: 'Stars', data: allRepositories.slice(0,7).map(r=>r.stargazers_count), borderColor: '#2f81f7', backgroundColor: 'rgba(47,129,247,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: 'var(--text-secondary)' } } } } }); } }
@@ -876,10 +1163,15 @@
     navigateTo('home');
     renderFeatures();
     renderTechTags();
+    renderZipFeatures();
+    renderZipTechTags();
     updateReadmePreview();
+    updateZipReadmePreview();
     
     if (licenseSelector && enableLicenseCheckbox) { licenseSelector.style.display = enableLicenseCheckbox.checked ? 'block' : 'none'; }
+    if (zipLicenseSelector && zipEnableLicenseCheckbox) { zipLicenseSelector.style.display = zipEnableLicenseCheckbox.checked ? 'block' : 'none'; }
     updateLicenseInfoLink();
+    updateZipLicenseInfoLink();
     
     setTimeout(() => { const body = document.getElementById('terminalBody'); if (body && body.children.length === 0 && !isAuthenticated) { addSystemLog('[SYSTEM] Welcome to RepoFlow Pro Smart Upload!', 'success'); addSystemLog('[SYSTEM] Upload your project files or ZIP, and AI will auto-generate README and LICENSE', 'info'); } }, 500);
     
@@ -888,4 +1180,4 @@
     window.showDeleteModal = showDeleteModal;
     window.showCloneModal = showCloneModal;
     window.loadRepositories = loadRepositories;
- 
+  
