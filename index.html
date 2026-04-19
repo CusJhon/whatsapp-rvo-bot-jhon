@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>RepoFlow Pro | Smart README & License Generator</title>
-  <meta name="description" content="Smart GitHub repository management with auto-detect README & License generator">
+  <title>RepoFlow Pro | Professional GitHub Manager</title>
+  <meta name="description" content="Professional GitHub repository management platform">
   <meta name="theme-color" content="#0a0a0f">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
- <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <div class="app">
@@ -154,7 +154,7 @@
           </div>
         </div>
 
-        <!-- SMART UPLOAD PAGE - Files Mode -->
+        <!-- SMART UPLOAD PAGE -->
         <div class="page" id="uploadPage" style="display: none;">
           <div class="tabs">
             <button class="tab active" data-mode="mode1"><i class="fas fa-file"></i> Upload Files</button>
@@ -355,17 +355,120 @@
           <div class="card"><div class="card-header"><h2><i class="fas fa-book"></i> Repositories</h2><button id="refreshReposBtn" class="btn btn-secondary" style="margin-left:auto"><i class="fas fa-sync-alt"></i> Refresh</button></div><div class="card-body"><div class="form-group"><input type="text" id="repoSearchInput" class="form-input" placeholder="Search repositories..."></div><div id="repoListContainerEnhanced" class="repos-grid"></div></div></div>
         </div>
 
-        <!-- PROFILE PAGE -->
+        <!-- PROFILE PAGE - NEW DESIGN (Like ditzzx.my.id/developer) -->
         <div class="page" id="profilePage" style="display: none;">
-          <div class="profile-card">
-            <div class="profile-hero"><div class="profile-avatar-wrap"><img class="profile-avatar-big" id="profileAvatar" src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="avatar"></div></div>
-            <div class="profile-body">
-              <div class="profile-center"><div class="profile-name-big" id="profileName">jhon ofc</div>
-              <div class="profile-desc" id="profileBio">JHON PRODUCTION dengan ketertarikan pada bidang teknologi. Memulai dari eksplorasi AI, kemudian memperluas fokus ke pengembangan web. Mengutamakan pembuatan antarmuka yang konsisten, rapi, dan mudah digunakan.</div>
-              <div class="chip-row"><div class="chip">JHON PRODUCTION</div><div class="chip">Web Development</div><div class="chip">UI / UX</div><div class="chip">Frontend</div></div></div>
-              <div class="stat-grid-2"><div class="stat-card"><div class="k">FOKUS</div><div class="v">UI / UX</div></div><div class="stat-card"><div class="k">PROJECT</div><div class="v">jhon_tools</div></div><div class="stat-card"><div class="k">STACK</div><div class="v">HTML • CSS • JS</div></div><div class="stat-card"><div class="k">AKTIVITAS</div><div class="v">Upload Tools</div></div></div>
-              <div class="social-media-section"><div class="social-links-grid"><a href="https://github.com/cpm_jhon" target="_blank" class="social-link-card github"><i class="fab fa-github"></i><span>GitHub</span></a><a href="https://instagram.com/jhon_production" target="_blank" class="social-link-card instagram"><i class="fab fa-instagram"></i><span>Instagram</span></a><a href="https://twitter.com/jhon_production" target="_blank" class="social-link-card twitter"><i class="fab fa-twitter"></i><span>Twitter</span></a><a href="https://t.me/jhon_production" target="_blank" class="social-link-card telegram"><i class="fab fa-telegram-plane"></i><span>Telegram</span></a></div></div>
-              <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;"><button class="tool-btn" onclick="navigateTo('dashboard')"><i class="fa-solid fa-gauge"></i> Back to Dashboard</button><button class="tool-btn" id="copyGithubBtn"><i class="fab fa-github"></i> Copy GitHub</button><button class="tool-btn" id="copyInstagramBtn"><i class="fab fa-instagram"></i> Copy Instagram</button></div>
+          <div class="profile-container">
+            <!-- Hero Section -->
+            <div class="profile-hero-section">
+              <div class="profile-hero-badge">
+                <i class="fas fa-user-astronaut"></i> 03 — Developer
+              </div>
+              <h1 class="profile-hero-title">The People Behind It</h1>
+              <p class="profile-hero-subtitle">Dua entitas, satu tujuan — bikin tools yang berguna dan keren.</p>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="stats-section">
+              <div class="stats-grid-4">
+                <div class="stat-item">
+                  <div class="stat-number" id="profileReposCount">0</div>
+                  <div class="stat-label">Repositories</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number" id="profileStarsCount">0</div>
+                  <div class="stat-label">Stars Earned</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number" id="profileForksCount">0</div>
+                  <div class="stat-label">Forks</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number">v3.0</div>
+                  <div class="stat-label">Version</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Credits Section -->
+            <div class="credits-section">
+              <div class="section-header">
+                <div class="section-number">01 — Credits</div>
+                <h2 class="section-title">Publisher & Creator</h2>
+              </div>
+              <div class="credits-grid">
+                <div class="credit-card">
+                  <div class="credit-number">01</div>
+                  <div class="credit-name">cpm_jhon</div>
+                  <div class="credit-role">Publisher & Owner</div>
+                  <div class="credit-desc">
+                    Otak di balik semua ini. cpm_jhon adalah publisher sekaligus pemilik project — yang punya ide, 
+                    yang nentuin arah, dan yang mastiin semua tools ini bisa berguna buat orang lain.
+                  </div>
+                </div>
+                <div class="credit-card">
+                  <div class="credit-number">02</div>
+                  <div class="credit-name">Claude AI</div>
+                  <div class="credit-role">AI Code Writer</div>
+                  <div class="credit-desc">
+                    Penulis kode di balik layar. Semua HTML, CSS, JavaScript, dan logika di website ini ditulis oleh Claude — 
+                    AI dari Anthropic yang ditugaskan cpm_jhon untuk mewujudkan setiap ide jadi kenyataan.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Colophon Section -->
+            <div class="colophon-section">
+              <div class="section-header">
+                <div class="section-number">02 — Colophon</div>
+                <h2 class="section-title">How This Website Was Built</h2>
+              </div>
+              <div class="colophon-card">
+                <p class="colophon-text">
+                  Website ini dibangun dengan filosofi sederhana: kalau bisa diotomasi, otomasi aja. 
+                  cpm_jhon datang dengan ide dan kebutuhan, lalu Claude menerjemahkannya menjadi kode yang bersih dan fungsional. 
+                  Tidak ada framework besar — hanya HTML, CSS, dan Vanilla JS di sisi frontend, serta GitHub API untuk backend.
+                </p>
+                <div class="tech-stack">
+                  <span class="tech-tag">HTML5</span>
+                  <span class="tech-tag">CSS3</span>
+                  <span class="tech-tag">JavaScript (Vanilla)</span>
+                  <span class="tech-tag">GitHub API</span>
+                  <span class="tech-tag">Chart.js</span>
+                  <span class="tech-tag">Marked.js</span>
+                  <span class="tech-tag">JSZip</span>
+                  <span class="tech-tag">Font Awesome</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Social Links -->
+            <div class="social-links">
+              <a href="https://github.com/cpm_jhon" target="_blank" class="social-link">
+                <i class="fab fa-github"></i> GitHub
+              </a>
+              <a href="https://instagram.com/jhon_production" target="_blank" class="social-link">
+                <i class="fab fa-instagram"></i> Instagram
+              </a>
+              <a href="https://twitter.com/jhon_production" target="_blank" class="social-link">
+                <i class="fab fa-twitter"></i> Twitter
+              </a>
+              <a href="https://t.me/jhon_production" target="_blank" class="social-link">
+                <i class="fab fa-telegram-plane"></i> Telegram
+              </a>
+              <button class="social-link" id="copyGithubBtn">
+                <i class="fas fa-copy"></i> Copy GitHub
+              </button>
+              <button class="social-link" id="copyInstagramBtn">
+                <i class="fas fa-copy"></i> Copy Instagram
+              </button>
+            </div>
+
+            <!-- Back to Dashboard Button -->
+            <div style="margin-top: 32px; text-align: center;">
+              <button class="btn btn-primary" onclick="navigateTo('dashboard')">
+                <i class="fa-solid fa-gauge"></i> Back to Dashboard
+              </button>
             </div>
           </div>
         </div>
@@ -388,7 +491,8 @@
 
   <!-- Clone Modal -->
   <div class="modal" id="cloneModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-code-branch"></i> Clone Repository</h3><button class="modal-close" id="closeCloneModalBtn">&times;</button></div><div class="modal-body"><p>Clone with HTTPS:</p><div class="clone-url"><code id="cloneUrlText"></code><button class="btn btn-secondary" id="copyCloneUrlBtn">Copy</button></div><p style="margin-top:16px">Run this command:</p><div class="clone-url"><code>git clone <span id="cloneCommandText"></span></code></div></div><div class="modal-footer"><button class="btn btn-secondary" id="closeCloneModalFooterBtn">Close</button></div></div></div>
-<script src="js/script.js"></script>
 
+  <script src="js/script.js"></script>
+  
 </body>
 </html>
