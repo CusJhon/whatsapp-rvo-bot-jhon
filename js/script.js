@@ -1130,12 +1130,10 @@
       const profileRepos = document.getElementById('profileReposCount');
       const profileStars = document.getElementById('profileStarsCount');
       const profileForks = document.getElementById('profileForksCount');
-      const profileName = document.getElementById('profileName');
       
       if (profileRepos) profileRepos.textContent = totalRepos;
       if (profileStars) profileStars.textContent = totalStars;
       if (profileForks) profileForks.textContent = totalForks;
-      if (profileName && gitUsername) profileName.textContent = gitUsername;
     }
     
     // Profile Social Media Copy Functions
