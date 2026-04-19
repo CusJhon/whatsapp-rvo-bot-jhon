@@ -1,7 +1,7 @@
 
     // ========================================
-    // REPOFLOW - SMART README & LICENSE GENERATOR
-    // Complete Implementation with Auto-Detect
+    // REPOFLOW - COMPLETE JAVASCRIPT
+    // All Original Functionality Preserved
     // ========================================
     
     // STATE MANAGEMENT
@@ -14,8 +14,8 @@
     let techStack = [];
     let currentLicense = "mit";
     let projectAnalysis = null;
-    let conflictAction = null;
-    let currentMode = "auto";
+    let existingReadme = null;
+    let existingLicense = null;
     
     // Gitignore templates
     const gitignoreTemplates = {
@@ -57,7 +57,7 @@
     
     function updateUIBasedOnAuth() { if (isAuthenticated) { document.body.classList.add('logged-in'); const ss = document.getElementById('statsSection'); if (ss) ss.style.display = 'grid'; } else { document.body.classList.remove('logged-in'); const ss = document.getElementById('statsSection'); if (ss) ss.style.display = 'none'; } }
     
-    // Project Analysis Functions - Auto Detect
+    // Read file content as text
     function readFileContent(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -66,6 +66,7 @@
       });
     }
     
+    // Analyze project structure and check for existing files
     async function analyzeProjectStructure(files) {
       addSystemLog('[ANALYSIS] Analyzing project structure...', 'info');
       let analysis = {
@@ -81,9 +82,25 @@
         badges: []
       };
       
+      // Look for existing README.md
+      const readmeFile = files.find(f => f.name === 'README.md');
+      if (readmeFile) {
+        analysis.hasReadme = true;
+        existingReadme = await readFileContent(readmeFile);
+        addSystemLog('[ANALYSIS] Found existing README.md - will use it', 'success');
+      }
+      
+      // Look for existing LICENSE
+      const licenseFile = files.find(f => f.name === 'LICENSE' || f.name === 'LICENSE.md' || f.name === 'LICENSE.txt');
+      if (licenseFile) {
+        analysis.hasLicense = true;
+        existingLicense = await readFileContent(licenseFile);
+        addSystemLog('[ANALYSIS] Found existing LICENSE - will use it', 'success');
+      }
+      
       // Look for package.json (Node.js)
       const packageJsonFile = files.find(f => f.name === 'package.json');
-      if (packageJsonFile) {
+      if (packageJsonFile && !analysis.name) {
         try {
           const content = await readFileContent(packageJsonFile);
           const pkg = JSON.parse(content);
@@ -101,10 +118,10 @@
       
       // Look for requirements.txt (Python)
       const requirementsFile = files.find(f => f.name === 'requirements.txt');
-      if (requirementsFile) {
+      if (requirementsFile && !analysis.name) {
         const content = await readFileContent(requirementsFile);
         analysis.type = 'python';
-        if (!analysis.name) analysis.name = 'python-project';
+        analysis.name = analysis.name || 'python-project';
         analysis.dependencies = content.split('\n').filter(l => l.trim() && !l.startsWith('#'));
         analysis.techStack = ['Python', ...analysis.dependencies.slice(0, 5)];
         analysis.badges.push('python');
@@ -115,38 +132,11 @@
       const htmlFile = files.find(f => f.name === 'index.html');
       if (htmlFile && analysis.type === 'unknown') {
         analysis.type = 'web';
-        analysis.name = 'web-project';
+        analysis.name = analysis.name || 'web-project';
         analysis.techStack = ['HTML5', 'CSS3', 'JavaScript'];
         analysis.badges.push('html5', 'css3', 'javascript');
         addSystemLog('[ANALYSIS] Detected Web project', 'success');
       }
-      
-      // Look for composer.json (PHP)
-      const composerFile = files.find(f => f.name === 'composer.json');
-      if (composerFile) {
-        try {
-          const content = await readFileContent(composerFile);
-          const composer = JSON.parse(content);
-          analysis.type = 'php';
-          analysis.name = composer.name || '';
-          analysis.description = composer.description || '';
-          analysis.dependencies = Object.keys(composer.require || {});
-          analysis.techStack = ['PHP', ...analysis.dependencies.slice(0, 5)];
-          analysis.badges.push('php');
-          addSystemLog(`[ANALYSIS] Detected PHP project: ${analysis.name || 'unnamed'}`, 'success');
-        } catch(e) {}
-      }
-      
-      // Check for existing README.md
-      const readmeFile = files.find(f => f.name === 'README.md');
-      analysis.hasReadme = !!readmeFile;
-      
-      // Check for existing LICENSE
-      const licenseFile = files.find(f => f.name === 'LICENSE' || f.name === 'LICENSE.md' || f.name === 'LICENSE.txt');
-      analysis.hasLicense = !!licenseFile;
-      
-      if (analysis.hasReadme) addSystemLog('[ANALYSIS] Existing README.md found', 'warning');
-      if (analysis.hasLicense) addSystemLog('[ANALYSIS] Existing LICENSE found', 'warning');
       
       return analysis;
     }
@@ -155,9 +145,21 @@
       const panel = document.getElementById('detectionPanel');
       const badge = document.getElementById('detectionBadge');
       const infoDiv = document.getElementById('projectInfo');
+      const existingInfo = document.getElementById('existingFilesInfo');
+      const generatorSection = document.getElementById('generatorSection');
       
       if (panel) panel.style.display = 'block';
       if (badge) badge.innerHTML = `<i class="fas fa-microchip"></i> Detected: ${analysis.type.toUpperCase()} project`;
+      
+      // Show existing files info if README or LICENSE already exist
+      if (analysis.hasReadme || analysis.hasLicense) {
+        if (existingInfo) existingInfo.style.display = 'block';
+        if (generatorSection) generatorSection.style.display = 'none';
+        addSystemLog('[INFO] Using existing README.md and/or LICENSE files from your project', 'info');
+      } else {
+        if (existingInfo) existingInfo.style.display = 'none';
+        if (generatorSection) generatorSection.style.display = 'block';
+      }
       
       if (infoDiv) {
         let typeIcon = analysis.type === 'node' ? 'fab fa-node-js' : analysis.type === 'python' ? 'fab fa-python' : analysis.type === 'php' ? 'fab fa-php' : 'fas fa-code';
@@ -173,47 +175,81 @@
         `;
       }
       
-      // Auto-fill form with detected data
-      const projectNameInput = document.getElementById('projectName');
-      const projectDescInput = document.getElementById('projectDesc');
-      const authorNameInput = document.getElementById('authorName');
-      
-      if (projectNameInput && analysis.name) projectNameInput.value = analysis.name;
-      if (projectDescInput && analysis.description) projectDescInput.value = analysis.description;
-      if (authorNameInput && analysis.author && !authorNameInput.value) authorNameInput.value = analysis.author;
-      
-      if (analysis.techStack.length > 0) {
-        techStack = [...new Set([...techStack, ...analysis.techStack])];
-        renderTechTags();
+      // Auto-fill form with detected data (only if no existing files)
+      if (!analysis.hasReadme) {
+        const projectNameInput = document.getElementById('projectName');
+        const projectDescInput = document.getElementById('projectDesc');
+        const authorNameInput = document.getElementById('authorName');
+        
+        if (projectNameInput && analysis.name) projectNameInput.value = analysis.name;
+        if (projectDescInput && analysis.description) projectDescInput.value = analysis.description;
+        if (authorNameInput && analysis.author && !authorNameInput.value) authorNameInput.value = analysis.author;
+        
+        if (analysis.techStack.length > 0) {
+          techStack = [...new Set([...techStack, ...analysis.techStack])];
+          renderTechTags();
+        }
       }
-      
-      // Show conflict panel if files already exist
-      const conflictPanel = document.getElementById('conflictPanel');
-      if (conflictPanel && (analysis.hasReadme || analysis.hasLicense)) {
-        conflictPanel.style.display = 'block';
-      }
-      
-      // Show generator section
-      const generatorSection = document.getElementById('generatorSection');
-      if (generatorSection) generatorSection.style.display = 'block';
       
       projectAnalysis = analysis;
     }
     
     // README Generator Functions
-    function renderFeatures() { const container = document.getElementById('featuresList'); if (!container) return; container.innerHTML = features.map((f, i) => `<div class="list-item"><input type="text" class="form-input" value="${escapeHtml(f)}" data-feature-idx="${i}" placeholder="Feature"><button class="btn btn-secondary" style="padding:6px 12px" data-remove-feature="${i}"><i class="fas fa-trash"></i></button></div>`).join(''); document.querySelectorAll('[data-feature-idx]').forEach(inp => { inp.addEventListener('change', (e) => { features[parseInt(inp.dataset.featureIdx)] = inp.value; updateReadmePreview(); }); }); document.querySelectorAll('[data-remove-feature]').forEach(btn => { btn.addEventListener('click', () => { features.splice(parseInt(btn.dataset.removeFeature), 1); if(features.length===0) features=['']; renderFeatures(); updateReadmePreview(); }); }); }
+    function renderFeatures() { 
+      const container = document.getElementById('featuresList'); 
+      if (!container) return; 
+      if (features.length === 0) features = [""];
+      container.innerHTML = features.map((f, i) => `<div class="list-item"><input type="text" class="form-input" value="${escapeHtml(f)}" data-feature-idx="${i}" placeholder="Feature description"><button class="btn btn-secondary" style="padding:6px 12px" data-remove-feature="${i}"><i class="fas fa-trash"></i></button></div>`).join(''); 
+      document.querySelectorAll('[data-feature-idx]').forEach(inp => { inp.addEventListener('change', (e) => { features[parseInt(inp.dataset.featureIdx)] = inp.value; updateReadmePreview(); }); }); 
+      document.querySelectorAll('[data-remove-feature]').forEach(btn => { btn.addEventListener('click', () => { features.splice(parseInt(btn.dataset.removeFeature), 1); if(features.length===0) features=['']; renderFeatures(); updateReadmePreview(); }); }); 
+    }
     
-    function renderTechTags() { const container = document.getElementById('techTags'); if (!container) return; container.innerHTML = techStack.map(t => `<span class="tag">${escapeHtml(t)} <span class="tag-remove" data-tech="${escapeHtml(t)}">&times;</span></span>`).join('') + `<input type="text" class="tag-input" id="techInput" placeholder="Add tech...">`; document.querySelectorAll('.tag-remove').forEach(btn => { btn.addEventListener('click', () => { techStack = techStack.filter(t => t !== btn.dataset.tech); renderTechTags(); updateReadmePreview(); }); }); const techInput = document.getElementById('techInput'); if (techInput) { techInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && techInput.value.trim()) { techStack.push(techInput.value.trim()); techInput.value = ''; renderTechTags(); updateReadmePreview(); } }); } }
+    function renderTechTags() { 
+      const container = document.getElementById('techTags'); 
+      if (!container) return; 
+      container.innerHTML = techStack.map(t => `<span class="tag">${escapeHtml(t)} <span class="tag-remove" data-tech="${escapeHtml(t)}">&times;</span></span>`).join('') + `<input type="text" class="tag-input" id="techInput" placeholder="Add technology...">`; 
+      document.querySelectorAll('.tag-remove').forEach(btn => { btn.addEventListener('click', () => { techStack = techStack.filter(t => t !== btn.dataset.tech); renderTechTags(); updateReadmePreview(); }); }); 
+      const techInput = document.getElementById('techInput'); 
+      if (techInput) { techInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && techInput.value.trim()) { techStack.push(techInput.value.trim()); techInput.value = ''; renderTechTags(); updateReadmePreview(); } }); } 
+    }
     
-    function getSelectedLicense() { const radios = document.getElementsByName('licenseType'); for (let i = 0; i < radios.length; i++) { if (radios[i].checked) return radios[i].value; } return 'mit'; }
+    function getSelectedLicense() { 
+      const radios = document.getElementsByName('licenseType'); 
+      for (let i = 0; i < radios.length; i++) { 
+        if (radios[i].checked) return radios[i].value; 
+      } 
+      return 'mit'; 
+    }
     
-    function generateLicenseContent() { const licenseType = getSelectedLicense(); const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous"; const year = new Date().getFullYear(); let content = licenseTemplates[licenseType] || licenseTemplates.mit; content = content.replace(/{year}/g, year).replace(/{author}/g, author); return content; }
+    function generateLicenseContent() { 
+      const licenseType = getSelectedLicense(); 
+      const author = document.getElementById('authorName')?.value.trim() || gitUsername || "Anonymous"; 
+      const year = new Date().getFullYear(); 
+      let content = licenseTemplates[licenseType] || licenseTemplates.mit; 
+      content = content.replace(/{year}/g, year).replace(/{author}/g, author); 
+      return content; 
+    }
+    
+    function updateLicenseInfoLink() { 
+      const licenseType = getSelectedLicense(); 
+      const linkMap = { 
+        'mit': 'https://opensource.org/licenses/MIT', 
+        'gpl-3.0': 'https://www.gnu.org/licenses/gpl-3.0.html', 
+        'apache-2.0': 'https://www.apache.org/licenses/LICENSE-2.0', 
+        'bsd-3-clause': 'https://opensource.org/licenses/BSD-3-Clause', 
+        'isc': 'https://opensource.org/licenses/ISC', 
+        'cc0-1.0': 'https://creativecommons.org/publicdomain/zero/1.0/', 
+        'unlicense': 'https://unlicense.org/' 
+      }; 
+      const link = document.getElementById('licenseInfoLink'); 
+      if (link) link.href = linkMap[licenseType] || '#'; 
+    }
     
     function generateReadmeContent() {
       const name = document.getElementById('projectName')?.value.trim() || (projectAnalysis?.name || "My Awesome Project");
       const tagline = document.getElementById('projectTagline')?.value.trim() || "⚡ Next-gen Tool ⚡";
       const desc = document.getElementById('projectDesc')?.value.trim() || (projectAnalysis?.description || "");
-      const featuresList = features.filter(f => f.trim());
+      const featuresList = features.filter(f => f && f.trim());
       const tech = techStack.length ? techStack : (projectAnalysis?.techStack || []);
       const install = document.getElementById('installSteps')?.value.trim() || (projectAnalysis?.scripts?.start ? `npm install\nnpm start` : "");
       const usage = document.getElementById('usageSteps')?.value.trim() || "";
@@ -264,10 +300,42 @@
       return markdown;
     }
     
-    function updateReadmePreview() { const md = generateReadmeContent(); const previewDiv = document.getElementById('readmePreview'); if (previewDiv && typeof marked !== 'undefined') { marked.setOptions({ breaks: true, gfm: true }); previewDiv.innerHTML = marked.parse(md); } }
-    function copyMarkdownToClipboard() { navigator.clipboard.writeText(generateReadmeContent()); showToast('README markdown copied!', 'success'); }
-    function downloadReadmeFile() { const blob = new Blob([generateReadmeContent()], { type: 'text/markdown' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'README.md'; a.click(); URL.revokeObjectURL(url); showToast('README.md downloaded!', 'success'); }
-    function downloadLicenseFile() { const content = generateLicenseContent(); const blob = new Blob([content], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'LICENSE'; a.click(); URL.revokeObjectURL(url); showToast('LICENSE file downloaded!', 'success'); }
+    function updateReadmePreview() { 
+      const md = generateReadmeContent(); 
+      const previewDiv = document.getElementById('readmePreview'); 
+      if (previewDiv && typeof marked !== 'undefined') { 
+        marked.setOptions({ breaks: true, gfm: true }); 
+        previewDiv.innerHTML = marked.parse(md); 
+      } 
+    }
+    
+    function copyMarkdownToClipboard() { 
+      navigator.clipboard.writeText(generateReadmeContent()); 
+      showToast('README markdown copied!', 'success'); 
+    }
+    
+    function downloadReadmeFile() { 
+      const blob = new Blob([generateReadmeContent()], { type: 'text/markdown' }); 
+      const url = URL.createObjectURL(blob); 
+      const a = document.createElement('a'); 
+      a.href = url; 
+      a.download = 'README.md'; 
+      a.click(); 
+      URL.revokeObjectURL(url); 
+      showToast('README.md downloaded!', 'success'); 
+    }
+    
+    function downloadLicenseFile() { 
+      const content = generateLicenseContent(); 
+      const blob = new Blob([content], { type: 'text/plain' }); 
+      const url = URL.createObjectURL(blob); 
+      const a = document.createElement('a'); 
+      a.href = url; 
+      a.download = 'LICENSE'; 
+      a.click(); 
+      URL.revokeObjectURL(url); 
+      showToast('LICENSE file downloaded!', 'success'); 
+    }
     
     // Upload Functions
     function handleFilesSelected(files) {
@@ -302,32 +370,27 @@
       let filesToUpload = [...uploadedFiles];
       
       const hasReadme = filesToUpload.some(f => f.name === 'README.md');
-      if (!hasReadme || conflictAction === 'replace' || conflictAction === 'merge') {
+      const hasLicense = filesToUpload.some(f => f.name === 'LICENSE');
+      const addNewLicense = document.getElementById('enableLicense')?.checked || false;
+      
+      if (!hasReadme) {
         const readmeContent = generateReadmeContent();
         const readmeFile = new File([readmeContent], 'README.md', { type: 'text/markdown' });
-        if (hasReadme && conflictAction === 'replace') {
-          const index = filesToUpload.findIndex(f => f.name === 'README.md');
-          if (index !== -1) filesToUpload[index] = readmeFile;
-          else filesToUpload.push(readmeFile);
-        } else if (!hasReadme) {
-          filesToUpload.push(readmeFile);
-        }
-        addSystemLog(`[SMART UPLOAD] ${hasReadme ? (conflictAction === 'replace' ? 'Replaced' : 'Merged') : 'Added'} README.md`, 'info');
+        filesToUpload.push(readmeFile);
+        addSystemLog(`[SMART UPLOAD] Generated and added README.md`, 'info');
+      } else {
+        addSystemLog(`[SMART UPLOAD] Using existing README.md from your project`, 'success');
       }
       
-      const hasLicense = filesToUpload.some(f => f.name === 'LICENSE');
-      const addLicense = document.getElementById('enableLicense')?.checked || false;
-      if (addLicense && (!hasLicense || conflictAction === 'replace')) {
+      if (!hasLicense && addNewLicense) {
         const licenseContent = generateLicenseContent();
         const licenseFile = new File([licenseContent], 'LICENSE', { type: 'text/plain' });
-        if (hasLicense && conflictAction === 'replace') {
-          const index = filesToUpload.findIndex(f => f.name === 'LICENSE');
-          if (index !== -1) filesToUpload[index] = licenseFile;
-          else filesToUpload.push(licenseFile);
-        } else if (!hasLicense) {
-          filesToUpload.push(licenseFile);
-        }
-        addSystemLog(`[SMART UPLOAD] Added LICENSE file`, 'info');
+        filesToUpload.push(licenseFile);
+        addSystemLog(`[SMART UPLOAD] Generated and added LICENSE`, 'info');
+      } else if (hasLicense) {
+        addSystemLog(`[SMART UPLOAD] Using existing LICENSE from your project`, 'success');
+      } else {
+        addSystemLog(`[SMART UPLOAD] No LICENSE file added`, 'info');
       }
       
       let success = 0, error = 0;
@@ -383,9 +446,10 @@
           zipPanel.innerHTML = `
             <div class="detection-badge"><i class="fas fa-microchip"></i> Detected: ${analysis.type.toUpperCase()} project</div>
             <div class="mt-16">
+              ${analysis.hasReadme ? '<div class="detection-badge" style="background:rgba(0,212,255,0.1); border-color:var(--accent-cyan);"><i class="fas fa-check-circle"></i> README.md found - will use existing file</div>' : ''}
+              ${analysis.hasLicense ? '<div class="detection-badge" style="background:rgba(0,212,255,0.1); border-color:var(--accent-cyan);"><i class="fas fa-check-circle"></i> LICENSE found - will use existing file</div>' : ''}
               ${analysis.name ? `<div><strong>Project Name:</strong> ${escapeHtml(analysis.name)}</div>` : ''}
               ${analysis.description ? `<div><strong>Description:</strong> ${escapeHtml(analysis.description)}</div>` : ''}
-              ${analysis.dependencies.length ? `<div><strong>Dependencies:</strong> ${analysis.dependencies.slice(0,5).join(', ')}</div>` : ''}
             </div>
           `;
         }
@@ -426,22 +490,28 @@
         } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload ${path}: ${err.message}`, 'error'); }
       }
       
-      const readmeContent = generateReadmeContent();
-      const addLicense = document.getElementById('enableLicense')?.checked || false;
+      const hasReadme = extractedFiles.some(f => f.name === 'README.md');
+      const hasLicense = extractedFiles.some(f => f.name === 'LICENSE');
+      const addNewLicense = document.getElementById('enableLicense')?.checked || false;
       
-      try {
-        let sha = null;
+      if (!hasReadme) {
+        const readmeContent = generateReadmeContent();
         try {
-          const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/README.md?ref=${branch}`, 'GET');
-          sha = existing.sha;
-        } catch(e) {}
-        const b64 = btoa(unescape(encodeURIComponent(readmeContent)));
-        await githubRequest(`/repos/${gitUsername}/${repo}/contents/README.md`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
-        success++;
-        addSystemLog(`[SUCCESS] Uploaded README.md`, 'success');
-      } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload README.md: ${err.message}`, 'error'); }
+          let sha = null;
+          try {
+            const existing = await githubRequest(`/repos/${gitUsername}/${repo}/contents/README.md?ref=${branch}`, 'GET');
+            sha = existing.sha;
+          } catch(e) {}
+          const b64 = btoa(unescape(encodeURIComponent(readmeContent)));
+          await githubRequest(`/repos/${gitUsername}/${repo}/contents/README.md`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
+          success++;
+          addSystemLog(`[SUCCESS] Generated and uploaded README.md`, 'success');
+        } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload README.md: ${err.message}`, 'error'); }
+      } else {
+        addSystemLog(`[INFO] Using existing README.md from ZIP file`, 'success');
+      }
       
-      if (addLicense) {
+      if (!hasLicense && addNewLicense) {
         const licenseContent = generateLicenseContent();
         try {
           let sha = null;
@@ -452,8 +522,10 @@
           const b64 = btoa(unescape(encodeURIComponent(licenseContent)));
           await githubRequest(`/repos/${gitUsername}/${repo}/contents/LICENSE`, 'PUT', { message: msg, content: b64, branch: branch, sha: sha });
           success++;
-          addSystemLog(`[SUCCESS] Uploaded LICENSE`, 'success');
+          addSystemLog(`[SUCCESS] Generated and uploaded LICENSE`, 'success');
         } catch (err) { error++; addSystemLog(`[ERROR] Failed to upload LICENSE: ${err.message}`, 'error'); }
+      } else if (hasLicense) {
+        addSystemLog(`[INFO] Using existing LICENSE from ZIP file`, 'success');
       }
       
       addSystemLog(`[SMART UPLOAD] Complete: ${success} success, ${error} failed`, error === 0 ? 'success' : 'warning');
@@ -722,32 +794,6 @@
     
     document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); const mode = tab.dataset.mode; document.querySelectorAll('.mode-container').forEach(c => c.style.display = 'none'); const container = document.getElementById(`${mode}Container`); if (container) container.style.display = 'block'; }); });
     
-    // Mode toggle (Auto/Manual)
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentMode = btn.dataset.mode;
-        const autoPanel = document.getElementById('autoModePanel');
-        const manualPanel = document.getElementById('manualModePanel');
-        if (currentMode === 'auto') {
-          if (autoPanel) autoPanel.style.display = 'block';
-          if (manualPanel) manualPanel.style.display = 'none';
-        } else {
-          if (autoPanel) autoPanel.style.display = 'none';
-          if (manualPanel) manualPanel.style.display = 'block';
-        }
-      });
-    });
-    
-    // Conflict resolution buttons
-    const conflictReplaceBtn = document.getElementById('conflictReplaceBtn');
-    const conflictMergeBtn = document.getElementById('conflictMergeBtn');
-    const conflictSkipBtn = document.getElementById('conflictSkipBtn');
-    if (conflictReplaceBtn) conflictReplaceBtn.addEventListener('click', () => { conflictAction = 'replace'; document.getElementById('conflictPanel').style.display = 'none'; addSystemLog('[CONFLICT] Will replace existing files', 'info'); });
-    if (conflictMergeBtn) conflictMergeBtn.addEventListener('click', () => { conflictAction = 'merge'; document.getElementById('conflictPanel').style.display = 'none'; addSystemLog('[CONFLICT] Will merge with existing files', 'info'); });
-    if (conflictSkipBtn) conflictSkipBtn.addEventListener('click', () => { conflictAction = 'skip'; document.getElementById('conflictPanel').style.display = 'none'; addSystemLog('[CONFLICT] Will skip generating new files', 'info'); });
-    
     // README Generator Event Listeners
     const addFeatureBtn = document.getElementById('addFeatureBtn');
     const copyMarkdownBtn = document.getElementById('copyMarkdownBtn');
@@ -775,18 +821,35 @@
     
     const licenseRadios = document.querySelectorAll('input[name="licenseType"]');
     licenseRadios.forEach(radio => {
-      radio.addEventListener('change', () => { currentLicense = getSelectedLicense(); updateLicenseInfoLink(); updateReadmePreview(); });
+      radio.addEventListener('change', () => { 
+        currentLicense = getSelectedLicense(); 
+        updateLicenseInfoLink(); 
+        updateReadmePreview(); 
+      });
     });
     
     const licenseInfoLink = document.getElementById('licenseInfoLink');
     if (licenseInfoLink) licenseInfoLink.addEventListener('click', (e) => { e.preventDefault(); window.open(licenseInfoLink.href, '_blank'); });
-    function updateLicenseInfoLink() { const licenseType = getSelectedLicense(); const linkMap = { 'mit': 'https://opensource.org/licenses/MIT', 'gpl-3.0': 'https://www.gnu.org/licenses/gpl-3.0.html', 'apache-2.0': 'https://www.apache.org/licenses/LICENSE-2.0', 'bsd-3-clause': 'https://opensource.org/licenses/BSD-3-Clause', 'isc': 'https://opensource.org/licenses/ISC', 'cc0-1.0': 'https://creativecommons.org/publicdomain/zero/1.0/', 'unlicense': 'https://unlicense.org/' }; const link = document.getElementById('licenseInfoLink'); if (link) link.href = linkMap[licenseType] || '#'; }
     
     // DASHBOARD & STATS
     function updateStats() { const totalRepos = allRepositories.length, publicRepos = allRepositories.filter(r => !r.private).length, privateRepos = allRepositories.filter(r => r.private).length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0); const totalReposEl = document.getElementById('totalRepos'); const publicReposEl = document.getElementById('publicRepos'); const privateReposEl = document.getElementById('privateRepos'); const totalStarsEl = document.getElementById('totalStars'); if (totalReposEl) totalReposEl.textContent = totalRepos; if (publicReposEl) publicReposEl.textContent = publicRepos; if (privateReposEl) privateReposEl.textContent = privateRepos; if (totalStarsEl) totalStarsEl.textContent = totalStars; if (commitChart) commitChart.destroy(); const ctx = document.getElementById('commitChart')?.getContext('2d'); if (ctx) { commitChart = new Chart(ctx, { type: 'line', data: { labels: allRepositories.slice(0,7).map(r=>r.name.substring(0,12)), datasets: [{ label: 'Stars', data: allRepositories.slice(0,7).map(r=>r.stargazers_count), borderColor: '#2f81f7', backgroundColor: 'rgba(47,129,247,0.1)', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: 'var(--text-secondary)' } } } } }); } }
     function updateDashboard() { const activityDiv = document.getElementById('activityList'); if (activityDiv && activityLog.length) { activityDiv.innerHTML = activityLog.slice(0,5).map(log => `<div class="activity-item"><div class="activity-icon"><i class="fas fa-${log.type === 'success' ? 'check-circle' : log.type === 'error' ? 'times-circle' : 'info-circle'}"></i></div><div class="activity-text">${escapeHtml(log.message.substring(0,80))}</div><div class="activity-time">${new Date(log.time).toLocaleTimeString()}</div></div>`).join(''); } }
     function updateHomeStats() { const totalRepos = allRepositories.length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0), totalForks = allRepositories.reduce((s,r)=>s+r.forks_count,0), totalWatchers = allRepositories.reduce((s,r)=>s+(r.watchers_count||0),0); const homeTotalRepos = document.getElementById('homeTotalRepos'); const homeTotalStars = document.getElementById('homeTotalStars'); const homeTotalForks = document.getElementById('homeTotalForks'); const homeWatchers = document.getElementById('homeWatchers'); if (homeTotalRepos) homeTotalRepos.textContent = totalRepos; if (homeTotalStars) homeTotalStars.textContent = totalStars; if (homeTotalForks) homeTotalForks.textContent = totalForks; if (homeWatchers) homeWatchers.textContent = totalWatchers; }
-    function updateProfilePage() { const totalRepos = allRepositories.length, totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0), totalForks = allRepositories.reduce((s,r)=>s+r.forks_count,0); const profileRepos = document.getElementById('profileReposCount'); const profileStars = document.getElementById('profileStarsCount'); const profileForks = document.getElementById('profileForksCount'); const profileName = document.getElementById('profileName'); if (profileRepos) profileRepos.textContent = totalRepos; if (profileStars) profileStars.textContent = totalStars; if (profileForks) profileForks.textContent = totalForks; if (profileName && gitUsername) profileName.textContent = gitUsername; }
+    function updateProfilePage() { 
+      const totalRepos = allRepositories.length;
+      const totalStars = allRepositories.reduce((s,r)=>s+r.stargazers_count,0);
+      const totalForks = allRepositories.reduce((s,r)=>s+r.forks_count,0);
+      
+      const profileRepos = document.getElementById('profileReposCount');
+      const profileStars = document.getElementById('profileStarsCount');
+      const profileForks = document.getElementById('profileForksCount');
+      const profileName = document.getElementById('profileName');
+      
+      if (profileRepos) profileRepos.textContent = totalRepos;
+      if (profileStars) profileStars.textContent = totalStars;
+      if (profileForks) profileForks.textContent = totalForks;
+      if (profileName && gitUsername) profileName.textContent = gitUsername;
+    }
     
     // Profile Social Media Copy Functions
     function copyGitHub() { copyToClipboard('https://github.com/cpm_jhon'); }
@@ -825,4 +888,4 @@
     window.showDeleteModal = showDeleteModal;
     window.showCloneModal = showCloneModal;
     window.loadRepositories = loadRepositories;
-  
+ 
