@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>RepoFlow Pro | Professional GitHub Manager</title>
+  <meta name="description" content="Professional GitHub repository management platform">
+  <meta name="theme-color" content="#0a0a0f">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- JSZip Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <!-- Marked for README preview -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="logo">
+          <div class="logo-icon"><i class="fab fa-github"></i></div>
+          <span class="logo-text">Repo<span class="highlight">Flow</span></span>
+        </div>
+        <button class="collapse-toggle" id="collapseToggleBtn"><i class="fas fa-chevron-left"></i></button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="home" data-tooltip="Home"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="#" class="nav-item require-login" data-page="dashboard" data-tooltip="Dashboard"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
+        <a href="#" class="nav-item require-login" data-page="create" data-tooltip="Create Repo"><i class="fas fa-plus-circle"></i><span>Create Repo</span></a>
+        <a href="#" class="nav-item require-login" data-page="delete" data-tooltip="Delete Repo"><i class="fas fa-trash-alt"></i><span>Delete Repo</span></a>
+        <a href="#" class="nav-item require-login" data-page="upload" data-tooltip="Smart Upload"><i class="fas fa-cloud-upload-alt"></i><span>Smart Upload</span></a>
+        <a href="#" class="nav-item require-login" data-page="repos" data-tooltip="Repositories"><i class="fas fa-list"></i><span>Repositories</span></a>
+        <a href="#" class="nav-item" data-page="profile" data-tooltip="Profile"><i class="fas fa-user-circle"></i><span>Profile</span></a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="profile-section" id="sidebarProfileBtn">
+          <img class="profile-avatar" id="sidebarAvatar" src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="avatar">
+          <div class="profile-info">
+            <div class="profile-name" id="sidebarName">Guest</div>
+            <div class="profile-role" id="sidebarRole">Not logged in</div>
+          </div>
+        </div>
+        <div class="status-indicator" id="connectionStatus">
+          <div class="status-dot" id="statusDot"></div>
+          <span class="status-text" id="statusText">Disconnected</span>
+        </div>
+        <button class="theme-toggle" id="themeToggleBtn"><i class="fas fa-moon" id="themeIcon"></i><span id="themeText">Dark Mode</span></button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-bar">
+        <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+        <div class="user-section">
+          <div class="auth-badge"><i class="fas fa-user-circle"></i><span id="userName">Guest</span></div>
+          <button class="btn-login" id="showLoginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
+          <button class="btn-logout" id="logoutBtn" style="display: none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+      </header>
+
+      <div class="pages-container" id="pagesContainer">
+        <!-- HOME PAGE -->
+        <div class="page" id="homePage">
+          <div class="hero-section">
+            <div class="hero-badge"><i class="fas fa-robot"></i><span>AI-Powered Repository Builder</span></div>
+            <h1 class="hero-title">Smart README & License<br>Generator for GitHub</h1>
+            <p class="hero-subtitle">Upload your project files or ZIP, and let our AI automatically detect your project structure, generate professional README.md and LICENSE files, and upload to GitHub in one click.</p>
+            <div class="social-buttons">
+              <a href="https://instagram.com/jhon_production" target="_blank" class="social-btn instagram"><i class="fab fa-instagram"></i> Instagram</a>
+              <a href="https://github.com/cpm_jhon" target="_blank" class="social-btn github"><i class="fab fa-github"></i> GitHub</a>
+              <a href="https://t.me/jhon_production" target="_blank" class="social-btn telegram"><i class="fab fa-telegram-plane"></i> Telegram</a>
+            </div>
+          </div>
+
+          <div class="stats-grid" id="statsSection" style="display: none;">
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-database"></i></div><div class="stat-value" id="homeTotalRepos">0</div><div class="stat-label">Total Repositories</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-value" id="homeTotalStars">0</div><div class="stat-label">Stars Earned</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-code-fork"></i></div><div class="stat-value" id="homeTotalForks">0</div><div class="stat-label">Forks</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-value" id="homeWatchers">0</div><div class="stat-label">Watchers</div></div>
+          </div>
+
+          <div class="features-grid">
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-microchip"></i></div><h3>Auto Detect Project</h3><p>Otomatis mendeteksi struktur project dari package.json, requirements.txt, dll.</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-file-alt"></i></div><h3>Smart README Generator</h3><p>Generate README profesional dengan 3 template aesthetic.</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-gavel"></i></div><h3>Multi License Support</h3><p>Pilih dari 7 lisensi open source populer.</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-line"></i></div><h3>Auto Badges</h3><p>Generate shields.io badges otomatis untuk project Anda.</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-upload"></i></div><h3>One-Click Upload</h3><p>Upload files + README + LICENSE sekaligus ke GitHub.</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-mobile-alt"></i></div><h3>Fully Responsive</h3><p>Akses platform dari berbagai device dengan tampilan optimal.</p></div>
+          </div>
+
+          <div class="developer-info-card">
+            <div class="dev-avatar"><img src="https://i.ibb.co.com/chGXxvw1/avt.jpg" alt="Developer"></div>
+            <div class="dev-content">
+              <h3>Created by <span class="highlight">cpm_jhon</span></h3>
+              <p>Full-stack developer & cybersecurity enthusiast. Membangun tools cerdas untuk memudahkan developer dalam mengelola repository GitHub.</p>
+              <div class="dev-social">
+                <a href="#" class="social-link"><i class="fab fa-github"></i> GitHub</a>
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i> Instagram</a>
+                <a href="#" class="social-link"><i class="fab fa-twitter"></i> Twitter</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DASHBOARD PAGE -->
+        <div class="page" id="dashboardPage" style="display: none;">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-database"></i></div><div class="stat-value" id="totalRepos">0</div><div class="stat-label">Total Repos</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-globe"></i></div><div class="stat-value" id="publicRepos">0</div><div class="stat-label">Public</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-lock"></i></div><div class="stat-value" id="privateRepos">0</div><div class="stat-label">Private</div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-star"></i></div><div class="stat-value" id="totalStars">0</div><div class="stat-label">Total Stars</div></div>
+          </div>
+          <div class="dashboard-grid">
+            <div class="card"><div class="card-header"><h2><i class="fas fa-chart-line"></i> Stars Activity</h2></div><div class="card-body"><canvas id="commitChart" style="height:200px"></canvas></div></div>
+            <div class="card"><div class="card-header"><h2><i class="fas fa-history"></i> Recent Activity</h2></div><div class="card-body"><div class="activity-list" id="activityList"></div></div></div>
+          </div>
+          <div class="card mt-24"><div class="card-header"><h2><i class="fas fa-bolt"></i> Quick Actions</h2></div><div class="card-body"><div class="quick-actions-grid"><div class="quick-action-card" data-page="create"><i class="fas fa-plus-circle"></i><span>New Repository</span></div><div class="quick-action-card" data-page="upload"><i class="fas fa-upload"></i><span>Smart Upload</span></div><div class="quick-action-card" data-page="delete"><i class="fas fa-trash-alt"></i><span>Delete Repository</span></div><div class="quick-action-card" data-page="repos"><i class="fas fa-list"></i><span>View All Repos</span></div></div></div></div>
+        </div>
+
+        <!-- CREATE REPOSITORY PAGE -->
+        <div class="page" id="createPage" style="display: none;">
+          <div class="card" style="max-width:640px;margin:0 auto">
+            <div class="card-header"><h2><i class="fas fa-plus-circle"></i> Create Repository</h2><p>Buat repository baru di GitHub</p></div>
+            <div class="card-body">
+              <div class="form-group"><label class="form-label">Repository Name <span class="optional">(required)</span></label><input type="text" id="newRepoName" class="form-input" placeholder="my-awesome-project"><div class="form-helper">Gunakan huruf kecil, angka, dan tanda hubung</div></div>
+              <div class="form-group"><label class="form-label">Description</label><textarea id="repoDesc" class="form-textarea" rows="3" placeholder="Deskripsi singkat repository"></textarea></div>
+              <div class="form-group"><label class="checkbox-wrapper"><input type="checkbox" id="repoPrivate"> <span>Private repository</span></label></div>
+              <div class="form-group"><label class="form-label">.gitignore Template</label><select id="gitignoreTemplate" class="form-select"><option value="">None</option><option value="Node">Node</option><option value="Python">Python</option><option value="Java">Java</option></select></div>
+            </div>
+            <div class="card-footer"><button id="confirmCreateRepo" class="btn btn-primary btn-full"><i class="fas fa-code-branch"></i> Create Repository</button></div>
+          </div>
+        </div>
+
+        <!-- DELETE REPOSITORY PAGE -->
+        <div class="page" id="deletePage" style="display: none;">
+          <div class="card" style="max-width:560px;margin:0 auto;border-color:var(--accent-danger)">
+            <div class="card-header"><h2><i class="fas fa-trash-alt"></i> Delete Repository</h2><p>⚠️ Peringatan: Tindakan ini permanen!</p></div>
+            <div class="card-body">
+              <div class="warning-box"><i class="fas fa-exclamation-triangle"></i><p>This action cannot be undone. This will permanently delete the repository.</p></div>
+              <div class="form-group"><label class="form-label">Select Repository</label><select id="deleteRepoSelect" class="form-select"><option value="">-- Select repository --</option></select></div>
+              <div class="form-group"><label class="form-label">Type the repository name to confirm</label><input type="text" id="confirmDeleteName" class="form-input" placeholder="repository-name"></div>
+            </div>
+            <div class="card-footer"><button id="confirmDeleteRepoBtn" class="btn btn-danger btn-full" disabled><i class="fas fa-radiation"></i> Delete Permanently</button></div>
+          </div>
+        </div>
+
+        <!-- SMART UPLOAD PAGE -->
+        <div class="page" id="uploadPage" style="display: none;">
+          <div class="tabs">
+            <button class="tab active" data-mode="mode1"><i class="fas fa-file"></i> Upload Files</button>
+            <button class="tab" data-mode="mode2"><i class="fas fa-file-archive"></i> Upload ZIP</button>
+          </div>
+          
+          <!-- Mode 1: Upload Files -->
+          <div id="mode1Container" class="mode-container">
+            <div class="card">
+              <div class="card-body">
+                <div class="dropzone" id="dropZone1">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                  <p>Drag & drop file/folder di sini atau klik untuk memilih</p>
+                  <p class="form-helper mt-8">Sistem akan otomatis menganalisis struktur project Anda</p>
+                  <input type="file" id="fileInputModern1" webkitdirectory multiple style="display:none">
+                </div>
+                
+                <!-- Smart Detection Panel -->
+                <div id="detectionPanel" class="smart-panel" style="display: none;">
+                  <div class="detection-badge" id="detectionBadge">
+                    <i class="fas fa-microchip"></i> Analyzing project structure...
+                  </div>
+                  <div id="projectInfo" class="mt-16"></div>
+                  <div id="fileTreePreview" class="file-tree mt-16"></div>
+                  <div id="existingFilesInfo" class="mt-16" style="display: none;">
+                    <div class="detection-badge" style="background:rgba(0,212,255,0.1); border-color:var(--accent-cyan); color:var(--accent-cyan);">
+                      <i class="fas fa-check-circle"></i> README.md and LICENSE already exist in your project
+                    </div>
+                    <p class="mt-8 form-helper">System will use your existing files. No new files will be generated.</p>
+                  </div>
+                </div>
+                
+                <!-- README & License Generator Section -->
+                <div id="generatorSection" class="generator-section" style="display: none;">
+                  <div class="template-selector">
+                    <label class="form-label">README Template Style</label>
+                    <div class="template-buttons">
+                      <button class="btn btn-secondary template-btn active" data-template="cyberpunk"><i class="fas fa-robot"></i> Cyberpunk</button>
+                      <button class="btn btn-secondary template-btn" data-template="minimal"><i class="fas fa-circle"></i> Minimal</button>
+                      <button class="btn btn-secondary template-btn" data-template="clean"><i class="fas fa-brush"></i> Clean Pro</button>
+                    </div>
+                  </div>
+                  
+                  <div class="generator-layout">
+                    <div class="generator-form">
+                      <div class="form-section"><h4><i class="fas fa-edit"></i> Edit README Content</h4>
+                        <div class="form-group"><label class="form-label">Project Name</label><input type="text" id="projectName" class="form-input" placeholder="My Awesome Project"></div>
+                        <div class="form-group"><label class="form-label">Tagline / Slogan</label><input type="text" id="projectTagline" class="form-input" placeholder="⚡ Next-gen Tool ⚡"></div>
+                        <div class="form-group"><label class="form-label">Description</label><textarea id="projectDesc" class="form-textarea" rows="3" placeholder="Project description"></textarea></div>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-list-check"></i> Features (Edit)</h4>
+                        <div id="featuresList" class="dynamic-list"></div>
+                        <button type="button" class="add-btn" id="addFeatureBtn"><i class="fas fa-plus"></i> Add Feature</button>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-cubes"></i> Tech Stack (Edit)</h4>
+                        <div id="techTags" class="tag-input-container"></div>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-code"></i> Installation & Usage (Edit)</h4>
+                        <div class="form-group"><label class="form-label">Installation Steps</label><textarea id="installSteps" class="form-textarea" rows="3" placeholder="npm install&#10;npm start"></textarea></div>
+                        <div class="form-group"><label class="form-label">Usage / Commands</label><textarea id="usageSteps" class="form-textarea" rows="3" placeholder="npm run dev"></textarea></div>
+                      </div>
+                      <div class="form-section"><h4><i class="fas fa-user-astronaut"></i> Author Info (Edit)</h4>
+                        <div class="form-group"><label class="form-label">Author Name</label><input type="text" id="authorName" class="form-input"></div>
+                        <div class="form-group"><label class="form-label">GitHub Username</label><input type="text" id="socialGithub" class="form-input"></div>
+                        <div class="form-group"><label class="form-label">Instagram Username</label><input type="text" id="socialInstagram" class="form-input"></div>
+                      </div>
+                      
+                      <!-- License Selector Section -->
+                      <div class="form-section"><h4><i class="fas fa-gavel"></i> License Selection (Choose License Type)</h4>
+                        <label class="checkbox-wrapper"><input type="checkbox" id="enableLicense" checked> <span>Add LICENSE file to repository</span></label>
+                        <div id="licenseSelector" class="license-selector">
+                          <div class="license-option"><input type="radio" name="licenseType" id="licenseMIT" value="mit" checked><label for="licenseMIT">MIT License</label><span class="license-badge">Popular</span></div>
+                          <div class="license-option"><input type="radio" name="licenseType" id="licenseGPL" value="gpl-3.0"><label for="licenseGPL">GNU General Public License v3.0</label><span class="license-badge">GPL-3.0</span></div>
+                          <div class="license-option"><input type="radio" name="licenseType" id="licenseApache" value="apache-2.0"><label for="licenseApache">Apache License 2.0</label><span class="license-badge">Apache-2.0</span></div>
+                          <div class="license-option"><input type="radio" name="licenseType" id="licenseBSD" value="bsd-3-clause"><label for="licenseBSD">BSD 3-Clause License</label><span class="license-badge">BSD-3</span></div>
+                          <div class="license-option"><input type="radio" name="licenseType" id="licenseISC" value="isc"><label for="licenseISC">ISC License</label><span class="license-badge">ISC</span></div>
+                          <div class="license-option"><input type="radio" name="licenseType" id="licenseCC0" value="cc0-1.0"><label for="licenseCC0">Creative Commons Zero v1.0 Universal</label><span class="license-badge">CC0-1.0</span></div>
+                          <div class="license-option"><input type="radio" name="licenseType" id="licenseUnlicense" value="unlicense"><label for="licenseUnlicense">The Unlicense</label><span class="license-badge">Public Domain</span></div>
+                        </div>
+                        <div class="form-helper mt-8"><i class="fas fa-info-circle"></i> <a href="#" id="licenseInfoLink" class="license-link" target="_blank">View license details</a></div>
+                      </div>
+                    </div>
+                    <div class="generator-preview">
+                      <div class="preview-header"><i class="fas fa-eye"></i> Live Preview <span class="preview-badge">README.md</span></div>
+                      <div class="preview-content" id="readmePreview"></div>
+                      <div class="preview-actions">
+                        <button class="btn btn-secondary" id="copyMarkdownBtn"><i class="fas fa-copy"></i> Copy README</button>
+                        <button class="btn btn-primary" id="downloadReadmeBtn"><i class="fas fa-download"></i> Download README.md</button>
+                        <button class="btn btn-primary" id="downloadLicenseBtn"><i class="fas fa-file-contract"></i> Download LICENSE</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName" class="form-input" placeholder="repository-name"></div>
+                <div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName" value="main" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg" value="Initial commit via RepoFlow Smart Upload" class="form-input"></div>
+                <div id="fileListModern" class="file-list mt-20" style="display:none"></div>
+                <button id="startSmartUploadBtn" class="btn btn-primary btn-full mt-20" style="display:none"><i class="fas fa-rocket"></i> Smart Upload to GitHub</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Mode 2: Upload ZIP -->
+          <div id="mode2Container" class="mode-container" style="display:none">
+            <div class="card">
+              <div class="card-body">
+                <div class="dropzone" id="dropZone2">
+                  <i class="fas fa-file-archive"></i>
+                  <p>Drag & drop ZIP file di sini atau klik untuk memilih</p>
+                  <p class="form-helper mt-8">Sistem akan otomatis mengekstrak dan menganalisis project Anda</p>
+                  <input type="file" id="fileInputModern2" accept=".zip" style="display:none">
+                </div>
+                <div id="zipDetectionPanel" class="smart-panel" style="display: none;"></div>
+                <div id="zipGeneratorSection" class="generator-section" style="display: none;"></div>
+                <div class="form-group mt-20"><label class="form-label">Target Repository</label><input type="text" id="targetRepoName2" class="form-input" placeholder="repository-name"></div>
+                <div class="form-group"><label class="form-label">Branch</label><input type="text" id="branchName2" value="main" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Commit Message</label><input type="text" id="commitMsg2" value="Initial commit via RepoFlow Smart Upload" class="form-input"></div>
+                <div id="zipFileList" class="file-list mt-20" style="display:none"></div>
+                <button id="startSmartZipUploadBtn" class="btn btn-primary btn-full mt-20" style="display:none"><i class="fas fa-rocket"></i> Smart Upload to GitHub</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REPOSITORIES PAGE -->
+        <div class="page" id="reposPage" style="display: none;">
+          <div class="card"><div class="card-header"><h2><i class="fas fa-book"></i> Repositories</h2><button id="refreshReposBtn" class="btn btn-secondary" style="margin-left:auto"><i class="fas fa-sync-alt"></i> Refresh</button></div><div class="card-body"><div class="form-group"><input type="text" id="repoSearchInput" class="form-input" placeholder="Search repositories..."></div><div id="repoListContainerEnhanced" class="repos-grid"></div></div></div>
+        </div>
+
+        <!-- PROFILE PAGE - NEW DESIGN -->
+        <div class="page" id="profilePage" style="display: none;">
+          <div class="profile-container">
+            <!-- Hero Section -->
+            <div class="profile-hero-section">
+              <div class="profile-hero-badge">
+                <i class="fas fa-user-astronaut"></i> 03 — Developer
+              </div>
+              <h1 class="profile-hero-title">The People Behind It</h1>
+              <p class="profile-hero-subtitle">Dua entitas, satu tujuan — bikin tools yang berguna dan keren.</p>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="stats-section">
+              <div class="stats-grid-4">
+                <div class="stat-item">
+                  <div class="stat-number" id="profileReposCount">0</div>
+                  <div class="stat-label">Repositories</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number" id="profileStarsCount">0</div>
+                  <div class="stat-label">Stars Earned</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number" id="profileForksCount">0</div>
+                  <div class="stat-label">Forks</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number">v3.0</div>
+                  <div class="stat-label">Version</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Credits Section -->
+            <div class="credits-section">
+              <div class="section-header">
+                <div class="section-number">01 — Credits</div>
+                <h2 class="section-title">Publisher & Creator</h2>
+              </div>
+              <div class="credits-grid">
+                <div class="credit-card">
+                  <div class="credit-number">01</div>
+                  <div class="credit-name">cpm_jhon</div>
+                  <div class="credit-role">Publisher & Owner</div>
+                  <div class="credit-desc">
+                    Otak di balik semua ini. cpm_jhon adalah publisher sekaligus pemilik project — yang punya ide, 
+                    yang nentuin arah, dan yang mastiin semua tools ini bisa berguna buat orang lain.
+                  </div>
+                </div>
+                <div class="credit-card">
+                  <div class="credit-number">02</div>
+                  <div class="credit-name">Claude AI</div>
+                  <div class="credit-role">AI Code Writer</div>
+                  <div class="credit-desc">
+                    Penulis kode di balik layar. Semua HTML, CSS, JavaScript, dan logika di website ini ditulis oleh Claude — 
+                    AI dari Anthropic yang ditugaskan cpm_jhon untuk mewujudkan setiap ide jadi kenyataan.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Colophon Section -->
+            <div class="colophon-section">
+              <div class="section-header">
+                <div class="section-number">02 — Colophon</div>
+                <h2 class="section-title">How This Website Was Built</h2>
+              </div>
+              <div class="colophon-card">
+                <p class="colophon-text">
+                  Website ini dibangun dengan filosofi sederhana: kalau bisa diotomasi, otomasi aja. 
+                  cpm_jhon datang dengan ide dan kebutuhan, lalu Claude menerjemahkannya menjadi kode yang bersih dan fungsional. 
+                  Tidak ada framework besar — hanya HTML, CSS, dan Vanilla JS di sisi frontend, serta GitHub API untuk backend.
+                </p>
+                <div class="tech-stack">
+                  <span class="tech-tag">HTML5</span>
+                  <span class="tech-tag">CSS3</span>
+                  <span class="tech-tag">JavaScript (Vanilla)</span>
+                  <span class="tech-tag">GitHub API</span>
+                  <span class="tech-tag">Chart.js</span>
+                  <span class="tech-tag">Marked.js</span>
+                  <span class="tech-tag">JSZip</span>
+                  <span class="tech-tag">Font Awesome</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Social Links -->
+            <div class="social-links">
+              <a href="https://github.com/cpm_jhon" target="_blank" class="social-link">
+                <i class="fab fa-github"></i> GitHub
+              </a>
+              <a href="https://instagram.com/jhon_production" target="_blank" class="social-link">
+                <i class="fab fa-instagram"></i> Instagram
+              </a>
+              <a href="https://twitter.com/jhon_production" target="_blank" class="social-link">
+                <i class="fab fa-twitter"></i> Twitter
+              </a>
+              <a href="https://t.me/jhon_production" target="_blank" class="social-link">
+                <i class="fab fa-telegram-plane"></i> Telegram
+              </a>
+              <button class="social-link" id="copyGithubBtn">
+                <i class="fas fa-copy"></i> Copy GitHub
+              </button>
+              <button class="social-link" id="copyInstagramBtn">
+                <i class="fas fa-copy"></i> Copy Instagram
+              </button>
+            </div>
+
+            <!-- Back to Dashboard Button -->
+            <div style="margin-top: 32px; text-align: center;">
+              <button class="btn btn-primary" onclick="navigateTo('dashboard')">
+                <i class="fa-solid fa-gauge"></i> Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="terminal-container" id="terminalContainer" style="display: none;">
+        <div class="terminal-header"><span><i class="fas fa-terminal"></i> Live Terminal</span><button id="closeTerminalBtn" style="background:none;border:none;color:var(--text-secondary);cursor:pointer"><i class="fas fa-times"></i></button></div>
+        <div class="terminal-body" id="terminalBody"></div>
+      </div>
+      <button class="show-terminal-btn" id="showTerminalBtn" style="display: none"><i class="fas fa-terminal"></i> Show Terminal</button>
+    </main>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal" id="loginModal"><div class="modal-content"><div class="modal-header"><h3><i class="fab fa-github"></i> GitHub Authentication</h3><button class="modal-close" id="closeLoginModal">&times;</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Username</label><input type="text" id="githubUsername" class="form-input"></div><div class="form-group"><label class="form-label">Personal Access Token</label><input type="password" id="githubToken" class="form-input"><div class="form-helper">Requires repo, delete_repo permissions</div></div><button id="authBtn" class="btn btn-primary btn-full"><i class="fas fa-plug"></i> Connect to GitHub</button><div id="authStatus" class="mt-16"></div></div></div></div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal" id="deleteModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-exclamation-triangle"></i> Delete Repository</h3><button class="modal-close" id="closeDeleteModalBtn">&times;</button></div><div class="modal-body"><div class="warning-box"><i class="fas fa-radiation"></i><p>Warning: This action cannot be undone!</p></div><p>Type <strong id="deleteRepoNameDisplay"></strong> to confirm:</p><input type="text" id="deleteConfirmInput" class="form-input mt-8"></div><div class="modal-footer"><button class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button><button class="btn btn-danger" id="confirmDeleteModalBtn">Delete</button></div></div></div>
+
+  <!-- Clone Modal -->
+  <div class="modal" id="cloneModal"><div class="modal-content"><div class="modal-header"><h3><i class="fas fa-code-branch"></i> Clone Repository</h3><button class="modal-close" id="closeCloneModalBtn">&times;</button></div><div class="modal-body"><p>Clone with HTTPS:</p><div class="clone-url"><code id="cloneUrlText"></code><button class="btn btn-secondary" id="copyCloneUrlBtn">Copy</button></div><p style="margin-top:16px">Run this command:</p><div class="clone-url"><code>git clone <span id="cloneCommandText"></span></code></div></div><div class="modal-footer"><button class="btn btn-secondary" id="closeCloneModalFooterBtn">Close</button></div></div></div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
